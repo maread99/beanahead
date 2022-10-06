@@ -1,5 +1,7 @@
 """Functions to administer expired transactions."""
 
+from __future__ import annotations
+
 import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -8,13 +10,12 @@ import re
 from beancount.core.data import Transaction
 
 from . import utils
-from .utils import TODAY
 from .errors import BeanaheadWriteError
 
-# TODO TESTS!!! 
+# TODO TESTS!!!
 
 TODAY = utils.TODAY
-TOMORROW = utils.TODAY + timedelta(1)
+TOMORROW = TODAY + timedelta(1)
 
 DATE_FORMATS = "(YYYY-MM-DD or MM-DD or DD)"
 VALID_DATE_FORMAT_REGEXES = [

@@ -1,5 +1,7 @@
 """Functions to reconcile new transactions with expected transactions."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal

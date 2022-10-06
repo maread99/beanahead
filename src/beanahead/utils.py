@@ -1,5 +1,7 @@
 """General utility functions."""
 
+from __future__ import annotations
+
 import datetime
 from pathlib import Path
 import re
@@ -441,7 +443,7 @@ def get_verified_txns(path: Path) -> list[Transaction]:
 
 def is_expired(txn: Transaction) -> bool:
     """Query if a transaction has expired.
-    
+
     Returns
     -------
     bool
@@ -663,7 +665,9 @@ def remove_txns_from_ledger(path: Path, txns: list[Transaction]):
 
 # TODO TEST VIA doctest
 def compile_words_regex(
-    words: str | list[str], reject: str | list[str] | None = None, flags=re.I
+    words: str | list[str],
+    reject: str | list[str] | None = None,
+    flags=re.I,  # noqa: E741
 ) -> re.Pattern:
     """Return regex to match one or more words in any order.
 
@@ -728,7 +732,7 @@ def inject_txns(injection: str, ledger: str):
     injection_path = get_verified_path(injection)
     content = get_content(injection_path)
     if content.startswith(HEADER):
-        content = content[len(HEADER):]
+        content = content[len(HEADER) :]
     content = "\n" + content
     ledger_path = get_verified_path(ledger)
 

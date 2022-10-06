@@ -57,6 +57,9 @@ documentation = "https://github.com/maread99/beanahead"
 "Issue Tracker" = "https://github.com/maread99/beanahead/issues"
 "Source Code" = "https://github.com/maread99/beanahead"
 
+[project.scripts]
+beanahead = "beanahead.scripts.cli:main"
+
 [tool.setuptools_scm]
 write_to = "src/beanahead/_version.py"
 

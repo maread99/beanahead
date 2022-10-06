@@ -1,5 +1,7 @@
 """Functions and class for administering regular transactions."""
 
+from __future__ import annotations
+
 import copy
 from collections import defaultdict
 import datetime
@@ -294,7 +296,7 @@ def compose_new_content(file_key: str, txns: list[Transaction]) -> str:
         If created content would parse a different number of transactions
         to the number of transactions receieved.
     """
-    if file_key not in VALID_FILE_KEYS: 
+    if file_key not in VALID_FILE_KEYS:
         valid_keys = ", ".join(VALID_FILE_KEYS)
         raise ValueError(
             f"'{file_key}' is not a valid file key. Valid values for"
@@ -677,8 +679,7 @@ class Admin:
         self._overwrite_beancount_file(self.path_defs, content_defs, also_revert)
         self._validate_main_ledger(self.rx_txns_files)
         print(
-            f"{len(new_txns)} have been added to the Regular Expected Transactions"
-            f"ledger '{self.path_ledger}'.\nRegular Expected Transaction Definitions"
-            f" on '{self.path_defs}' have been updated to reflect the most recent"
-            f" transactions added to the ledger."
+            f"{len(new_txns)} transactions have been added to the ledger"
+            f" '{self.path_ledger.stem}'.\nDefinitions on '{self.path_defs.stem}' have"
+            f" been updated to reflect the most recent transactions."
         )

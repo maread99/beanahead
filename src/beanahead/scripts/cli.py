@@ -3,7 +3,8 @@
 import argparse
 import datetime
 
-from beanahead import rx_txns, reconcile, expired, utils
+import beanahead
+from beanahead import utils, rx_txns, reconcile, expired
 
 
 def make_file(args: argparse.Namespace):
@@ -38,7 +39,7 @@ def inj(args: argparse.Namespace):
     utils.inject_txns(args.injection, args.ledger)
 
 
-def entry_point():
+def main():
     """Entry point for calls from the command line."""
     parser = argparse.ArgumentParser(
         description=(
@@ -49,9 +50,9 @@ def entry_point():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # TODO INCLUDE a version argument
-    # parser.add_argument('--version', '-V', action='version',
-    #                     version=)
+    parser.add_argument(
+        "--version", "-V", action="version", version=beanahead.__version__
+    )
 
     subparsers = parser.add_subparsers(
         title="subcommands",
@@ -165,7 +166,7 @@ def entry_point():
         help=(
             "path to incoming transactions beancount file. Can be"
             "\nabsolute or relative to the current working directory."
-        )
+        ),
     )
     parser_recon.add_argument(
         "ledgers",
@@ -254,11 +255,10 @@ def entry_point():
     )
     parser_inject.set_defaults(func=inj)
 
-
     # Call pass-through function corresponding with subcommand
     args = parser.parse_args()
     args.func(args)
 
 
 if __name__ == "__main__":
-    entry_point()
+    main()
