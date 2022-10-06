@@ -1,13 +1,8 @@
 """Beanahead error classes."""
 
+from __future__ import annotations
 
 from pathlib import Path
-
-
-
-
-
-
 
 
 class BeancountFileExistsError(FileExistsError):
