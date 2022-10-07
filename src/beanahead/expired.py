@@ -181,7 +181,7 @@ def admin_expired_txns(ledgers: list[str]):
         Requests user choose from following options:
             Move txn forwards to tomorrow.
             Move txn forwards to user-defined date.
-            Remove transaction for ledger.
+            Remove transaction from ledger.
             Leave transaction as is.
 
         Actions request.

@@ -146,7 +146,7 @@ def get_pattern(x_txn: Transaction) -> re.Pattern:
     words = payee.split(" ")
     if len(words) == 1:
         return re.compile(payee, re.I)
-    return utils.compile_words_regex(words)
+    return utils.compile_strings_regex(words)
 
 
 def get_payee_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction]:

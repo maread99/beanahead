@@ -668,22 +668,18 @@ def remove_txns_from_ledger(path: Path, txns: list[Transaction]):
     overwrite_file(path, new_content)
 
 
-# TODO TEST VIA doctest
-def compile_words_regex(
-    words: str | list[str],
-    reject: str | list[str] | None = None,
+def compile_strings_regex(
+    strings: str | list[str],
     flags=re.I,  # noqa: E741
 ) -> re.Pattern:
-    """Return regex to match one or more words in any order.
+    """Return regex to match any string of one or more strings.
+
+    Will match if strings overlap.
 
     Parameters
     ----------
-    words
-        Words to match.
-
-    reject
-        List of words to not match. If any word in the `reject` list is
-        present then the regex will not match.
+    strings
+        Strings to match.
 
     flags : default: re.I
         re module flags. Combine more than one with | operator. Pass None
@@ -693,16 +689,35 @@ def compile_words_regex(
     -------
     re.Pattern
         Compiled regex.
+
+    Examples
+    --------
+    >>> strings = ["one", "another"]
+    >>> regex = compile_strings_regex(strings)
+    >>> passes = [
+    ...     "one for a match",  # at start of string
+    ...     "and another",  # at end of string
+    ...     "this one matches",  # in middle of string
+    ...     "and another one",  # two match
+    ...     "never alone you stand",  # not as a word
+    ...     "oneanother",
+    ...     "anotherone",
+    ...     "aaonebb",
+    ...     "aanotheroneb",
+    ... ]
+    >>> fails = [
+    ...     "no match here",
+    ...     "not on e anothe rmatch",
+    ... ]
+    >>> for pass_ in passes:
+    ...     assert regex.match(pass_) is not None
+    >>> for fail in fails:
+    ...     assert regex.match(fail) is None
     """
-    if isinstance(words, str):
-        words = [words]
-    regex = "^" + "".join([rf"(?=.*\b{word}\b)" for word in words])
-    if reject is not None:
-        if isinstance(reject, str):
-            reject = [reject]
-        regex += "".join([rf"(!=.*\b{word}\b)" for word in reject])
-    regex += ".*$"
-    return re.compile(regex, flags)
+    if isinstance(strings, str):
+        strings = [strings]
+    regex = "^.*(?=" + "|".join([rf"{string}" for string in strings]) + ").*$"
+    return re.compile(regex, flags=flags)
 
 
 def response_is_valid_number(response: str, max_value: int) -> bool:
