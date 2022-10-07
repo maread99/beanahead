@@ -19,9 +19,9 @@ def add_rx_txns(args: argparse.Namespace):
 
 
 def recon(args: argparse.Namespace):
-    """Pass through command line args to reconcile incoming transactions."""
+    """Pass through command line args to reconcile new transactions."""
     reconcile.reconcile_new_txns(
-        new_entries=args.incoming,
+        new_entries=args.new,
         x_txns_ledgers=args.ledgers,
         remove=not args.keep,
         output=args.output,
@@ -43,9 +43,9 @@ def main():
     """Entry point for calls from the command line."""
     parser = argparse.ArgumentParser(
         description=(
-            "Add Regular Expected Transactions, Reconcile incoming transactions"
-            "\n against Expected Transactions and create Expected Transactions"
-            "\nledgers."
+            "Create expected transactions ledgers, generate regular expected"
+            "\ntransactions and reconcile expected transactions against"
+            "\nnew transactions."
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -56,11 +56,6 @@ def main():
 
     subparsers = parser.add_subparsers(
         title="subcommands",
-        description=(
-            "Create and administer expected transaction ledgers."
-            "\nIt is not necesasry to include the .beancount extension"
-            "\nto positional args."
-        ),
         dest="subcmd",
         required=True,
     )
@@ -153,8 +148,8 @@ def main():
     # Subparser for recon
     parser_recon = subparsers.add_parser(
         "recon",
-        description=("Reconcile incoming transactions with expected transactions."),
-        help="reconcile incoming transactions.",
+        description=("Reconcile new transactions with expected transactions."),
+        help="reconcile new transactions.",
         epilog=(
             "Documentation of underlying function:"
             f"\n\n{reconcile.reconcile_new_txns.__doc__}"
@@ -162,9 +157,9 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser_recon.add_argument(
-        "incoming",
+        "new",
         help=(
-            "path to incoming transactions beancount file. Can be"
+            "path to new transactions beancount file. Can be"
             "\nabsolute or relative to the current working directory."
         ),
     )
@@ -172,8 +167,9 @@ def main():
         "ledgers",
         nargs="+",
         help=(
-            "paths to one or more Regular Expected Transactions Ledgers"
-            "\nagainst which to reconcile incoming transactions."
+            "paths to one or more Regular Expected Transactions"
+            "\nLedgers against which to reconcile incoming"
+            "\ntransactions."
         ),
     )
     parser_recon.add_argument(
@@ -227,11 +223,10 @@ def main():
     # Subparser for inject
     parser_inject = subparsers.add_parser(
         "inject",
-        description=("Inject new transactions to a ledger."),
+        description=("Append new transactions to a ledger."),
         help="inject new transactions.",
         epilog=(
-            "Documentation of underlying function:"
-            f"\n\n{utils.inject_txns.__doc__}"
+            "Documentation of underlying function:" f"\n\n{utils.inject_txns.__doc__}"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -249,7 +244,7 @@ def main():
         "ledger",
         help=(
             "path to beancount ledger to which new entires are to"
-            "\nbe injected. Can be absolute or relative to the current"
+            "\nbe appended. Can be absolute or relative to the current"
             "\nworking directory."
         ),
     )
