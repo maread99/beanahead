@@ -1,6 +1,10 @@
 [flake8]
 
 ignore = 
+    # variable assigned but never used. For clarity declare variables returned by loader
+    # function although not used, and to clarify nature of parts of a tuple returned
+    # as an empty to list, for example `return entries, (errors := [])`.
+    F841,
     # E203 (not PEP 8 compliant) ignored to not conflict with black
     E203,
     # W503 (not PEP 8 compliant) ignored to not conflict with black

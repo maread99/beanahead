@@ -449,6 +449,10 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
     x_txn = utils.reverse_automatic_balancing(x_txn)
     new_txn = utils.reverse_automatic_balancing(new_txn)
     new_txn = new_txn._replace(narration=x_txn.narration)
+
+    if tags_to_add := x_txn.tags - utils.TAGS_X:
+        new_txn = utils.add_tags(new_txn, tags_to_add)
+
     new_txn_accounts = get_entry_accounts(new_txn)
     for posting in x_txn.postings:
         if (account := posting.account) not in new_txn_accounts:

@@ -22,8 +22,6 @@ from .errors import BeanaheadWriteError, BeancountLoaderErrors
 
 # TODO TESTS FOR ALL OF MODULE!!!!
 
-TAG = "rx_txn"
-
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
 
 
@@ -102,24 +100,6 @@ def roll_txns(txns: list[Transaction]) -> list[Transaction]:
     return rtrn
 
 
-def remove_tag(txn: Transaction) -> Transaction:
-    """Remove 'rx_txn' tag from a Regular Expected Transaction.
-
-    Returns copy of `txn` with 'rx_txn' tag removed. If `txn` does not have
-    'rx_txn' tag then return `txn` as received.
-
-    Parameters
-    ----------
-    txn
-        Regular Transaction from which 'rx_txn' tag to be removed.
-    """
-    tags = set(txn.tags)
-    if TAG in tags:
-        tags.remove(TAG)
-        return txn._replace(tags=frozenset(tags))
-    return txn
-
-
 def convert_for_printer(txn: Transaction) -> Transaction:
     """Convert a regular transaction for printing to a .beancount file.
 
@@ -144,7 +124,8 @@ def convert_for_printer(txn: Transaction) -> Transaction:
     if meta["roll"]:
         del meta["roll"]
     converted = txn._replace(meta=meta)
-    return remove_tag(converted)
+    converted = utils.remove_tags(converted, utils.TAG_RX)
+    return converted
 
 
 INCOME_STATEMENT_ACCOUNTS = ["Income", "Expenses"]

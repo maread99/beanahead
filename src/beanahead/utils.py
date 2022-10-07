@@ -24,6 +24,11 @@ from .errors import (
 
 # TODO TESTS FOR ALL OF MODULE!!!!
 
+TAG_X = "x_txn"
+TAG_RX = "rx_txn"
+TAGS_X = set([TAG_X, TAG_RX])
+
+
 SEPARATOR_LINE = "-" * 77 + "\n"
 TODAY = datetime.datetime.now().date()
 EXT = ".beancount"
@@ -32,21 +37,21 @@ FILE_CONFIG = {
     "x": {
         "title": "Expected Transactions Ledger",
         "plugin": None,
-        "tag": "x_txn",
+        "tag": TAG_X,
         "comment": "Enter expected transactions after this line...",
         "post_comment": "...enter expected transactions before this line.",
     },
     "rx": {
         "title": "Regular Expected Transactions Ledger",
         "plugin": "rx_txn_plugin",
-        "tag": "rx_txn",
+        "tag": TAG_RX,
         "comment": "Transactions should not be manually added to this file.",
         "post_comment": None,
     },
     "rx_def": {
         "title": "Regular Expected Transaction Definitions",
         "plugin": "rx_txn_plugin",
-        "tag": "rx_txn",
+        "tag": TAG_RX,
         "comment": "Enter definitions after this line...",
         "post_comment": "...enter definitions before this line.",
     },
@@ -738,3 +743,51 @@ def inject_txns(injection: str, ledger: str):
 
     with ledger_path.open("at", encoding="utf-8") as file:
         file.write(content)
+
+
+def remove_tags(txn: Transaction, tags: str | list | set) -> Transaction:
+    """Remove a specific tag or tags from a transaction.
+
+    Parameters
+    ----------
+    txn
+        Transaction from which to remove `tags`.
+
+    tags
+        Tags to remove from `txn`.
+
+    Returns
+    -------
+    Transaction
+        Copy of `txn` with `tags` removed.
+        If `txn` has no tag of `tags` then returns `txn` as received.
+    """
+    tags = set([tags]) if isinstance(tags, str) else set(tags)
+    new_tags = txn.tags - tags
+    if new_tags != txn.tags:
+        return txn._replace(tags=new_tags)
+    return txn
+
+
+def add_tags(txn: Transaction, tags: str | list | set) -> Transaction:
+    """Add a specific tag or tags to a transaction.
+
+    Parameters
+    ----------
+    txn
+        Transaction to which to add `tags`.
+
+    tags
+        Tags to add to `txn`.
+
+    Returns
+    -------
+    Transaction
+        Copy of `txn` with `tags` added.
+        If `txn` already has all `tags` then returns `txn` as received.
+    """
+    tags = set([tags]) if isinstance(tags, str) else set(tags)
+    new_tags = txn.tags | tags
+    if new_tags != txn.tags:
+        return txn._replace(tags=new_tags)
+    return txn
