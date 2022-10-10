@@ -418,8 +418,7 @@ class Admin:
     def _revert_to_stored_content(self, path: Path):
         """Revert a rx txns file to stored content."""
         stored_content = self._stored_content[path]
-        with path.open("wt") as file:
-            file.write(stored_content)
+        utils.write(path, stored_content)
 
     def _get_main_ledger_errors(self) -> list[tuple]:
         """Errors registered on loading the main ledger.

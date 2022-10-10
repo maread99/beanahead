@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 import re
-from typing import Callable
 
 import beancount
 from beancount import loader
@@ -267,11 +267,11 @@ def have_same_number(a: Transaction, b: Transaction) -> bool:
     return number_diff(a, b) == number.ZERO
 
 
-def get_exact_number_matches(
-    txns: list[Transaction], x_txn: Transaction
+def get_number_matches(
+    txns: list[Transaction], x_txn: Transaction, margin: Decimal = number.ZERO
 ) -> list[Transaction]:
-    """Return transactions exactly matching expected transaction's numbers."""
-    return [txn for txn in txns if have_same_number(txn, x_txn)]
+    """Return transactions matching expected transaction's numbers."""
+    return [txn for txn in txns if number_diff(txn, x_txn) <= margin]
 
 
 def get_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction]:
@@ -282,17 +282,21 @@ def get_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction
 
     payee_matches = get_payee_matches(basic_matches, x_txn)
     if not payee_matches:
-        # if no matches by payee then return only those with exact number
-        matches = get_exact_number_matches(basic_matches, x_txn)
+        # if no matches by payee then return only those within 2%
+        matches = get_number_matches(basic_matches, x_txn, Decimal("0.02"))
         return sort_by_date(matches, x_txn)
     if len(payee_matches) == 1:
         return payee_matches
 
     matches = sort_by_date(payee_matches, x_txn)
     closest_match = matches[0]
-    # if closest match has exact value, return that one
+    # if closest match has exact value, return only those with that date and exact value
     if have_same_number(closest_match, x_txn):
-        return [closest_match]
+        return [
+            txn
+            for txn in matches
+            if closest_match.date == txn.date and have_same_number(txn, x_txn)
+        ]
     return sort_by_number(matches, x_txn)
 
 
