@@ -8,7 +8,7 @@ import re
 
 from beancount import loader
 from beancount.core import data
-from beancount.core.account_types import is_account_type
+from beancount.core.account_types import is_account_type, get_account_type
 from beancount.core.data import Transaction
 from beancount.core.interpolate import AUTOMATIC_META
 from beancount.ingest.extract import HEADER
@@ -52,7 +52,10 @@ FILE_CONFIG = {
         "title": "Regular Expected Transaction Definitions",
         "plugin": "rx_txn_plugin",
         "tag": TAG_RX,
-        "comment": "Enter definitions after this line...",
+        "comment": (
+            "All accounts referenced by definitions should be defined on the main"
+            " ledger.\nEnter definitions after this line..."
+        ),
         "post_comment": "...enter definitions before this line.",
     },
 }
@@ -112,10 +115,13 @@ def compose_header_footer(file_key: str) -> tuple[str, str]:
         header += f'plugin "{plugin}"\n'
     header += f"pushtag #{tag}\n"
     if comment is not None:
-        header += f";; {comment}\n"
+        for line in comment.split("\n"):
+            header += f";; {line}\n"
 
-    post_comment = config["post_comment"]
-    footer = f";; {post_comment}\n" if post_comment is not None else ""
+    footer = ""
+    if (post_comment := config["post_comment"]) is not None:
+        for line in post_comment.split("\n"):
+            footer += f";; {line}\n"
     footer += f"poptag #{tag}\n"
     return header, footer
 
@@ -520,24 +526,53 @@ def is_assets_account(string: str) -> bool:
 
 
 def get_assets_accounts(txn: Transaction) -> list[str]:
-    """Get all assets accounts assigned to a transaction's postings.
+    """Return all assets accounts associated with a transaction.
 
     Parameters
     ----------
     txn
         Transaction to query.
 
-    Raises
-    ------
-    ValueError
-        If `txn` has no posting to an Assets account.
+    Returns
+    -------
+    list of str
+        All assets accounts to which postings are made.
     """
-    accounts = [
-        post.account for post in txn.postings if is_assets_account(post.account)
-    ]
-    if not accounts:
-        raise ValueError(f"Transaction has no posting to an Assets account:\n{txn}")
-    return accounts
+    return [post.account for post in txn.postings if is_assets_account(post.account)]
+
+
+def get_accounts(txn: Transaction) -> list[str]:
+    """Return all accounts associated with a transaction.
+
+    Parameters
+    ----------
+    txn
+        Transaction to query.
+
+    Returns
+    -------
+    list of str
+        All accounts to which postings are made.
+    """
+    return [post.account for post in txn.postings]
+
+
+def get_accounts_types(txn: Transaction) -> set[str]:
+    """Return set of account types associated with a transaction.
+
+    Parameters
+    ----------
+    txn
+        Transaction to query.
+
+    Returns
+    -------
+    set of str
+        All account types to which a posting is made. For example,
+        {'Assets', 'Expenses'}
+    """
+    accounts_types = [get_account_type(acc) for acc in get_accounts(txn)]
+    return set(accounts_types)
 
 
 def get_content(path: Path) -> str:
@@ -555,7 +590,7 @@ def get_content(path: Path) -> str:
 
 def compose_entries_content(entries: data.Directive | data.Entries) -> str:
     """Return printable string representing one or more entries."""
-    if isinstance(entries, data.Directive):
+    if not isinstance(entries, list):
         entries = [entries]
     content = ""
     for entry in entries:

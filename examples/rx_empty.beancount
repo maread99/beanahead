@@ -1,0 +1,7 @@
+option "title" "Regular Expected Transactions Ledger"
+plugin "rx_txn_plugin"
+pushtag #rx_txn
+;; Transactions should not be manually added to this file.
+
+
+poptag #rx_txn

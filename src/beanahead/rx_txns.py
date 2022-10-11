@@ -13,7 +13,6 @@ import pandas as pd
 from beancount import loader
 from beancount.core import data
 from beancount.core.data import Transaction
-from beancount.core.account_types import get_account_type
 from beancount.parser import parser
 from beancount.parser.printer import EntryPrinter
 
@@ -128,82 +127,102 @@ def convert_for_printer(txn: Transaction) -> Transaction:
     return converted
 
 
-INCOME_STATEMENT_ACCOUNTS = ["Income", "Expenses"]
-OTHER_SIDE_ACCOUNTS = {"Assets": 0, "Income": 1, "Expenses": 2}
+OTHER_SIDE_ACCOUNTS = {
+    "Assets": 0,
+    "Income": 1,
+    "Expenses": 2,
+    "Various": 3,
+}
 
 
-def get_income_statement_acc_type(
+def get_other_side_acc_type(
     txn: Transaction,
-) -> Literal["Income", "Expenses"]:
-    """Return root of `income statement` account associated with a transaction.
+) -> Literal["Assets", "Income", "Expenses", "Liabilities", "Various"]:
+    """Return root of account on `other side` of a transaction.
 
     Parameters
     ----------
     txn
         Transaction to be queried.
 
-    Raises
-    ------
-    ValueError
-        If `txn` has no postings to an income statement account.
+    Returns
+    -------
+        "Assets" if all postings are to "Assets" accounts.
 
-        If postings are made to more than one type of `income statement`
-        account.
+        "Various" if there are postings to more than one type of account
+        other than "Assets"
+
+        Otherwise the other type of account to which all postings are made
+        (other than "Assets"). Treats "Liabilities" as if "Expenses".
     """
-    valid_account_types = []
-    for posting in txn.postings:
-        account_type = get_account_type(posting.account)
-        if account_type in INCOME_STATEMENT_ACCOUNTS:
-            valid_account_types.append(account_type)
-    if not valid_account_types:
-        raise ValueError(
-            "Transaction has no posting to an income statement account"
-            f" ('{INCOME_STATEMENT_ACCOUNTS}'):\n{txn}"
-        )
-    if len(account_type := set(valid_account_types)) != 1:
-        raise ValueError(
-            "Transaction has postings to both an 'Income' account"
-            f" and an 'Expense' account:\n{txn}"
-        )
-    return account_type.pop()
+    assets = "Assets"
+    accounts_types = utils.get_accounts_types(txn)
+    if accounts_types == {assets}:
+        return assets
+    if assets in accounts_types:
+        accounts_types.remove(assets)
+    if len(accounts_types) == 1:
+        account_type = accounts_types.pop()
+        if account_type == "Liabilities":
+            account_type = "Expenses"
+        return account_type
+    return "Various"
 
 
 GrouperKey = tuple[str, str]
 
 
-def group_definitions(
-    txns: list[Transaction],
-) -> dict[GrouperKey, list[Transaction]]:
-    """Group definitions by accounts.
-
-    Groups definitions by assets account and 'other account'.
+def get_definition_group(definition: Transaction) -> GrouperKey:
+    """Return name of group corresponding with a definition.
 
     Parameters
     ----------
-    txns
-        Transactions to be grouped.
+    definition
+        definition to query.
+
+    Returns
+    -------
+    2-tuple of str
+        [0] Assets account
+        [1] Other account type (either 'Assets', 'Income', 'Expenses'
+        'Liabilities' or 'Various'.
+
+        Or, ("Others", "_") if txn has with no posting to an Asset
+         account.
+
+        Example: ("Assets:US:Chase:Checking", "Expenses")
+    """
+    assets_accounts = utils.get_assets_accounts(definition)
+    if not assets_accounts:
+        return ("Others", "_")
+    other_side = get_other_side_acc_type(definition)
+    key = (assets_accounts[0], other_side)
+    return key
+
+
+def group_definitions(
+    defs: list[Transaction],
+) -> dict[GrouperKey, list[Transaction]]:
+    """Group definitions.
+
+    Parameters
+    ----------
+    defs
+        Definitions to be grouped.
 
     Returns
     -------
     dict
         key : 2-tuple of str, str
-            [0] Assets account
-            [1] Other account type (either 'Assets', 'Income' or 'Expenses'
-            Example: ("Assets:US:Chase:Checking", "Expenses")
+            Definition group, as returned by `get_definition_group`.
 
         value : list of Transaction
-            List of transactions posted to accounts with key.
+            List of definitions corresponding with group.
     """
     grouper = defaultdict(list)
-    for txn in txns:
-        assets_accounts = utils.get_assets_accounts(txn)
-        assets_account = assets_accounts[0]
-        if len(assets_accounts) > 1:
-            other_side = "Assets"
-        else:
-            other_side = get_income_statement_acc_type(txn)
-        key = (assets_account, other_side)
-        grouper[key].append(txn)
+    for definition in defs:
+        group = get_definition_group(definition)
+        grouper[group].append(definition)
     return grouper
 
 
@@ -212,15 +231,38 @@ def sortkey_grouper(grouper_key: GrouperKey) -> tuple[str, str]:
 
     Sorts by:
         Assets account name
-        Other account name ("Assets", "Income", "Expenses")
+        Other side account type, in order:
+            "Assets", "Liabilities", "Income", "Expenses", "Various"
 
     Parameters
     ----------
     grouper_key: tuple[str, str]
         [0] An assets account.
-        [1] Type of other account, i.e. "Assets", "Income" or "Expenses".
+
+        [1] Type of other account, i.e. "Assets", "Income", "Expenses"
+        or "Various".
     """
     return (grouper_key[0], OTHER_SIDE_ACCOUNTS[grouper_key[1]])
+
+
+def get_group_heading(group: GrouperKey) -> str:
+    """Return section heading for a definitions group.
+
+    Parameters
+    ----------
+    group
+        Definitions group for which require section heading.
+    """
+    asset_acc, other_side_type = group
+    if other_side_type == "Assets":
+        return f"Transactions between {asset_acc} and other Assets accounts"
+    elif other_side_type == "Expenses":
+        return f"{asset_acc} to Expenses and Liabilities"
+    elif other_side_type == "Income":
+        return f"Income to {asset_acc}"
+    elif other_side_type == "Various":
+        return f"{asset_acc} to various account types"
+    return "Other definitions"
 
 
 def compose_definitions_content(txns: list[Transaction]) -> str:
@@ -235,8 +277,7 @@ def compose_definitions_content(txns: list[Transaction]) -> str:
     content = ""
     printer = EntryPrinter()
     for key in sorted(grouper.keys(), key=sortkey_grouper):
-        asset_acc, other_acc = key
-        content += f"* {asset_acc} to {other_acc}\n"
+        content += f"* {get_group_heading(key)}\n"
         group_txns = grouper[key]
         group_txns.sort(key=lambda txn: txn.meta["name"])
         for txn in group_txns:

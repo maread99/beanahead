@@ -1,0 +1,9 @@
+option "title" "Regular Expected Transaction Definitions"
+plugin "rx_txn_plugin"
+pushtag #rx_txn
+;; All accounts referenced by definitions should be defined on the main ledger.
+;; Enter definitions after this line...
+
+
+;; ...enter definitions before this line.
+poptag #rx_txn
