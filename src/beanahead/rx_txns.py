@@ -7,6 +7,7 @@ from collections import defaultdict
 import datetime
 import functools
 from pathlib import Path
+import re
 from typing import Literal
 
 import pandas as pd
@@ -23,29 +24,81 @@ from .errors import BeanaheadWriteError, BeancountLoaderErrors
 
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
 
+REGEX_SIMPLE_FREQ = re.compile(r"^\d*[mwy]$")
+SIMPLE_FREQ_MAPPING = {
+    "w": "weeks",
+    "m": "months",
+    "y": "years",
+}
 
-def get_freq(txn: Transaction) -> pd.DateOffset:
-    """Get frequency of a regular transaction.
+
+def is_simple_freq(string: str) -> bool:
+    """Query if a string represents a simple frequency definition.
+
+    Examples
+    --------
+    >>> simple_freqs = ["3m", "2y", "13w", "m", "y", "w", "1y"]
+    >>> all(is_simple_freq(freq) for freq in simple_freqs)
+    True
+    >>> not_simple_freqs = ["3M", "2", "2r", "3mm"]
+    >>> any(is_simple_freq(freq) for freq in not_simple_freqs)
+    False
+    """
+    return REGEX_SIMPLE_FREQ.match(string) is not None
+
+
+def get_simple_offset(freq: str) -> pd.DateOffset:
+    """Return offset corresponding with a simple frequency.
+
+    Parameters
+    ----------
+    freq
+        Simple frequency, for example "y", "3m", "13w"
+
+    Examples
+    --------
+    >>> get_simple_offset("3m")
+    <DateOffset: months=3>
+    >>> get_simple_offset("2y")
+    <DateOffset: years=2>
+    >>> get_simple_offset("13w")
+    <DateOffset: weeks=13>
+    >>> get_simple_offset("m")
+    <DateOffset: months=1>
+    >>> get_simple_offset("1m")
+    <DateOffset: months=1>
+    """
+    unit = freq[-1]
+    value = 1 if len(freq) == 1 else int(freq[:-1])
+    kwargs = {SIMPLE_FREQ_MAPPING[unit]: value}
+    return pd.DateOffset(**kwargs)
+
+
+def get_freq_offset(txn: Transaction) -> pd.offsets.BaseOffset:
+    """Get offset for a regular transaction.
 
     Parameters
     ----------
     txn
         Transaction to query.
     """
-    return pd.DateOffset(**eval(txn.meta["freq"]))
+    freq = txn.meta["freq"]
+    if is_simple_freq(freq):
+        return get_simple_offset(freq)
+    return pd.tseries.frequencies.to_offset(freq)
 
 
 def create_entries(
-    rx_txn_def: Transaction,
-    end: datetime.date,
-) -> list[Transaction]:
-    """Create entries for a regular transaction.
+    rx_def: Transaction, end: datetime.date
+) -> tuple[list[Transaction], Transaction | None]:
+    """Create entries and new definition for a regular transaction.
 
-    Creates entries from last transaction to a future date.
+    Creates entries from rx_def through `end`. Creates new definition as
+    earliest transaction following `end`.
 
     Parameters
     ----------
-    rx_txn_def
+    rx_def
         Regular expected transaction definition. This is the unmodified
         version of the last entry created for the regular transaction
         (this should be the entry as defined on the rx_defs beancount
@@ -59,20 +112,39 @@ def create_entries(
 
     Returns
     -------
-    list of Transaction
-        Transactions from `rx_txn_def` through end, exclusive of
-        `rx_txn_def`. Transaction dates are as they fall based ONLY on the
-        transaction frequency, i.e. transactions are NOT modified by, for
-        example, rolling forwards over a weekend.
+    2-tuple
+        [0] Transactions from `rx_def` through `end`, inclusive of
+        `rx_def`.
+
+        [1] New definition, as next transaction after `end`, or None if [0]
+        is empty.
+
+        For both items, transaction dates are as they fall based ONLY on
+        the transaction frequency, i.e. transactions are NOT modified by,
+        for example, rolling forwards over a weekend.
     """
     end = END_DFLT if end is None else end
-    dates = pd.date_range(rx_txn_def.date, end, freq=get_freq(rx_txn_def))[1:]
+    offset = get_freq_offset(rx_def)
+    dates = pd.date_range(rx_def.date, end + offset, freq=offset)
+    if len(dates) == 1:
+        # no txns dated < end (only new definition date was evaluated)
+        return ([], None)
     txns = []
     for date in dates:
-        txn = copy.copy(rx_txn_def)
+        txn = copy.copy(rx_def)
         txn = txn._replace(date=date.date())
         txns.append(txn)
-    return txns
+    new_def = txns.pop()
+    return (txns, new_def)
+
+
+def remove_after_final(txns: list[Transaction]) -> list[Transaction]:
+    """Remove transactions dated after any final date."""
+    return [
+        txn
+        for txn in txns
+        if (txn.meta["final"] is None) or (txn.date <= txn.meta["final"])
+    ]
 
 
 def roll_txns(txns: list[Transaction]) -> list[Transaction]:
@@ -395,7 +467,7 @@ class Admin:
                     self._store_content(path)
 
     @functools.cached_property
-    def rx_txn_defs(self) -> dict[str, Transaction]:
+    def rx_defs(self) -> dict[str, Transaction]:
         """Last transaction of each Regular Expected Ttransaction.
 
         Returns
@@ -415,7 +487,7 @@ class Admin:
     @property
     def names(self) -> list[str]:
         """Names of defined Regular Expected Transactions."""
-        return list(self.rx_txn_defs.keys())
+        return list(self.rx_defs.keys())
 
     def _verify_names_unique(self):
         """Raise error if rx txn names are not unique.
@@ -434,7 +506,7 @@ class Admin:
             raise RegularTransactionsDefinitionError(msg)
 
     @property
-    def rx_txns_files(self) -> tuple[Path]:
+    def rx_files(self) -> tuple[Path]:
         """Paths of Regular Expected Transactions beancount files.
 
         Returns
@@ -453,7 +525,7 @@ class Admin:
         path
             Path to rx txns file with contents to be stored.
         """
-        assert path in self.rx_txns_files
+        assert path in self.rx_files
         self._stored_content[path] = utils.get_content(path)
 
     def _revert_to_stored_content(self, path: Path):
@@ -473,8 +545,10 @@ class Admin:
         entries, errors, options = loader.load_file(self.path_ledger_main)
         return errors
 
-    def create_raw_new_entries(self, end: pd.Timestamp) -> list[Transaction]:
-        """Create new entries for all Regular Expected Transactions.
+    def create_raw_new_entries(
+        self, end: pd.Timestamp
+    ) -> tuple[list[Transaction], list[Transaction]]:
+        """Create new entries and defs for all regular expected txns.
 
         Parameters
         ----------
@@ -483,68 +557,17 @@ class Admin:
 
         Returns
         -------
-        list of Transaction
-            List of new entries.
+        2-tuple of list of Transaction
+            [0] List of new entries.
+            [1] List of new definitions.
         """
-        entries = []
-        for reg_txn_def in self.rx_txn_defs.values():
-            txns = create_entries(reg_txn_def, end)
-            entries += txns if txns else []
-        return entries
-
-    def _map_name_to_txns(
-        self, txns: list[Transaction]
-    ) -> dict[str, list[Transaction]]:
-        """Return mapping of all names to Regular Expected Transactions.
-
-        Parameters
-        -------
-        txns
-            Transactions to be mapped.
-
-        Returns
-        -------
-        dict
-            key: str
-                Regular Expected Transaction name
-            value: list[Transaction]
-                List of transactions with name as key. List will be in same
-                order as received `txns`. List will be empty if `txns` contains
-                no transactions for the Regular Expected Transaction.
-        """
-        d = {name: [] for name in self.names}
-        for txn in txns:
-            d[txn.meta["name"]].append(txn)
-        return d
-
-    def _get_new_defs(self, new_entries: list[Transaction]) -> list[Transaction]:
-        """Return list of new definitions for each rx txn.
-
-        Parameters
-        ----------
-        new_entries
-            List of unmodified new entries to be added (post modifiaction)
-            to the Regular Expected Transactions Ledger.
-
-        Return
-        ------
-        list of Transaction
-            List of new Regular Expected Transaction definitions. List
-            contains last transaction for every tx txn. For rx txns
-            that a new transaction is not included to `new_entries`, the
-            definition will be as the existing.
-        """
-        mapping = self._map_name_to_txns(new_entries)
-        new_defs = []
-        for name, txns in mapping.items():
-            if not txns:
-                new_def = self.rx_txn_defs[name]
-            else:
-                new_def = txns[-1]
-                assert max(txn.date for txn in txns) == new_def.date
+        entries, new_defs = [], []
+        for rx_def in self.rx_defs.values():
+            txns, new_def = create_entries(rx_def, end)
+            entries += txns
+            new_def = new_def if new_def is not None else rx_def
             new_defs.append(new_def)
-        assert len(self.names) == len(new_defs)
-        return new_defs
+        return entries, new_defs
 
     def _get_new_txns_data(
         self,
@@ -563,9 +586,10 @@ class Admin:
             [0] New entries to inject to Regular Expected Transactions Ledger.
             [1] Updated rx txns definitions based on new entries ([0]).
         """
-        raw_entries = self.create_raw_new_entries(end)
-        new_defs = self._get_new_defs(raw_entries)
-        new_entries = roll_txns(raw_entries)
+        raw_entries, new_defs = self.create_raw_new_entries(end)
+        new_entries = remove_after_final(raw_entries)
+        new_defs = remove_after_final(new_defs)
+        new_entries = roll_txns(new_entries)
         return new_entries, new_defs
 
     @property
@@ -600,7 +624,7 @@ class Admin:
                 self._store_content(path)
             if self.path_defs in paths:
                 # delete cache, will recache if/when called
-                del self.rx_txn_defs
+                del self.rx_defs
             return
 
         else:
@@ -698,7 +722,7 @@ class Admin:
         self._overwrite_beancount_file(self.path_ledger, content_ledger)
         also_revert = [self.path_ledger]
         self._overwrite_beancount_file(self.path_defs, content_defs, also_revert)
-        self._validate_main_ledger(self.rx_txns_files)
+        self._validate_main_ledger(self.rx_files)
         print(
             f"{len(new_txns)} transactions have been added to the ledger"
             f" '{self.path_ledger.stem}'.\nDefinitions on '{self.path_defs.stem}' have"

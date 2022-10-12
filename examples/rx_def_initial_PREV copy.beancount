@@ -6,59 +6,53 @@ pushtag #rx_txn
 
 * Monthly expenses
 
-2022-10-05 * "EDISON" "Electricity, monthly fixed tarrif"
+2022-09-05 * "EDISON" "Electricity, monthly fixed tarrif"
+  ; First transaction added to main ledger will be dated 2022-10-05
   freq: "m"
   Assets:US:BofA:Checking                     -65.00 USD
   Expenses:Home:Electricity
 
-2022-10-15 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
-  ; 2022-10-15 is a Saturday. By default, the next generated transaction
-  ; will be rolled forwards to 2022-10-17 (Monday) although transactions
-  ; thereafter will be dated the 15 of each month whenever the 15 is a
-  ; weekday.
+2022-09-15 * "Verizon" "Telecoms, monthly variable" #inc-a-tag
+  ; First transaction added to main ledger will be dated 2022-10-17, a Monday.
+  ; By default transaction is rolled forward from 2022-10-15 which is a Saturday.
   freq: "m"
   Assets:US:BofA:Checking                     -55.00 USD
   Expenses:Home:Phone
 
-* Define frequency as a pandas frequency
-
-2022-10-01 * "Account Fee" "Monthly bank fee"
-  freq: "BMS" ; date transactions as first business day of each month
+2022-09-01 * "Account Fee" "Monthly bank fee"
+  ; Generated transactions will be dated the first business day of each month
+  freq: "BMS"
   Assets:US:BofA:Checking                           -4.00 USD
   Expenses:Financial:Fees
-
-2022-10-31 * "Slate" "Credit Card payment"
-  freq: "BM" ; date transactions as last business day of each month
-  Assets:US:BofA:Checking                           -250.00 USD
-  Liabilities:US:Chase:Slate
-
 
 
 * Prevent rolling forwards a quarterly transfer between accounts
 
-2022-11-13 * "ETrade Transfer" "Transfering accumulated savings to other account"
-  ; As roll is defined as FALSE the next transaction will be dated
-  ; 2022-11-13 even through this is a Sunday.
+2022-08-13 * "ETrade Transfer" "Transfering accumulated savings to other account"
+  ; First transaction added to main ledger will be dated 2022-11-13, a Sunday.
   freq: "3m"
-  roll: FALSE
+  roll: FALSE  ; Do not roll date forwards if falls on a weekend.
   Assets:US:BofA:Checking                           -4000 USD
   Assets:US:ETrade:Cash
 
 
-* Including a 'final' transaction date
+* Including a 'final' transaction date for a quarterly business loan repayment
 
-2022-10-31 * "Chase" "Chase Hire Purchase"
-  freq: "BM"
-  ; No transaction will be created which would be dated (before any
-  ; rolling) later than 2022-11-30
-  final: "2022-11-30"
-  Liabilities:US:Chase:HirePurchase                322.00 USD
+2022-09-30 * "Chase" "Chase quarterly loan repayment"
+  ; First transaction added to main ledger will be dated 2022-12-30, i.e. last
+  ; business day of last quarter of 2022
+  freq: "BQ"
+  ; No transaction will be created which would be dated (before any rolling)
+  ; later than 2025-06-03
+  final: "2025-06-03"
+  Liabilities:US:Chase:Loan                       2800.00 USD
   Assets:US:BofA:Checking
 
 
 * Fortnightly income
 
-2022-10-07 * "BayBook" "Payroll"
+2022-09-23 * "BayBook" "Payroll"
+  ; First transaction added to main ledger will be dated 2022-10-07.
   freq: "2w"
   Assets:US:BofA:Checking                         1350.60 USD
   Assets:US:Vanguard:Cash                         1200.00 USD
@@ -82,12 +76,14 @@ pushtag #rx_txn
 
 * Fortnightly investments
 
-2022-10-07 * "VBMPX" "Investing 40% of cash in VBMPX"
+2022-09-26 * "VBMPX" "Investing 40% of cash in VBMPX"
+  ; First transaction added to main ledger will be dated 2022-10-10.
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:VBMPX                     50 VBMPX @@ 479.94 USD
 
-2022-10-07 * "RGAGX" "Investing 60% of cash in RGAGX"
+2022-09-26 * "RGAGX" "Investing 60% of cash in RGAGX"
+  ; First transaction added to main ledger will be dated 2022-10-10.
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:RGAGX                     13.3 RGAGX @@ 720.02 USD
@@ -95,7 +91,8 @@ pushtag #rx_txn
 
 * Quarterly income
 
-2022-12-15 * "Dividend" "Dividends on portfolio"
+2022-09-15 * "Dividend" "Dividends on portfolio"
+  ; First transaction added to main ledger will be dated 2022-12-15.
   freq: "3m"
   Assets:US:ETrade:Cash                             29.59 USD
   Income:US:ETrade:GLD:Dividend
@@ -103,7 +100,8 @@ pushtag #rx_txn
 
 * Yearly expense
 
-2023-04-18 * "Erie" "Home insurance, yearly premium"
+2022-04-18 * "Erie" "Home insurance, yearly premium"
+  ; First transaction added to main ledger will be dated 2023-04-18.
   freq: "y"
   Assets:US:BofA:Checking                         -427.60 USD
   Expenses:Home:Insurance

@@ -40,9 +40,10 @@ include "x.beancount"
   Assets:US:BofA:Checking                         3262.01 USD
   Equity:Opening-Balances
 
-* Loans
+* Liabilities
 
-2020-05-12 open Liabilities:US:Chase:Loan                      USD
+2020-05-12 open Liabilities:US:Chase:Slate                      USD
+2020-05-12 open Liabilities:US:Chase:HirePurchase          USD
 
 * Taxable Investments
 
@@ -64,8 +65,8 @@ include "x.beancount"
 
 * Taxes
 
-1980-05-12 open Income:US:Federal:PreTax401k                    IRAUSD
-1980-05-12 open Assets:US:Federal:PreTax401k                    IRAUSD
+2020-01-01 open Income:US:Federal:PreTax401k                    IRAUSD
+2020-01-01 open Assets:US:Federal:PreTax401k                    IRAUSD
 
 * Sources of Income
 
@@ -91,9 +92,10 @@ include "x.beancount"
 
 * Expenses
 
-1980-05-12 open Expenses:Home:Insurance
-1980-05-12 open Expenses:Home:Electricity
-1980-05-12 open Expenses:Home:Phone
+2020-01-01 open Expenses:Home:Insurance
+2020-01-01 open Expenses:Home:Electricity
+2020-01-01 open Expenses:Home:Phone
+2020-01-01 open Expenses:Financial:Fees
 
 
 ;; PREVIOUS TRANSACTIONS WOULD BE LISTED HERE
