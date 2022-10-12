@@ -96,6 +96,6 @@ include "x.beancount"
 2020-01-01 open Expenses:Home:Electricity
 2020-01-01 open Expenses:Home:Phone
 2020-01-01 open Expenses:Financial:Fees
-
+2020-01-01 open Expenses:Transport:Tram
 
 ;; PREVIOUS TRANSACTIONS WOULD BE LISTED HERE

@@ -8,11 +8,11 @@ import datetime
 import functools
 from pathlib import Path
 import re
-from typing import Literal
 
 import pandas as pd
 from beancount import loader
 from beancount.core import data
+from beancount.core.account_types import get_account_type
 from beancount.core.data import Transaction
 from beancount.parser import parser
 from beancount.parser.printer import EntryPrinter
@@ -206,70 +206,47 @@ OTHER_SIDE_ACCOUNTS = {
     "Various": 3,
 }
 
-
-def get_other_side_acc_type(
-    txn: Transaction,
-) -> Literal["Assets", "Income", "Expenses", "Liabilities", "Various"]:
-    """Return root of account on `other side` of a transaction.
-
-    Parameters
-    ----------
-    txn
-        Transaction to be queried.
-
-    Returns
-    -------
-        "Assets" if all postings are to "Assets" accounts.
-
-        "Various" if there are postings to more than one type of account
-        other than "Assets"
-
-        Otherwise the other type of account to which all postings are made
-        (other than "Assets"). Treats "Liabilities" as if "Expenses".
-    """
-    assets = "Assets"
-    accounts_types = utils.get_accounts_types(txn)
-    if accounts_types == {assets}:
-        return assets
-    if assets in accounts_types:
-        accounts_types.remove(assets)
-    if len(accounts_types) == 1:
-        account_type = accounts_types.pop()
-        if account_type == "Liabilities":
-            account_type = "Expenses"
-        return account_type
-    return "Various"
-
-
 GrouperKey = tuple[str, str]
 
 
 def get_definition_group(definition: Transaction) -> GrouperKey:
-    """Return name of group corresponding with a definition.
+    """Return key of group corresponding with a definition.
 
     Parameters
     ----------
     definition
-        definition to query.
+        Definition to query.
 
     Returns
     -------
     2-tuple of str
-        [0] Assets account
-        [1] Other account type (either 'Assets', 'Income', 'Expenses'
-        'Liabilities' or 'Various'.
+        [0] Balance sheet account. This will be the account of the first
+        defined posting to either an "Assets" or "Liabilites" account.
 
-        Or, ("Others", "_") if txn has with no posting to an Asset
-         account.
+        [1] Other-side account type. Type of accounts on 'other-side'. This
+        will be a key of `OTHER_SIDE_ACCOUNTS`.
+        "Liabilities" are treated as "Expenses" for the purpose of
+        evaluate the other-side account type.
+        "Various" if there are `other-side` postings to more than one type
+        of account.
 
         Example: ("Assets:US:Chase:Checking", "Expenses")
     """
-    assets_accounts = utils.get_assets_accounts(definition)
-    if not assets_accounts:
-        return ("Others", "_")
-    other_side = get_other_side_acc_type(definition)
-    key = (assets_accounts[0], other_side)
-    return key
+    bal_sheet_account = utils.get_balance_sheet_accounts(definition)[0]
+    other_sides = set()
+    for posting in definition.postings:
+        account = posting.account
+        if account == bal_sheet_account:
+            continue
+        account_type = get_account_type(account)
+        if account_type == "Assets":
+            other_sides.add("Assets")
+        elif account_type == "Income":
+            other_sides.add("Income")
+        else:
+            other_sides.add("Expenses")
+    other_side = "Various" if len(other_sides) > 1 else other_sides.pop()
+    return (bal_sheet_account, other_side)
 
 
 def group_definitions(
@@ -325,15 +302,16 @@ def get_group_heading(group: GrouperKey) -> str:
     group
         Definitions group for which require section heading.
     """
-    asset_acc, other_side_type = group
+    bal_sheet_acc, other_side_type = group
     if other_side_type == "Assets":
-        return f"Transactions between {asset_acc} and other Assets accounts"
+        insert = "other " if utils.is_assets_account(bal_sheet_acc) else ""
+        return f"Transactions between '{bal_sheet_acc}' and {insert}Assets accounts"
     elif other_side_type == "Expenses":
-        return f"{asset_acc} to Expenses and Liabilities"
+        return f"'{bal_sheet_acc}' to Expenses and Liabilities"
     elif other_side_type == "Income":
-        return f"Income to {asset_acc}"
+        return f"Income to '{bal_sheet_acc}'"
     elif other_side_type == "Various":
-        return f"{asset_acc} to various account types"
+        return f"'{bal_sheet_acc}' to various account types"
     return "Other definitions"
 
 

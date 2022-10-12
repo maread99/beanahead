@@ -8,7 +8,7 @@ import re
 
 from beancount import loader
 from beancount.core import data
-from beancount.core.account_types import is_account_type, get_account_type
+from beancount.core.account_types import is_account_type
 from beancount.core.data import Transaction
 from beancount.core.interpolate import AUTOMATIC_META
 from beancount.ingest.extract import HEADER
@@ -541,8 +541,26 @@ def get_assets_accounts(txn: Transaction) -> list[str]:
     return [post.account for post in txn.postings if is_assets_account(post.account)]
 
 
-def get_accounts(txn: Transaction) -> list[str]:
-    """Return all accounts associated with a transaction.
+BAL_SHEET_ACCS = ["Assets", "Liabilities"]
+
+
+def is_balance_sheet_account(string: str) -> bool:
+    """Query if a string represents a balance sheet account.
+
+    Balance sheet accounts considered as "Assets" and "Liabilities" only.
+
+    Parameters
+    ----------
+    txn
+        Transaction to query.
+    """
+    return any(is_account_type(acc_type, string) for acc_type in BAL_SHEET_ACCS)
+
+
+def get_balance_sheet_accounts(txn: Transaction) -> list[str]:
+    """Return all balance sheet accounts associated with a transaction.
+
+    Balance sheet accounts considered as "Assets" and "Liabilities" only.
 
     Parameters
     ----------
@@ -552,27 +570,11 @@ def get_accounts(txn: Transaction) -> list[str]:
     Returns
     -------
     list of str
-        All accounts to which postings are made.
+        All balance sheet accounts to which postings are made.
     """
-    return [post.account for post in txn.postings]
-
-
-def get_accounts_types(txn: Transaction) -> set[str]:
-    """Return set of account types associated with a transaction.
-
-    Parameters
-    ----------
-    txn
-        Transaction to query.
-
-    Returns
-    -------
-    set of str
-        All account types to which a posting is made. For example,
-        {'Assets', 'Expenses'}
-    """
-    accounts_types = [get_account_type(acc) for acc in get_accounts(txn)]
-    return set(accounts_types)
+    return [
+        post.account for post in txn.postings if is_balance_sheet_account(post.account)
+    ]
 
 
 def get_content(path: Path) -> str:

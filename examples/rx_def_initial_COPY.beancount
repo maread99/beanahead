@@ -4,15 +4,15 @@ pushtag #rx_txn
 ;; All accounts referenced by definitions should be defined on the main ledger.
 ;; Enter definitions after this line...
 
-* Monthly expenses
+* Expenses
 
 2022-10-05 * "EDISON" "Electricity, monthly fixed tarrif"
   freq: "m"
   Assets:US:BofA:Checking                     -65.00 USD
   Expenses:Home:Electricity
 
-2022-10-15 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
-  ; 2022-10-15 is a Saturday. By default, the next generated transaction
+2022-10-16 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
+  ; 2022-10-16 is a Sunday. By default, the next generated transaction
   ; will be rolled forwards to 2022-10-17 (Monday) although transactions
   ; thereafter will be dated the 15 of each month whenever the 15 is a
   ; weekday.
@@ -20,18 +20,28 @@ pushtag #rx_txn
   Assets:US:BofA:Checking                     -55.00 USD
   Expenses:Home:Phone
 
+2023-04-18 * "Erie" "Home insurance, yearly premium"
+  freq: "y" ; annual frequency
+  Assets:US:BofA:Checking                    -427.60 USD
+  Expenses:Home:Insurance
+
+
 * Define frequency as a pandas frequency
 
 2022-10-01 * "Account Fee" "Monthly bank fee"
   freq: "BMS" ; date transactions as first business day of each month
-  Assets:US:BofA:Checking                           -4.00 USD
+  Assets:US:BofA:Checking                      -4.00 USD
   Expenses:Financial:Fees
 
 2022-10-31 * "Slate" "Credit Card payment"
   freq: "BM" ; date transactions as last business day of each month
-  Assets:US:BofA:Checking                           -250.00 USD
+  Assets:US:BofA:Checking                     -250.00 USD
   Liabilities:US:Chase:Slate
 
+2022-10-15 * "Metro" "Tram tickets, Metro Authority"
+  freq: "SMS" ; semi-month start, 1st and 15th of every month
+  Liabilities:US:Chase:Slate                  -120.00 USD
+  Expenses:Transport:Tram
 
 
 * Prevent rolling forwards a quarterly transfer between accounts
@@ -99,14 +109,6 @@ pushtag #rx_txn
   freq: "3m"
   Assets:US:ETrade:Cash                             29.59 USD
   Income:US:ETrade:GLD:Dividend
-
-
-* Yearly expense
-
-2023-04-18 * "Erie" "Home insurance, yearly premium"
-  freq: "y"
-  Assets:US:BofA:Checking                         -427.60 USD
-  Expenses:Home:Insurance
 
 
 ;; ...enter definitions before this line.
