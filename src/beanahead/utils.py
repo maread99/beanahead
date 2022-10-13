@@ -525,20 +525,21 @@ def is_assets_account(string: str) -> bool:
     return is_account_type("Assets", string)
 
 
-def get_assets_accounts(txn: Transaction) -> list[str]:
-    """Return all assets accounts associated with a transaction.
+# TODO DEL IF NOT REQUIRED
+# def get_assets_accounts(txn: Transaction) -> list[str]:
+#     """Return all assets accounts associated with a transaction.
 
-    Parameters
-    ----------
-    txn
-        Transaction to query.
+#     Parameters
+#     ----------
+#     txn
+#         Transaction to query.
 
-    Returns
-    -------
-    list of str
-        All assets accounts to which postings are made.
-    """
-    return [post.account for post in txn.postings if is_assets_account(post.account)]
+#     Returns
+#     -------
+#     list of str
+#         All assets accounts to which postings are made.
+#     """
+#     return [post.account for post in txn.postings if is_assets_account(post.account)]
 
 
 BAL_SHEET_ACCS = ["Assets", "Liabilities"]
@@ -598,6 +599,7 @@ def compose_entries_content(entries: data.Directive | data.Entries) -> str:
     for entry in entries:
         if isinstance(entry, Transaction):
             entry = reverse_automatic_balancing(entry)
+            entry = remove_tags(entry, TAGS_X)
         content += printer.format_entry(entry) + "\n"
     return content[:-1]
 

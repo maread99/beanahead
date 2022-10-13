@@ -105,25 +105,25 @@ def get_close_txns(
     return list(data.iter_entry_dates(txns, start, end))
 
 
-def asset_accounts_match(a: Transaction, b: Transaction) -> bool:
-    """Query if two transactions have postings to the same Asset account."""
-    accounts_a = utils.get_assets_accounts(a)
-    accounts_b = utils.get_assets_accounts(b)
+def bal_sheet_accounts_match(a: Transaction, b: Transaction) -> bool:
+    """Query if two transactions have postings to same bal sheet acc."""
+    accounts_a = utils.get_balance_sheet_accounts(a)
+    accounts_b = utils.get_balance_sheet_accounts(b)
     return bool(set(accounts_a).intersection(set(accounts_b)))
 
 
 def get_accounts_matches(
     txns: list[Transaction], x_txn: Transaction
 ) -> list[Transaction]:
-    """Return txns matching an Expected Transaction's assets account.
+    """Return txns matching an Expected Transaction's bal sheet acc.
 
     Returns
     -------
     list of Transaction
-        Transactions of `txns` with a posting to an assets account to which
-        the `x_txn` also has a posting.
+        Transactions of `txns` with a posting to a balance sheet account
+        to which the `x_txn` also has a posting.
     """
-    return [txn for txn in txns if asset_accounts_match(txn, x_txn)]
+    return [txn for txn in txns if bal_sheet_accounts_match(txn, x_txn)]
 
 
 def get_basic_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction]:
@@ -134,7 +134,7 @@ def get_basic_matches(txns: list[Transaction], x_txn: Transaction) -> list[Trans
     list of Transaction
         Transactions of `txns` that match `x_txn` based on:
             Closeness of dates (5 days)
-            Postings to same Assets account.
+            Postings to same balance sheet account.
     """
     matches = get_close_txns(txns, x_txn, timedelta(days=5))
     return get_accounts_matches(matches, x_txn)

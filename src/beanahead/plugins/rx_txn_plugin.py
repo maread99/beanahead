@@ -1,7 +1,5 @@
 """Plugins for Regular Expected Transactions."""
 
-import datetime
-
 from beancount.core.data import Entries, Options, Transaction
 from beanahead.utils import TAG_RX
 
@@ -20,9 +18,7 @@ def convert_meta(entries: Entries, _: Options) -> tuple[Entries, list[tuple]]:
         if (not isinstance(entry, Transaction)) or TAG_RX not in entry.tags:
             continue
         entry.meta.setdefault("name", entry.payee)
-        final = entry.meta.setdefault("final", None)
-        if final is not None:
-            entry.meta["final"] = datetime.date.fromisoformat(final)
+        entry.meta.setdefault("final", None)
         entry.meta.setdefault("roll", True)
 
     return entries, (errors := [])

@@ -194,9 +194,7 @@ def convert_for_printer(txn: Transaction) -> Transaction:
         del meta["final"]
     if meta["roll"]:
         del meta["roll"]
-    converted = txn._replace(meta=meta)
-    converted = utils.remove_tags(converted, utils.TAG_RX)
-    return converted
+    return txn._replace(meta=meta)
 
 
 OTHER_SIDE_ACCOUNTS = {
@@ -332,6 +330,7 @@ def compose_definitions_content(txns: list[Transaction]) -> str:
         group_txns.sort(key=lambda txn: txn.meta["name"])
         for txn in group_txns:
             txn = utils.reverse_automatic_balancing(txn)
+            txn = utils.remove_tags(txn, utils.TAG_RX)
             content += "\n" + printer(txn)
         content += "\n\n"
     return content

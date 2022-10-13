@@ -61,7 +61,7 @@ pushtag #rx_txn
   freq: "BM"
   ; No transaction will be created which would be dated (before any
   ; rolling) later than 2022-11-30
-  final: "2022-11-30"
+  final: 2022-11-30
   Liabilities:US:Chase:HirePurchase                322.00 USD
   Assets:US:BofA:Checking
 
