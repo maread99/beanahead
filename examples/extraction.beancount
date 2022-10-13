@@ -1,46 +1,36 @@
 ;; -*- mode: beancount -*-
 
-;; extracted transaction file fabricated for purpose of README tutorial and testing
-;; 'tid' meta field (test id) is included for test purposes and can be otherwise ignored
-
+;; extracted transaction file fabricated for purpose of README tutorial
 
 **** C:/Users/Path/to/boa_statement_oct22.csv
 
 2022-10-03 * "Account Fee" ""
-	tid: "1"
   Assets:US:BofA:Checking						 	 -4.00 USD
 
-
 2022-10-05 * "Edison Power green tariff" ""
-	tid: "2"
   Assets:US:BofA:Checking							-65.00 USD
 
+; assumes extraction process deduplicated transactions extracted from vanguard and boa
+2022-10-07 * "BayBook 2022-09-23 through 2022-10-06" ""
+  Assets:US:BofA:Checking          	 1350.60 USD
+  Assets:US:Vanguard:Cash          	 1200.00 USD
+
 2022-10-17 * "Verizon Mobile" ""
-	tid: "3"
   Assets:US:BofA:Checking           	-72.63 USD
   Expenses:Home:Phone
 
 ; assumes extraction process deduplicated transactions extracted from vanguard and boa
-2022-10-07 * "BayBook 2022-09-23 through 2022-10-06" ""
-	tid: "4"
-  Assets:US:BofA:Checking          	 1350.60 USD
-  Assets:US:Vanguard:Cash          	 1200.00 USD
-
-; assumes extraction process deduplicated transactions extracted from vanguard and boa
 2022-10-21 * "BayBook 2022-10-07 through 2022-10-20" ""
-	tid: "5"
   Assets:US:BofA:Checking          	 1350.60 USD
   Assets:US:Vanguard:Cash          	 1200.00 USD
 
-; assumes extraction process deduplicated transactions extracted from boa and chase
+; assumes extraction process deduplicated transactions extracted from boa and chase.
 2022-10-31 * "Chase Bank Slate" ""
-	tid: "6"
   Assets:US:BofA:Checking          	 -461.00 USD
   Liabilities:US:Chase:Slate        	461.00 USD
 
 ; assumes extraction process deduplicated transactions extracted from boa and chase HP
 2022-10-31 * "Chase Hire Purchase" ""
-	tid: "7"
   Liabilities:US:Chase:HirePurchase 	324.61 USD
   Assets:US:BofA:Checking  					 -324.61 USD
 
@@ -48,23 +38,28 @@
 **** C:/Users/Path/to/vanguard_statement_oct22.csv
 
 2022-10-07 * "VBMPX" ""
-	tid: "8"
-  Assets:US:Vanguard:VBMPX           49.42 VBMPX @ 9.7115 USD
+  Assets:US:Vanguard:VBMPX                     49.42 VBMPX @ 9.7115 USD
 
 2022-10-07 * "RGAGX" ""
-	tid: "9"
-  Assets:US:Vanguard:RGAGX           12.84 RGAGX @ 56.0763 USD
+  Assets:US:Vanguard:RGAGX                     12.84 RGAGX @ 56.0763 USD
 
 2022-10-21 * "VBMPX" ""
-	tid: "10"
-  Assets:US:Vanguard:VBMPX           49.13 VBMPX @ 9.7688 USD
+  Assets:US:Vanguard:VBMPX                     49.13 VBMPX @ 9.7688 USD
 
 2022-10-21 * "RGAGX" ""
-	tid: "11"
-  Assets:US:Vanguard:RGAGX					 12.78 RGAGX @ 56.3396 USD
+  Assets:US:Vanguard:RGAGX                     12.78 RGAGX @ 56.3396 USD
 
 **** C:/Users/Path/to/chase_statement_oct22.csv
 
-2022-10-17 * "Metro Transport Authority" ""
-	tid: "12"
-  Liabilities:US:Chase:Slate       -120.00 USD
+2022-10-03 * "Jewel of Morroco" ""
+  Liabilities:US:Chase:Slate                  -18.21 USD
+
+2022-10-30 * "Mercadito" ""
+  Liabilities:US:Chase:Slate                 -102.93 USD
+  Expenses:Food:Alcohol                       -40.00 USD
+
+2022-10-15 * "Goba Goba" ""
+  Liabilities:US:Chase:Slate                  -23.44 USD
+
+2022-10-23 * "Chichipotle" ""
+  Liabilities:US:Chase:Slate                  -38.01 USD

@@ -9,7 +9,6 @@ pushtag #rx_txn
 
 2023-02-13 * "ETrade Transfer" "Transfering accumulated savings to other account"
   freq: "3m"
-  name: "ETrade Transfer"
   roll: FALSE
   Assets:US:BofA:Checking  -4000 USD
   Assets:US:ETrade:Cash
@@ -19,31 +18,26 @@ pushtag #rx_txn
 
 2023-01-02 * "Account Fee" "Monthly bank fee"
   freq: "BMS"
-  name: "Account Fee"
   Assets:US:BofA:Checking  -4.00 USD
   Expenses:Financial:Fees
 
 2023-01-05 * "EDISON" "Electricity, monthly fixed tarrif"
   freq: "m"
-  name: "EDISON"
   Assets:US:BofA:Checking    -65.00 USD
   Expenses:Home:Electricity
 
 2023-04-18 * "Erie" "Home insurance, yearly premium"
   freq: "y"
-  name: "Erie"
   Assets:US:BofA:Checking  -427.60 USD
   Expenses:Home:Insurance
 
 2023-01-31 * "Slate" "Credit Card payment"
   freq: "BM"
-  name: "Slate"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 
 2023-01-16 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
   freq: "m"
-  name: "Verizon"
   Assets:US:BofA:Checking  -55.00 USD
   Expenses:Home:Phone
 
@@ -52,7 +46,6 @@ pushtag #rx_txn
 
 2023-01-13 * "BayBook" "Payroll"
   freq: "2w"
-  name: "BayBook"
   Assets:US:BofA:Checking                      1350.60 USD
   Assets:US:Vanguard:Cash                      1200.00 USD
   Income:US:BayBook:Salary                    -4615.38 USD
@@ -77,7 +70,6 @@ pushtag #rx_txn
 
 2023-03-15 * "Dividend" "Dividends on portfolio"
   freq: "3m"
-  name: "Dividend"
   Assets:US:ETrade:Cash          29.59 USD
   Income:US:ETrade:GLD:Dividend
 
@@ -86,13 +78,11 @@ pushtag #rx_txn
 
 2023-01-13 * "RGAGX" "Investing 60% of cash in RGAGX"
   freq: "2w"
-  name: "RGAGX"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
 
 2023-01-13 * "VBMPX" "Investing 40% of cash in VBMPX"
   freq: "2w"
-  name: "VBMPX"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:VBMPX  50 VBMPX @ 9.5988 USD
 
@@ -101,7 +91,6 @@ pushtag #rx_txn
 
 2023-01-01 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
-  name: "Metro"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 

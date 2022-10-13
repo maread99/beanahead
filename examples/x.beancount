@@ -2,6 +2,27 @@ option "title" "Expected Transactions Ledger"
 pushtag #x_txn
 ;; Enter expected transactions after this line...
 
+2022-10-03 * "Morroco" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate                  -18.21 USD
+  Expenses:Food:Restaurant
+
+2022-10-10 * "Mercadito" "Night on the tiles"
+  Liabilities:US:Chase:Slate                 -102.93 USD
+  Expenses:Food:Coffee                         -8.00 USD
+  Expenses:Food:Alcohol                       -50.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-14 * "Gobbba" "Name's wrong but I'll match on value"
+  Liabilities:US:Chase:Slate                  -23.44 USD
+  Expenses:Food:Restaurant
+
+2022-10-21 * "Chichipotle" "Value's wrong but payee will match and date is close enough"
+  Liabilities:US:Chase:Slate                  -30.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-29 * "25 Degrees Burger Bar" "I won't match with anything"
+  Liabilities:US:Chase:Slate                   -12.00 USD
+
 
 ;; ...enter expected transactions before this line.
 poptag #x_txn

@@ -184,8 +184,40 @@ def get_number_for_account(txn: Transaction, account: str) -> Decimal:
     return number.ZERO if posting is None else posting.units.number
 
 
+def decimal_diff(a: Decimal, b: Decimal) -> Decimal:
+    """Return difference of a decimal relative to another.
+
+    Returns
+    -------
+    Decimal
+        Decimal bewteen 0 and 1 representing percentage difference of
+        `b` from `a`.
+
+        Decimal(1) if the signs of `a` and `b` are different.
+
+    Examples
+    --------
+    >>> decimal_diff(Decimal("40"), Decimal("40"))
+    Decimal('0')
+    >>> decimal_diff(Decimal("40"), Decimal("50"))
+    Decimal('0.25')
+    >>> decimal_diff(Decimal("50"), Decimal("40"))
+    Decimal('0.2')
+    >>> decimal_diff(Decimal("-50"), Decimal("-40"))
+    Decimal('0.2')
+    >>> decimal_diff(Decimal("-50"), Decimal("40"))
+    Decimal('1')
+    """
+    if a * b < number.ZERO:
+        return number.ONE
+    abs_diff = a - b
+    return abs(abs_diff / a)
+
+
 def number_diff(a: Transaction, b: Transaction) -> Decimal:
     """Return percentage difference between number of two transactions.
+
+    Return represents percentage difference of number(s) of `b` from `a`.
 
     Returns
     -------
@@ -206,11 +238,9 @@ def number_diff(a: Transaction, b: Transaction) -> Decimal:
     for account in get_common_accounts(a, b):
         num_a = get_number_for_account(a, account)
         num_b = get_number_for_account(b, account)
-        if num_a * num_b < number.ZERO:
-            return number.ONE
-        if num_a > num_b:
-            num_a, num_b = num_b, num_a
-        diff = number.ONE - (num_a / num_b)
+        diff = decimal_diff(num_a, num_b)
+        if diff == number.ONE:
+            return diff
         diffs.append(diff)
     if not diffs:
         return number.ONE
@@ -226,7 +256,7 @@ def get_sortkey_number(x_txn: Transaction) -> Callable:
 
     def sortkey_number(txn: Transaction) -> Decimal:
         """sortkey to sort transactions by difference in number."""
-        return number_diff(txn, x_txn)
+        return number_diff(x_txn, txn)
 
     return sortkey_number
 
@@ -271,7 +301,7 @@ def get_number_matches(
     txns: list[Transaction], x_txn: Transaction, margin: Decimal = number.ZERO
 ) -> list[Transaction]:
     """Return transactions matching expected transaction's numbers."""
-    return [txn for txn in txns if number_diff(txn, x_txn) <= margin]
+    return [txn for txn in txns if number_diff(x_txn, txn) <= margin]
 
 
 def get_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction]:

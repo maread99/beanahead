@@ -1,0 +1,62 @@
+option "title" "Expected Transactions Ledger"
+pushtag #x_txn
+;; Enter expected transactions after this line...
+
+2022-10-01 * "Argo" ""
+  matches: "0" ; matches nothing
+  Liabilities:US:Chase:Slate                        -6.28 USD
+  Expenses:Food:Coffee
+
+2022-10-08 * "Morroco" "Eating out with work buddies"
+  matches: "50" ; matches on exactly 5 days
+  Liabilities:US:Chase:Slate                       -71.42 USD
+  Expenses:Food:Restaurant
+
+2022-10-03 * "Modagor" "Eating out after work"
+  matches: "0" ; no match as although date and value match, account does not
+  Assets:US:BofA:Checking                          -20.41 USD
+  Expenses:Food:Restaurant
+
+2022-10-09 * "Modagor" "Eating out after work"
+  matches: "0" ; no match as > 5 days
+  Liabilities:US:Chase:Slate                       -20.41 USD
+  Expenses:Food:Restaurant
+
+2022-10-03 * "Modor" "Eating out after work"
+  matches: "0" ; no match as payee doesn't match and value > 2% off (51 is -$20.41)
+  Liabilities:US:Chase:Slate                       -20.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-15 * "Gobbbbba" "Eating out after work"
+  matches: "52" ; payee doesn't match, matches on 2% limit (52 is -$40.80)
+  Liabilities:US:Chase:Slate                       -40.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-21 * "Chichipotle" "Eating out with Natasha"
+  matches: "55, 54, 53" ; payee matches, ordered by value, not ordered by date
+  Liabilities:US:Chase:Slate                       -33.01 USD
+  Expenses:Food:Restaurant
+
+2022-10-21 * "King Soya" "Eating out with Bill"
+  matches: "56, 57, 58" ; payee does not match, matches on value within 2%
+  ; matches ordered by date delta, not ordered by value
+  Liabilities:US:Chase:Slate                       -20.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-27 * "Degrees" "The only one of three that was included to expected txns"
+  matches: "59, 60" ; payee matches 3, all exact value, should match only those
+  ; on closest date 2022-10-29
+  Liabilities:US:Chase:Slate                       -8.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-30 * "Mercadito" "Alcohol on 62 should be 40, coffee 8, restaurant empty"
+  matches: "62" ; payee matches, 62 includes different alcohol value (40 USD),
+  ; check other other-side accounts included and any values defined on incoming txn
+  ; take precedence
+  Liabilities:US:Chase:Slate                 -102.93 USD
+  Expenses:Food:Coffee                         -8.00 USD
+  Expenses:Food:Alcohol                       -50.00 USD
+  Expenses:Food:Restaurant
+
+;; ...enter expected transactions before this line.
+poptag #x_txn

@@ -42,7 +42,7 @@ include "x.beancount"
 
 * Liabilities
 
-2020-05-12 open Liabilities:US:Chase:Slate                      USD
+2020-05-12 open Liabilities:US:Chase:Slate                 USD
 2020-05-12 open Liabilities:US:Chase:HirePurchase          USD
 
 * Taxable Investments
@@ -97,5 +97,8 @@ include "x.beancount"
 2020-01-01 open Expenses:Home:Phone
 2020-01-01 open Expenses:Financial:Fees
 2020-01-01 open Expenses:Transport:Tram
+2020-01-01 open Expenses:Food:Restaurant
+2020-01-01 open Expenses:Food:Alcohol
+2020-01-01 open Expenses:Food:Coffee
 
 ;; PREVIOUS TRANSACTIONS WOULD BE LISTED HERE
