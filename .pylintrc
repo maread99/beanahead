@@ -62,7 +62,8 @@ output-format=colorized
 
 # Good variable names which should always be accepted, separated by a comma.
 good-names=i, j,
-           n,
+        k, v,
+        n,
 
 [FORMAT]
 

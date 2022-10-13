@@ -171,32 +171,6 @@ def roll_txns(txns: list[Transaction]) -> list[Transaction]:
     return rtrn
 
 
-def convert_for_printer(txn: Transaction) -> Transaction:
-    """Convert a regular transaction for printing to a .beancount file.
-
-    Reverses any interpolation of numbers for missing fields.
-    Removes meta fields that have default values.
-    Removes reg_txn tag.
-
-    Parameters
-    ----------
-    txn
-        Transaction to convert.
-
-    Returns
-    -------
-    Transaction
-        Converted copy of `txn`.
-    """
-    txn = utils.reverse_automatic_balancing(txn)
-    meta = copy.deepcopy(txn.meta)
-    if meta["final"] is None:
-        del meta["final"]
-    if meta["roll"]:
-        del meta["roll"]
-    return txn._replace(meta=meta)
-
-
 OTHER_SIDE_ACCOUNTS = {
     "Assets": 0,
     "Income": 1,
@@ -327,10 +301,9 @@ def compose_definitions_content(txns: list[Transaction]) -> str:
     for key in sorted(grouper.keys(), key=sortkey_grouper):
         content += f"* {get_group_heading(key)}\n"
         group_txns = grouper[key]
-        group_txns.sort(key=lambda txn: txn.meta["name"])
+        group_txns.sort(key=lambda txn: txn.payee)
         for txn in group_txns:
-            txn = utils.reverse_automatic_balancing(txn)
-            txn = utils.remove_tags(txn, utils.TAG_RX)
+            txn = utils.prepare_for_printer(txn)
             content += "\n" + printer(txn)
         content += "\n\n"
     return content
@@ -374,7 +347,6 @@ def compose_new_content(file_key: str, txns: list[Transaction]) -> str:
             f" `file_key` are {valid_keys}."
         )
 
-    txns = [convert_for_printer(txn) for txn in txns]
     if file_key.endswith("def"):
         txns_content = compose_definitions_content(txns)
     else:
@@ -427,7 +399,7 @@ class Admin:
 
     def __init__(self, defs: str, ledger: str, ledger_main: str | None = None):
         self.path_defs = utils.get_verified_path(defs, "rx_def")
-        self._verify_names_unique()
+        self._verify_payees_unique()
 
         self.path_ledger = utils.get_verified_path(ledger, "rx")
 
@@ -451,7 +423,7 @@ class Admin:
         -------
         dict
             key: str
-                Regular Expected Transaction name.
+                Regular Expected Transaction payee.
 
             value: Transaction
                 Unmodified version of last entry injected for each regular
@@ -459,26 +431,28 @@ class Admin:
                 reg_txn definitions file passed to the constructor.
         """
         txns = utils.get_unverified_txns(self.path_defs)
-        return {txn.meta["name"]: txn for txn in txns}
+        return {txn.payee: txn for txn in txns}
 
     @property
-    def names(self) -> list[str]:
-        """Names of defined Regular Expected Transactions."""
+    def payees(self) -> list[str]:
+        """Payees defined Regular Expected Transactions."""
         return list(self.rx_defs.keys())
 
-    def _verify_names_unique(self):
-        """Raise error if rx txn names are not unique.
+    def _verify_payees_unique(self):
+        """Raise error if rx txn payees are not unique.
 
-        Name uniqueness is case-INsensitive, i.e. "Rent" and "rent" are
-        considered to be repeated names, not unique.
+        Payee uniqueness is case-INsensitive, i.e. "Rent" and "rent" are
+        considered to be repeated payees, not unique.
         """
-        names = [name.lower() for name in self.names]
-        if len((unique_names := set(names))) < len(names):
-            repeated_names = [name for name in unique_names if names.count(name) > 1]
+        payees = [payee.lower() for payee in self.payees]
+        if len((unique_payees := set(payees))) < len(payees):
+            repeated_payees = [
+                payee for payee in unique_payees if payees.count(payee) > 1
+            ]
             msg = (
-                "The names of each regular expected transaction must be unique"
-                " (case insensitive) although the following name(s) are"
-                f" repeated in the file {self.path_defs}:\n{repeated_names}."
+                "The payee of each regular expected transaction must be unique"
+                " (case insensitive) although the following payees are"
+                f" repeated in the file {self.path_defs}:\n{repeated_payees}."
             )
             raise RegularTransactionsDefinitionError(msg)
 

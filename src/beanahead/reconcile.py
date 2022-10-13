@@ -415,8 +415,14 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
     """Update a incoming txn with data from a matched Expected Transaction.
 
     The following fields of the `new_txn` will be updated with the
-    corresponding fields of `x-txn`:
+    corresponding fields of `x_txn`:
         narration
+        tags (excluding expected transaction tags, for example #rx_txn)
+        meta:
+            Items of `x_txn` meta will be added to the `new_txn` meta if
+            the key is not already present. This excludes beanahead meta
+            fields ('final', 'roll' etc) which will not be added to the
+            `new_txn`.
         postings:
             postings to the `x_txn` will be added to the `new_txn` posting
             if the `new_txn` does not otherwise include a posting to the
@@ -427,8 +433,8 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
             the `new_txn` will be updated to reflect the value as defined
             on the `x_txn`
 
-    All other fields ('date', 'payee', 'meta' etc), will remain as defined
-    on the `new_txn`.
+    All other fields ('date', 'payee' etc), will remain as defined on the
+    `new_txn`.
 
     Parameters
     ----------
@@ -456,6 +462,11 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
 
     if tags_to_add := x_txn.tags - utils.TAGS_X:
         new_txn = utils.add_tags(new_txn, tags_to_add)
+
+    for k, v in x_txn.meta.items():
+        if k in utils.RX_META_DFLTS or k in new_txn.meta:
+            continue
+        new_txn.meta[k] = v
 
     new_txn_accounts = get_entry_accounts(new_txn)
     for posting in x_txn.postings:

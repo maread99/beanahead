@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import datetime
 from pathlib import Path
 import re
@@ -28,6 +29,10 @@ TAG_X = "x_txn"
 TAG_RX = "rx_txn"
 TAGS_X = set([TAG_X, TAG_RX])
 
+RX_META_DFLTS = {
+    "final": None,
+    "roll": True,
+}
 
 SEPARATOR_LINE = "-" * 77 + "\n"
 TODAY = datetime.datetime.now().date()
@@ -525,23 +530,6 @@ def is_assets_account(string: str) -> bool:
     return is_account_type("Assets", string)
 
 
-# TODO DEL IF NOT REQUIRED
-# def get_assets_accounts(txn: Transaction) -> list[str]:
-#     """Return all assets accounts associated with a transaction.
-
-#     Parameters
-#     ----------
-#     txn
-#         Transaction to query.
-
-#     Returns
-#     -------
-#     list of str
-#         All assets accounts to which postings are made.
-#     """
-#     return [post.account for post in txn.postings if is_assets_account(post.account)]
-
-
 BAL_SHEET_ACCS = ["Assets", "Liabilities"]
 
 
@@ -591,15 +579,71 @@ def get_content(path: Path) -> str:
     return content
 
 
+def clean_rx_meta(txn: Transaction) -> Transaction:
+    """Clean a regular expected transaction's meta fields for printing.
+
+    Removes meta fields that have default values.
+
+    Parameters
+    ----------
+    txn
+        Regular Expected Transaction.
+
+    Returns
+    -------
+    Transaction
+        Copy of `txn` with cleaned copy of `txn.meta`.
+    """
+    meta = copy.deepcopy(txn.meta)
+    for k, v in RX_META_DFLTS.items():
+        if meta[k] is v:
+            del meta[k]
+    return txn._replace(meta=meta)
+
+
+def prepare_for_printer(txn: Transaction) -> Transaction:
+    """Prepare a transaction for printing to a .beancount file.
+
+        Reverses any interpolation of numbers for missing fields.
+
+        Removes meta fields that have default values (for Regular Expected
+        Transactions).
+
+        Removes any expected transactions tags.
+
+    Parameters
+    ----------
+    Transaction
+        Transaction to prepare for printing.
+
+    Returns
+    -------
+    Transaction
+        Copy of `txn` suitable for printing to a ledger or definitions
+        file.
+    """
+    txn = reverse_automatic_balancing(txn)
+    if TAG_RX in txn.tags:
+        txn = clean_rx_meta(txn)
+    if TAGS_X & txn.tags:
+        txn = remove_tags(txn, TAGS_X)
+    return txn
+
+
 def compose_entries_content(entries: data.Directive | data.Entries) -> str:
-    """Return printable string representing one or more entries."""
+    """Return printable string representing one or more entries.
+
+    Parameters
+    ----------
+    entries
+        Entries to comprise content.
+    """
     if not isinstance(entries, list):
         entries = [entries]
     content = ""
     for entry in entries:
         if isinstance(entry, Transaction):
-            entry = reverse_automatic_balancing(entry)
-            entry = remove_tags(entry, TAGS_X)
+            entry = prepare_for_printer(entry)
         content += printer.format_entry(entry) + "\n"
     return content[:-1]
 
