@@ -91,6 +91,7 @@ pushtag #rx_txn
 
 2023-01-01 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 

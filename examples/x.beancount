@@ -22,6 +22,7 @@ pushtag #x_txn
 
 2022-10-29 * "25 Degrees Burger Bar" "I won't match with anything"
   Liabilities:US:Chase:Slate                   -12.00 USD
+  Expenses:Food:Restaurant
 
 
 ;; ...enter expected transactions before this line.
