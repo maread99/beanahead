@@ -1,0 +1,102 @@
+option "title" "Regular Expected Transaction Definitions"
+plugin "rx_txn_plugin"
+pushtag #rx_txn
+;; All accounts referenced by definitions should be defined on the main ledger.
+;; Enter definitions after this line...
+
+
+* Transactions between 'Assets:US:BofA:Checking' and other Assets accounts
+
+2023-02-13 * "ETrade Transfer" "Transfering accumulated savings to other account"
+  freq: "3m"
+  roll: FALSE
+  Assets:US:BofA:Checking  -4000 USD
+  Assets:US:ETrade:Cash
+
+
+* 'Assets:US:BofA:Checking' to Expenses and Liabilities
+
+2023-01-02 * "Account Fee" "Monthly bank fee"
+  freq: "BMS"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees
+
+2023-01-05 * "EDISON" "Electricity, monthly fixed tarrif"
+  freq: "m"
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity
+
+2023-04-18 * "Erie" "Home insurance, yearly premium"
+  freq: "y"
+  Assets:US:BofA:Checking  -427.60 USD
+  Expenses:Home:Insurance
+
+2023-01-31 * "Slate" "Credit Card payment"
+  freq: "BM"
+  Assets:US:BofA:Checking     -250.00 USD
+  Liabilities:US:Chase:Slate
+
+2023-01-16 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
+  freq: "m"
+  Assets:US:BofA:Checking  -55.00 USD
+  Expenses:Home:Phone
+
+
+* 'Assets:US:BofA:Checking' to various account types
+
+2023-01-13 * "BayBook" "Payroll"
+  freq: "2w"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:BayBook:Salary                    -4615.38 USD
+  Income:US:BayBook:GroupTermLife               -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2020:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2020:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2020:US:State                 365.08 USD
+  Expenses:Taxes:Y2020:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2020:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2020:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2020:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:BayBook:Vacation                         5 VACHR
+  Income:US:BayBook:Vacation                        -5 VACHR
+
+
+* Income to 'Assets:US:ETrade:Cash'
+
+2023-03-15 * "Dividend" "Dividends on portfolio"
+  freq: "3m"
+  Assets:US:ETrade:Cash          29.59 USD
+  Income:US:ETrade:GLD:Dividend
+
+
+* Transactions between 'Assets:US:Vanguard:Cash' and other Assets accounts
+
+2023-01-13 * "RGAGX" "Investing 60% of cash in RGAGX"
+  freq: "2w"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
+
+2023-01-13 * "VBMPX" "Investing 40% of cash in VBMPX"
+  freq: "2w"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:VBMPX  50 VBMPX @ 9.5988 USD
+
+
+* 'Liabilities:US:Chase:Slate' to Expenses and Liabilities
+
+2023-01-01 * "Metro" "Tram tickets, Metro Authority"
+  freq: "SMS"
+  test_meta: "You can include meta fields"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram
+
+
+
+
+;; ...enter definitions before this line.
+poptag #rx_txn

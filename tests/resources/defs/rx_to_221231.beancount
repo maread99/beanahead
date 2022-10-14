@@ -3,22 +3,18 @@ plugin "rx_txn_plugin"
 pushtag #rx_txn
 ;; Transactions should not be manually added to this file.
 
-;; All Oct txns will match with a single transaction of extracted.beancount
 
 2022-10-03 * "Account Fee" "Monthly bank fee"
-  matches: "1" ; matches on payee
   freq: "BMS"
   Assets:US:BofA:Checking  -4.00 USD
   Expenses:Financial:Fees
 
 2022-10-05 * "EDISON" "Electricity, monthly fixed tarrif"
-  matches: "2" ; matches on payee
   freq: "m"
   Assets:US:BofA:Checking    -65.00 USD
   Expenses:Home:Electricity
 
 2022-10-07 * "BayBook" "Payroll"
-  matches: "3" ; matches on payee
   freq: "2w"
   Assets:US:BofA:Checking                      1350.60 USD
   Assets:US:Vanguard:Cash                      1200.00 USD
@@ -40,35 +36,27 @@ pushtag #rx_txn
   Income:US:BayBook:Vacation                        -5 VACHR
 
 2022-10-07 * "VBMPX" "Investing 40% of cash in VBMPX"
-  matches: "8" ; matches on payee, value differs
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:VBMPX  50 VBMPX @ 9.5988 USD
 
 2022-10-07 * "RGAGX" "Investing 60% of cash in RGAGX"
-  matches: "9" ; matches on payee, value differs
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
 
-; tests tag carried over
 2022-10-17 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
-  matches: "4" ; matches on payee, value miles off
   freq: "m"
   Assets:US:BofA:Checking  -55.00 USD
   Expenses:Home:Phone
 
-; tests 'other' meta fields carry over
 2022-10-17 * "Metro" "Tram tickets, Metro Authority"
-  matches: "12" ; matches on payee
   freq: "SMS"
   test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 
-; tests updating incoming transaction with multiple other-side postings.
 2022-10-21 * "BayBook" "Payroll"
-  matches: "5" ; matches on payee
   freq: "2w"
   Assets:US:BofA:Checking                      1350.60 USD
   Assets:US:Vanguard:Cash                      1200.00 USD
@@ -90,26 +78,21 @@ pushtag #rx_txn
   Income:US:BayBook:Vacation                        -5 VACHR
 
 2022-10-21 * "VBMPX" "Investing 40% of cash in VBMPX"
-  matches: "10" ; matches on payee, value differs
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:VBMPX  50 VBMPX @ 9.5988 USD
 
 2022-10-21 * "RGAGX" "Investing 60% of cash in RGAGX"
-  matches: "11" ; matches on payee, value differs
   freq: "2w"
   Assets:US:Vanguard:Cash
   Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
 
 2022-10-31 * "Slate" "Credit Card payment"
-  matches: "6" ; matches on payee, value miles out
-  ; also tests updated txn has other-side posting with value as defined on extraction
   freq: "BM"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 
 2022-10-31 * "Chase" "Chase Hire Purchase"
-  matches: "7" ; matches on payee, value not exact but within 2%
   final: 2022-11-30
   freq: "BM"
   Liabilities:US:Chase:HirePurchase  322.00 USD
@@ -122,6 +105,7 @@ pushtag #rx_txn
 
 2022-11-01 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 
@@ -169,6 +153,7 @@ pushtag #rx_txn
 
 2022-11-15 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 
@@ -226,6 +211,7 @@ pushtag #rx_txn
 
 2022-12-01 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 
@@ -267,6 +253,7 @@ pushtag #rx_txn
 
 2022-12-15 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS"
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
 

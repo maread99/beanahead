@@ -40,6 +40,7 @@ pushtag #rx_txn
 
 2022-10-15 * "Metro" "Tram tickets, Metro Authority"
   freq: "SMS" ; semi-month start, 1st and 15th of every month
+  test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate                  -120.00 USD
   Expenses:Transport:Tram
 

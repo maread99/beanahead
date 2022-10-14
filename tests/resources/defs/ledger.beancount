@@ -1,0 +1,104 @@
+;; -*- mode: org; mode: beancount; -*-
+* Options
+
+option "title" "Example Beancount file"
+option "operating_currency" "USD"
+include "rx.beancount"
+include "x.beancount"
+
+* Commodities
+
+
+1792-01-01 commodity USD
+  export: "CASH"
+  name: "US Dollar"
+
+1995-09-18 commodity VBMPX
+  export: "MUTF:VBMPX"
+  name: "Vanguard Total Bond Market Index Fund Institutional Plus Shares"
+  price: "USD:google/MUTF:VBMPX"
+
+2009-05-01 commodity RGAGX
+  export: "MUTF:RGAGX"
+  name: "American Funds The Growth Fund of America Class R-6"
+  price: "USD:google/MUTF:RGAGX"
+
+* Equity Accounts
+
+1980-05-12 open Equity:Opening-Balances
+
+* Banking
+
+2020-01-01 open Assets:US:BofA
+  address: "123 America Street, LargeTown, USA"
+  institution: "Bank of America"
+  phone: "+1.012.345.6789"
+2020-01-01 open Assets:US:BofA:Checking                        USD
+  account: "00234-48574897"
+
+2020-01-01 * "Opening Balance for checking account"
+  Assets:US:BofA:Checking                         3262.01 USD
+  Equity:Opening-Balances
+
+* Liabilities
+
+2020-05-12 open Liabilities:US:Chase:Slate                 USD
+2020-05-12 open Liabilities:US:Chase:HirePurchase          USD
+
+* Taxable Investments
+
+2020-01-01 open Assets:US:ETrade:Cash                      USD
+2020-01-01 open Income:US:ETrade:GLD:Dividend              USD
+
+* Vanguard Investments
+
+2020-01-01 open Assets:US:Vanguard:VBMPX                     VBMPX
+  number: "882882"
+2020-01-01 open Assets:US:Vanguard:RGAGX                     RGAGX
+  number: "882882"
+2020-01-01 open Assets:US:Vanguard                            USD
+  address: "P.O. Box 1110, Valley Forge, PA 19482-1110"
+  institution: "Vanguard Group"
+  phone: "+1.800.523.1188"
+2020-01-01 open Assets:US:Vanguard:Cash                       USD
+  number: "882882"
+
+* Taxes
+
+2020-01-01 open Income:US:Federal:PreTax401k                    IRAUSD
+2020-01-01 open Assets:US:Federal:PreTax401k                    IRAUSD
+
+* Sources of Income
+
+2020-01-01 open Income:US:BayBook:Salary                      USD
+2020-01-01 open Income:US:BayBook:GroupTermLife               USD
+2020-01-01 open Income:US:BayBook:Vacation                    VACHR
+2020-01-01 open Assets:US:BayBook:Vacation                    VACHR
+2020-01-01 open Expenses:Vacation                               VACHR
+2020-01-01 open Expenses:Health:Life:GroupTermLife
+2020-01-01 open Expenses:Health:Medical:Insurance
+2020-01-01 open Expenses:Health:Dental:Insurance
+2020-01-01 open Expenses:Health:Vision:Insurance
+
+** Tax Year 2020
+
+2020-01-01 open Expenses:Taxes:Y2020:US:Federal:PreTax401k      IRAUSD
+2020-01-01 open Expenses:Taxes:Y2020:US:Medicare                USD
+2020-01-01 open Expenses:Taxes:Y2020:US:Federal                 USD
+2020-01-01 open Expenses:Taxes:Y2020:US:CityNYC                 USD
+2020-01-01 open Expenses:Taxes:Y2020:US:SDI                     USD
+2020-01-01 open Expenses:Taxes:Y2020:US:State                   USD
+2020-01-01 open Expenses:Taxes:Y2020:US:SocSec                  USD
+
+* Expenses
+
+2020-01-01 open Expenses:Home:Insurance
+2020-01-01 open Expenses:Home:Electricity
+2020-01-01 open Expenses:Home:Phone
+2020-01-01 open Expenses:Financial:Fees
+2020-01-01 open Expenses:Transport:Tram
+2020-01-01 open Expenses:Food:Restaurant
+2020-01-01 open Expenses:Food:Alcohol
+2020-01-01 open Expenses:Food:Coffee
+
+;; PREVIOUS TRANSACTIONS WOULD BE LISTED HERE
