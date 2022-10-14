@@ -1,0 +1,16 @@
+option "title" "Expected Transactions Ledger"
+pushtag #x_txn
+;; Enter expected transactions after this line...
+
+
+2022-10-29 * "25 Degrees Burger Bar" "I won't match with anything"
+  Liabilities:US:Chase:Slate  -12.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-30 * "Argo" "I won't match as I wasn't processed until Nov!"
+  Liabilities:US:Chase:Slate  -6.28 USD
+  Expenses:Food:Coffee
+
+
+;; ...enter expected transactions before this line.
+poptag #x_txn

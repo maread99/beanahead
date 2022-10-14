@@ -24,6 +24,9 @@
   Assets:US:BofA:Checking          	 1350.60 USD
   Assets:US:Vanguard:Cash          	 1200.00 USD
 
+2022-10-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking             -79.89 USD
+
 ; assumes extraction process deduplicated transactions extracted from boa and chase.
 2022-10-31 * "Chase Bank Slate" ""
   Assets:US:BofA:Checking          	 -461.00 USD
@@ -51,15 +54,32 @@
 
 **** C:/Users/Path/to/chase_statement_oct22.csv
 
+2022-10-01 * "Argo Tea" ""
+  Liabilities:US:Chase:Slate                   -6.42 USD
+
+2022-10-03 * "Farmer Fresh" ""
+  Liabilities:US:Chase:Slate                  -86.95 USD
+
 2022-10-03 * "Jewel of Morroco" ""
   Liabilities:US:Chase:Slate                  -18.21 USD
 
-2022-10-30 * "Mercadito" ""
+2022-10-07 * "Argo Tea" ""
+  Liabilities:US:Chase:Slate                   -6.42 USD
+
+2022-10-08 * "Argo Tea" ""
+  Liabilities:US:Chase:Slate                   -6.42 USD
+
+2022-10-12 * "Mercadito" ""
   Liabilities:US:Chase:Slate                 -102.93 USD
-  Expenses:Food:Alcohol                       -40.00 USD
 
 2022-10-15 * "Goba Goba" ""
   Liabilities:US:Chase:Slate                  -23.44 USD
+
+2022-10-17 * "Metro Authority, Tram" ""
+  Liabilities:US:Chase:Slate                 -120.00 USD
+
+2022-01-20 * "Corner Deli" ""
+  Liabilities:US:Chase:Slate                  -83.67 USD
 
 2022-10-23 * "Chichipotle" ""
   Liabilities:US:Chase:Slate                  -38.01 USD

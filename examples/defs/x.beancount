@@ -1,0 +1,7 @@
+option "title" "Expected Transactions Ledger"
+pushtag #x_txn
+;; Enter expected transactions after this line...
+
+
+;; ...enter expected transactions before this line.
+poptag #x_txn
