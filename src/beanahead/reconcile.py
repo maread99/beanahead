@@ -496,7 +496,7 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
         new_txn = utils.add_tags(new_txn, tags_to_add)
 
     for k, v in x_txn.meta.items():
-        if k in utils.RX_META_DFLTS or k in new_txn.meta:
+        if k in utils.RX_META_DFLTS or k in new_txn.meta or k == "freq":
             continue
         new_txn.meta[k] = v
 

@@ -23,8 +23,6 @@ from .errors import (
     BeancountLoaderErrors,
 )
 
-# TODO TESTS FOR ALL OF MODULE!!!!
-
 TAG_X = "x_txn"
 TAG_RX = "rx_txn"
 TAGS_X = set([TAG_X, TAG_RX])
@@ -526,7 +524,17 @@ def reverse_automatic_balancing(txn: Transaction) -> Transaction:
 
 
 def is_assets_account(string: str) -> bool:
-    """Query if a string represents an assets account."""
+    """Query if a string represents an assets account.
+
+    Examples
+    --------
+    >>> is_assets_account("Expenses:Home:Electricity")
+    False
+    >>> is_assets_account("Equity:Opening-Balances")
+    False
+    >>> is_assets_account("Assets:US:BofA:Checking")
+    True
+    """
     return is_account_type("Assets", string)
 
 
@@ -542,6 +550,19 @@ def is_balance_sheet_account(string: str) -> bool:
     ----------
     txn
         Transaction to query.
+
+    Examples
+    --------
+    >>> is_balance_sheet_account("Assets:US:BofA:Checking")
+    True
+    >>> is_balance_sheet_account("Liabilities:US:Chase:Slate")
+    True
+    >>> is_balance_sheet_account("Expenses:Home:Electricity")
+    False
+    >>> is_balance_sheet_account("Equity:Opening-Balances")
+    False
+    >>> is_balance_sheet_account("Income:US:BayBook:Match401k")
+    False
     """
     return any(is_account_type(acc_type, string) for acc_type in BAL_SHEET_ACCS)
 
@@ -561,9 +582,13 @@ def get_balance_sheet_accounts(txn: Transaction) -> list[str]:
     list of str
         All balance sheet accounts to which postings are made.
     """
-    return [
-        post.account for post in txn.postings if is_balance_sheet_account(post.account)
-    ]
+    accounts, seen = [], []
+    for post in txn.postings:
+        account = post.account
+        if is_balance_sheet_account(account) and account not in seen:
+            accounts.append(account)
+        seen.append(account)
+    return accounts
 
 
 def get_content(path: Path) -> str:
@@ -668,7 +693,7 @@ def compose_new_content(file_key: str, txns_content: str) -> str:
     Raises
     ------
     ValueError
-        If created content parses with errors.
+        If created content parses with syntax errors.
     """
     header, footer = compose_header_footer(file_key)
     content = header + "\n\n" + txns_content + "\n\n" + footer
@@ -703,8 +728,8 @@ def overwrite_file(path: Path, content: str):
     _, errors, _ = parser.parse_string(content)
     if errors:
         raise ValueError(
-            f"{path} has not been overwritten as content would parse with following"
-            f" errors: {errors}"
+            f"{path} has not been overwritten as content would parse with the"
+            f" following errors: {errors}"
         )
     write(path, content)
 
@@ -804,7 +829,25 @@ def compile_strings_regex(
 
 
 def response_is_valid_number(response: str, max_value: int) -> bool:
-    """Query if a response represents an integer less than a max_value."""
+    """Query if a response represents an integer less than a max_value.
+
+    Examples
+    --------
+    >>> response_is_valid_number('2', 3)
+    True
+    >>> response_is_valid_number('3', 3)
+    True
+    >>> response_is_valid_number('4', 3)
+    False
+    >>> response_is_valid_number('0', 3)
+    True
+    >>> response_is_valid_number('-1', 3)
+    False
+    >>> response_is_valid_number('2.0', 3)
+    False
+    >>> response_is_valid_number('hello', 3)
+    False
+    """
     try:
         response = int(response)
     except ValueError:
