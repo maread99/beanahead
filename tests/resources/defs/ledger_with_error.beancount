@@ -37,7 +37,7 @@ include "rx.beancount"
 
 2020-01-01 * "Opening Balance for checking account"
   Assets:US:BofA:Checking                    3262.01 USD
-  Equity:Opening-Balances
+  Equity:Opening-Balances                   -3200.00 USD ; ledger will load with errors
 
 * Liabilities
 

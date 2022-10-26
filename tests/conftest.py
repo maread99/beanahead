@@ -2,10 +2,11 @@
 
 from collections import abc
 import datetime
+import io
 from pathlib import Path
 import os
 import shutil
-import _io
+
 
 import beancount
 from beancount.core import data
@@ -32,7 +33,7 @@ TEMP_DIR = TEST_ROOT / r"./_temp"
 ENCODING = "utf-8"
 
 
-def get_fileobj(filepath: Path, mode="r") -> _io.TextIOWrapper:
+def get_fileobj(filepath: Path, mode="r") -> io.TextIOWrapper:
     return filepath.open(mode, encoding=ENCODING)
 
 
@@ -56,6 +57,16 @@ def pytest_sessionstart(session):
         for filename in filenames:
             path = Path(dirpath) / filename
             os.remove(path)
+
+
+@pytest.fixture
+def tag_x() -> abc.Iterator[str]:
+    yield "x_txn"
+
+
+@pytest.fixture
+def tag_rx() -> abc.Iterator[str]:
+    yield "rx_txn"
 
 
 @pytest.fixture
@@ -93,6 +104,9 @@ def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
     os.chdir(temp_dir)
     yield Path.cwd()
     os.chdir(prev_cwd)
+
+
+# Fixtures from files in make folder
 
 
 @pytest.fixture
@@ -134,11 +148,43 @@ def filepaths_make(
 
 
 @pytest.fixture
-def files_make(filepaths_make) -> abc.Iterator[dict[str, _io.TextIOWrapper]]:
+def files_make(filepaths_make) -> abc.Iterator[dict[str, io.TextIOWrapper]]:
     d = {k: get_fileobj(path) for k, path in filepaths_make.items()}
     yield d
     for fileobj in d.values():
         fileobj.close()
+
+
+# Fixtures from files in defs folder
+
+
+@pytest.fixture
+def filepath_defs(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "defs.beancount"
+
+
+@pytest.fixture
+def filepath_defs_ledger(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "ledger.beancount"
+
+
+@pytest.fixture
+def filepath_defs_rx(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "rx.beancount"
+
+
+@pytest.fixture
+def filepath_defs_ledger_with_error(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "ledger_with_error.beancount"
+
+
+@pytest.fixture
+def defs(filepath_defs) -> abc.Iterator[list[data.Transaction]]:
+    entries, errors, options = beancount.loader.load_file(filepath_defs)
+    yield entries
+
+
+# Fixtures from files in recon folder
 
 
 @pytest.fixture
@@ -154,6 +200,9 @@ def filepath_recon_rx(recon_dir) -> abc.Iterator[Path]:
 @pytest.fixture
 def filepath_recon_extraction(recon_dir) -> abc.Iterator[Path]:
     yield recon_dir / "extraction.beancount"
+
+
+# Fixtures from files in resources folder
 
 
 @pytest.fixture
@@ -248,6 +297,14 @@ def txns_rx_copy(filepath_rx_copy) -> abc.Iterator[list[data.Transaction]]:
 
 
 @pytest.fixture
+def rx_txn_edison(txns_rx) -> abc.Iterator[data.Transaction]:
+    txn = txns_rx[1]
+    assert txn.payee == "EDISON"
+    assert txn.date == datetime.date(2022, 10, 5)
+    yield txn
+
+
+@pytest.fixture
 def rx_txn_chase(txns_rx) -> abc.Iterator[data.Transaction]:
     txn = txns_rx[-1]
     assert txn.payee == "Chase"
@@ -265,13 +322,3 @@ def txns_rx_content(filepath_rx_content, encoding) -> abc.Iterator[str]:
     """Content of txns_rx relating to transactions"""
     contents_rx_lines = filepath_rx_content.split("\n")
     yield "\n".join(contents_rx_lines[6:-3])
-
-
-@pytest.fixture
-def tag_x() -> abc.Iterator[str]:
-    yield "x_txn"
-
-
-@pytest.fixture
-def tag_rx() -> abc.Iterator[str]:
-    yield "rx_txn"

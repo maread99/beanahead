@@ -20,8 +20,6 @@ from beancount.parser.printer import EntryPrinter
 from . import utils
 from .errors import BeanaheadWriteError, BeancountLoaderErrors
 
-# TODO TESTS FOR ALL OF MODULE!!!!
-
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
 
 REGEX_SIMPLE_FREQ = re.compile(r"^\d*[mwy]$")
@@ -121,7 +119,7 @@ def create_entries(
 
         For both items, transaction dates are as they fall based ONLY on
         the transaction frequency, i.e. transactions are NOT modified by,
-        for example, rolling forwards over a weekend.
+        for example, rolling forwards over a weekend or any 'final' meta.
     """
     end = END_DFLT if end is None else end
     offset = get_freq_offset(rx_def)
@@ -150,7 +148,7 @@ def remove_after_final(txns: list[Transaction]) -> list[Transaction]:
 def roll_txns(txns: list[Transaction]) -> list[Transaction]:
     """Roll transactions that roll forwards at weekend.
 
-    Any transaction that is set to roll and falls on a weekendis replaced
+    Any transaction that is set to roll and falls on a weekend is replaced
     with a transaction dated on the following Monday.
 
     Parameters
@@ -417,7 +415,7 @@ class Admin:
 
     @functools.cached_property
     def rx_defs(self) -> dict[str, Transaction]:
-        """Last transaction of each Regular Expected Ttransaction.
+        """Last transaction of each Regular Expected Transaction.
 
         Returns
         -------
@@ -552,10 +550,11 @@ class Admin:
         """
         return utils.get_unverified_txns(self.path_ledger)
 
-    @property
-    def rx_txns_expired(self) -> list[Transaction]:
-        """Get Regular Expected Transactions dated prior to today."""
-        return utils.get_expired_txns(self.rx_txns)
+    # TODO no apparent clients, remove if not required
+    # @property
+    # def rx_txns_expired(self) -> list[Transaction]:
+    #     """Get Regular Expected Transactions dated prior to today."""
+    #     return utils.get_expired_txns(self.rx_txns)
 
     def _validate_main_ledger(self, paths: list[Path]):
         """Validate main ledger loads without errors.
@@ -621,8 +620,8 @@ class Admin:
             revert_paths = [path]
             if also_revert is not None:
                 revert_paths.extend(also_revert)
-            for path in revert_paths:
-                self._revert_to_stored_content(path)
+            for path_ in revert_paths:
+                self._revert_to_stored_content(path_)
             raise BeanaheadWriteError(path, revert_paths) from err
 
     def add_txns(self, end: str | pd.Timestamp = END_DFLT):

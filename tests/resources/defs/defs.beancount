@@ -16,6 +16,10 @@ pushtag #rx_txn
   ; will be rolled forwards to 2022-10-17 (Monday) although transactions
   ; thereafter will be dated the 15 of each month whenever the 15 is a
   ; weekday.
+  ; Also serves to test that definitions update to a non-rolled
+  ; transaction - updated definition following adding rx txns through to
+  ; 2023-06-30 should update this definition to have date 2023-07-16,
+  ; which is a Sunday. 
   freq: "m"
   Assets:US:BofA:Checking                     -55.00 USD
   Expenses:Home:Phone
@@ -39,6 +43,10 @@ pushtag #rx_txn
   Liabilities:US:Chase:Slate
 
 2022-10-15 * "Metro" "Tram tickets, Metro Authority"
+  ; Also serves to test that definitions update to a non-rolled
+  ; transaction - updated definition following adding rx txns through to
+  ; 2023-06-30 should update this definition to have date 2023-07-01,
+  ; which is a Saturday. 
   freq: "SMS" ; semi-month start, 1st and 15th of every month
   test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate                  -120.00 USD

@@ -14,8 +14,9 @@ from beanahead import utils as m
 from beanahead import errors
 
 from .conftest import get_fileobj
+from . import cmn
 
-# pylint: disable=missing-function-docstring, missing-type-doc, missing_class_docstring
+# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
 # pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
 # pylint: disable=too-many-statements
@@ -41,7 +42,7 @@ def ledger_file_keys() -> abc.Iterator[set[str]]:
 
 
 def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys):
-    """Test module constant values."""
+    """Test module constants."""
     assert m.TAG_X == tag_x
     assert m.TAG_RX == tag_rx
     assert m.TAGS_X == set([tag_x, tag_rx])
@@ -51,9 +52,14 @@ def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys):
     assert dflts["final"] is None
     assert dflts["roll"] is True
 
+    today = datetime.datetime.now().date()
+    try:
+        assert m.TODAY == today
+    except AssertionError:  # if tests started before 00:00 and now > 00:00
+        assert m.TODAY == today - datetime.timedelta(1)
+
     assert m.SEPARATOR_LINE.startswith("-")
     assert m.SEPARATOR_LINE.endswith("\n")
-    assert m.TODAY == datetime.datetime.now().date()
     assert m.EXT == ".beancount"
 
     assert set(m.FILE_CONFIG.keys()) == set(file_keys)
@@ -263,25 +269,9 @@ def test_get_verified_file_key(filepaths_make, filepath_no_file, filepath_ledger
 
 
 class TestEntriesTxns:
-    def assert_txns_equal(self, a: list[data.Transaction], b: list[data.Transaction]):
-        """Assert two lists of transactions represent the same transactions.
-
-        Assertions ignore attributes including meta.
-        """
-        assert len(a) == len(b)
-        attrs = ["payee", "narration", "date"]
-        attrs_postings = ["account", "units"]
-        for txn_a, txn_b in zip(a, b):
-            for attr in attrs:
-                assert getattr(txn_a, attr) == getattr(txn_b, attr)
-            assert len(txn_a.postings) == len(txn_b.postings)
-            for post_a, post_b in zip(txn_a.postings, txn_b.postings):
-                for attr in attrs_postings:
-                    assert getattr(post_a, attr) == getattr(post_b, attr)
-
     def test_extract_entries(self, entries_ledger, txns_ledger):
         txns_rtrn = m.extract_txns(entries_ledger)
-        self.assert_txns_equal(txns_rtrn, txns_ledger)
+        cmn.assert_txns_equal(txns_rtrn, txns_ledger)
 
     def test_get_entries(self, filepath_ledger, entries_ledger, filepath_recon_rx):
         """Tests getting unverified and verified entries."""
@@ -294,7 +284,7 @@ class TestEntriesTxns:
     def test_get_txns(self, filepath_ledger, txns_ledger, filepath_recon_rx):
         """Tests getting unverified and verified txns."""
         for f in (m.get_unverified_txns, m.get_verified_txns):
-            self.assert_txns_equal(f(filepath_ledger), txns_ledger)
+            cmn.assert_txns_equal(f(filepath_ledger), txns_ledger)
 
         with pytest.raises(errors.BeancountLoaderErrors):
             f(filepath_recon_rx)  # errors on "Invalid reference to unknown account"
@@ -315,7 +305,7 @@ class TestEntriesTxns:
         assert cut_off_txn.date < txns_ledger[i + 1].date
         monkeypatch.setattr(attr, cut_off_txn.date + datetime.timedelta(1))
         rtrn = m.get_expired_txns(txns_ledger)
-        self.assert_txns_equal(rtrn, txns_ledger[: i + 1])
+        cmn.assert_txns_equal(rtrn, txns_ledger[: i + 1])
 
     def test_remove_txns(self, txns_ledger):
         indices = [4, 17, 21]

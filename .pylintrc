@@ -1,7 +1,7 @@
 # Following comments can be placed at the top of a test file to
 # disable errors not considered relevant for testing under pytest.
 
-# pylint: disable=missing-function-docstring, missing-type-doc, missing_class_docstring
+# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
 # pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
 # pylint: disable=too-many-statements
@@ -64,6 +64,7 @@ output-format=colorized
 good-names=i, j,
         k, v,
         n,
+        a, b,
 
 [FORMAT]
 
