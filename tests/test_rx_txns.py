@@ -1,4 +1,4 @@
-"""Tests for utils module."""
+"""Tests for `rx_txns` module."""
 
 from collections import abc
 from contextlib import redirect_stdout
@@ -256,7 +256,7 @@ class TestAdmin:
     """
 
     @pytest.fixture
-    def defs_221231_filepath(self, defs_dir, encoding) -> abc.Iterator[Path]:
+    def defs_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "defs_221231.beancount"
 
     @pytest.fixture
@@ -269,7 +269,7 @@ class TestAdmin:
         yield defs
 
     @pytest.fixture
-    def rx_221231_filepath(self, defs_dir, encoding) -> abc.Iterator[Path]:
+    def rx_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "rx_221231.beancount"
 
     @pytest.fixture
@@ -284,7 +284,7 @@ class TestAdmin:
         yield txns
 
     @pytest.fixture
-    def defs_230630_filepath(self, defs_dir, encoding) -> abc.Iterator[Path]:
+    def defs_230630_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "defs_230630.beancount"
 
     @pytest.fixture
@@ -297,7 +297,7 @@ class TestAdmin:
         yield defs
 
     @pytest.fixture
-    def rx_230630_filepath(self, defs_dir, encoding) -> abc.Iterator[Path]:
+    def rx_230630_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "rx_230630.beancount"
 
     @pytest.fixture
@@ -329,8 +329,6 @@ class TestAdmin:
         rx_txns_221231,
         defs_230630_content,
         rx_230630_content,
-        defs_230630,
-        rx_txns_230630,
         encoding,
     ):
         """Test for initial generation of rx txns.

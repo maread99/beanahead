@@ -1,4 +1,4 @@
-"""Tests for utils module."""
+"""Tests for `utils` module."""
 
 from collections import abc
 import datetime
@@ -41,8 +41,9 @@ def ledger_file_keys() -> abc.Iterator[set[str]]:
     yield {"x", "rx"}
 
 
-def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys):
+def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
     """Test module constants."""
+    assert m.ENCODING == "utf-8" == encoding
     assert m.TAG_X == tag_x
     assert m.TAG_RX == tag_rx
     assert m.TAGS_X == set([tag_x, tag_rx])

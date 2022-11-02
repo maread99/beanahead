@@ -39,6 +39,8 @@
   Liabilities:US:Chase:HirePurchase 	324.61 USD
   Assets:US:BofA:Checking  					 -324.61 USD
 
+2022-11-01 balance Assets:US:BofA:Checking   5320.22 USD
+
 
 **** C:/Users/Path/to/vanguard_statement_oct22.csv
 
@@ -66,11 +68,11 @@
 
 2022-10-03 * "Cafe Modagor" ""
   tid: "51"
-  Liabilities:US:Chase:Slate        -20.41 USD
+  Liabilities:US:Chase:Slate        -20.00 USD
 
 2022-10-15 * "Goba Goba" ""
 	tid: "52"
-  Liabilities:US:Chase:Slate        -40.80 USD
+  Liabilities:US:Chase:Slate        -40.00 USD
 
 2022-10-17 * "Metro Transport Authority" ""
 	tid: "12"
@@ -116,3 +118,5 @@
   tid: "62"
   Liabilities:US:Chase:Slate                 -102.93 USD
   Expenses:Food:Alcohol                       -40.00 USD
+
+2022-11-01 balance Liabilities:US:Chase:Slate   -520.33 USD

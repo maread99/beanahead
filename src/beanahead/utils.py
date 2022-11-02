@@ -23,6 +23,8 @@ from .errors import (
     BeancountLoaderErrors,
 )
 
+ENCODING = "utf-8"
+
 TAG_X = "x_txn"
 TAG_RX = "rx_txn"
 TAGS_X = set([TAG_X, TAG_RX])
@@ -175,7 +177,7 @@ def create_beanahead_file(
     header, footer = compose_header_footer(file_key)
     content = header + "\n\n" + footer
 
-    with path.open("wt", encoding="utf-8") as file:
+    with path.open("wt", encoding=ENCODING) as file:
         file.write(content)
 
 
@@ -224,7 +226,7 @@ def verify_files_key(path: Path, file_key: str):
     get_verified_ledger_file_key : Verify path to a beanahead ledger file
         and return its file key.
     """
-    with path.open("rt", encoding="utf-8") as file:
+    with path.open("rt", encoding=ENCODING) as file:
         first_line = file.readline()
     title = FILE_CONFIG[file_key]["title"]
     if not first_line[:-2].endswith(title):
@@ -599,7 +601,7 @@ def get_content(path: Path) -> str:
     path
         Path to file from which to get all content.
     """
-    with path.open("r", encoding="utf-8") as file:
+    with path.open("r", encoding=ENCODING) as file:
         content = file.read()
     return content
 
@@ -705,7 +707,7 @@ def compose_new_content(file_key: str, txns_content: str) -> str:
 
 def write(path: Path, content: str):
     """Write content to path."""
-    with path.open("wt", encoding="utf-8") as file:
+    with path.open("wt", encoding=ENCODING) as file:
         file.write(content)
 
 
@@ -882,7 +884,7 @@ def inject_txns(injection: str, ledger: str):
     content = "\n" + content
     ledger_path = get_verified_path(ledger)
 
-    with ledger_path.open("at", encoding="utf-8") as file:
+    with ledger_path.open("at", encoding=ENCODING) as file:
         file.write(content)
 
 

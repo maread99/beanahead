@@ -19,24 +19,19 @@ from beancount.ingest.extract import HEADER
 
 from . import utils
 from .errors import BeanaheadWriteError
-
-# TODO TESTS!!
-# For reconcile_new_txns set up files for incoming txns, x and rx. These
-# should cover all matching, and not matching, possibilities. Then simply
-# compare the output / changed files against expected files.
-# Test all reconcile_new_txns options.
+from .utils import ENCODING
 
 
-def load_injection_file(path: Path) -> data.Entries:
-    """Load entries from an injection file.
+def load_extraction_file(path: Path) -> data.Entries:
+    """Load entries extracted from statements.
 
     Parameters
     ----------
     path
-        Path to injection file.
+        Path to extraction file.
     """
     # load from string in case need to accommodate lost balance directives...
-    with path.open("rt", encoding="utf-8") as file:
+    with path.open("rt", encoding=ENCODING) as file:
         string = file.read()
 
     # NB do not pass "utf-8" encoding to load_string. utf-8 is the default,
@@ -61,7 +56,7 @@ def load_injection_file(path: Path) -> data.Entries:
             string += "1900-01-01 open " + account + "\n"
         new_entries_, errors, options = loader.load_string(string)
         # then removes the Open directives and loses balance diff from Balance
-        # directives - not useful for an injection file.
+        # directives - not useful for an extraction file.
         new_entries = []
         for entry in new_entries_:
             if isinstance(entry, data.Open):
@@ -101,7 +96,7 @@ def get_close_txns(
         `txns`) should be to the date of the `x_txn` in order to be
         included in return.
     """
-    start, end = x_txn.date - delta, x_txn.date + delta
+    start, end = x_txn.date - delta, x_txn.date + delta + timedelta(1)
     return list(data.iter_entry_dates(txns, start, end))
 
 
@@ -160,6 +155,12 @@ def get_common_accounts(a: Transaction, b: Transaction) -> set[str]:
     return get_entry_accounts(a).intersection(get_entry_accounts(b))
 
 
+def get_common_balance_sheet_accounts(a: Transaction, b: Transaction) -> set[str]:
+    """Return set of balance sheet accounts common to two transactions."""
+    common_accounts = get_common_accounts(a, b)
+    return {acc for acc in common_accounts if utils.is_balance_sheet_account(acc)}
+
+
 def get_posting_to_account(txn: Transaction, account: str) -> data.Posting | None:
     """Return a transaction's posting to a given account
 
@@ -169,19 +170,21 @@ def get_posting_to_account(txn: Transaction, account: str) -> data.Posting | Non
     if len(postings) > 1:
         raise ValueError(
             "Transaction cannot have multiple postings to the same account"
-            "although the following transaction has multiple postings to"
+            " although the following transaction has multiple postings to"
             f" '{account}':\n{txn}"
         )
+    if not postings:
+        return None
     return postings[0]
 
 
-def get_number_for_account(txn: Transaction, account: str) -> Decimal:
-    """Return number of a transaction's posting to a given account.
+def get_amount_for_account(txn: Transaction, account: str) -> data.Amount | None:
+    """Return amount of a transaction's posting to a given account.
 
-    Returns ZERO if no posting to `account`.
+    Returns None if no posting to `account`.
     """
     posting = get_posting_to_account(txn, account)
-    return number.ZERO if posting is None else posting.units.number
+    return None if posting is None else posting.units
 
 
 def decimal_diff(a: Decimal, b: Decimal) -> Decimal:
@@ -191,7 +194,7 @@ def decimal_diff(a: Decimal, b: Decimal) -> Decimal:
     -------
     Decimal
         Decimal bewteen 0 and 1 representing percentage difference of
-        `b` from `a`.
+        larger number relative to smaller number.
 
         Decimal(1) if the signs of `a` and `b` are different.
 
@@ -200,7 +203,7 @@ def decimal_diff(a: Decimal, b: Decimal) -> Decimal:
     >>> decimal_diff(Decimal("40"), Decimal("40"))
     Decimal('0')
     >>> decimal_diff(Decimal("40"), Decimal("50"))
-    Decimal('0.25')
+    Decimal('0.2')
     >>> decimal_diff(Decimal("50"), Decimal("40"))
     Decimal('0.2')
     >>> decimal_diff(Decimal("-50"), Decimal("-40"))
@@ -210,8 +213,8 @@ def decimal_diff(a: Decimal, b: Decimal) -> Decimal:
     """
     if a * b < number.ZERO:
         return number.ONE
-    abs_diff = a - b
-    return abs(abs_diff / a)
+    denom = max(abs(a), abs(b))
+    return abs(a - b) / denom
 
 
 def number_diff(a: Transaction, b: Transaction) -> Decimal:
@@ -224,20 +227,23 @@ def number_diff(a: Transaction, b: Transaction) -> Decimal:
     Decimal
         Decimal bewteen 0 and 1 representing average percentage difference
         between transactions' postings' 'number' (only for postings
-        to accounts that are common to both transactions). Decimal(0)
-        indicates the number of postings' to all common accounts are
-        exactly the same.
+        to balance sheet accounts that are common to both transactions).
+        Decimal(0) indicates the number of postings' to all common balance
+        sheet accounts are exactly the same.
 
         Returns Decimal(1) if
-            There are no common accounts.
+            There are no common balance sheet accounts with number
+            denominated in same currency.
 
-            For a common account the sign of the number on each transaction
-            is different.
+            For a common balance sheet account the sign of the number on
+            each transaction is different.
     """
     diffs = []
-    for account in get_common_accounts(a, b):
-        num_a = get_number_for_account(a, account)
-        num_b = get_number_for_account(b, account)
+    for account in get_common_balance_sheet_accounts(a, b):
+        num_a, cur_a = get_amount_for_account(a, account)
+        num_b, cur_b = get_amount_for_account(b, account)
+        if not cur_a == cur_b:
+            continue
         diff = decimal_diff(num_a, num_b)
         if diff == number.ONE:
             return diff
@@ -322,12 +328,31 @@ def get_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction
     closest_match = matches[0]
     # if closest match has exact value, return only those with that date and exact value
     if have_same_number(closest_match, x_txn):
+        delta = abs(closest_match.date - x_txn.date)
         return [
             txn
             for txn in matches
-            if closest_match.date == txn.date and have_same_number(txn, x_txn)
+            if abs(txn.date - x_txn.date) == delta and have_same_number(txn, x_txn)
         ]
     return sort_by_number(matches, x_txn)
+
+
+def get_input(text: str) -> str:
+    """Get user input.
+
+    Parameters
+    ----------
+    text
+        String to introduce request for user input.
+
+    Returns
+        User input
+
+    Notes
+    -----
+    Function included to facilitate mocking user input when testing.
+    """
+    return input(text)
 
 
 MSG_SINGLE_MATCH = "Do you want to match the above transactions? y/n: "
@@ -354,12 +379,12 @@ def confirm_single(
     """
     print(
         f"{utils.SEPARATOR_LINE}Expected Transaction:\n"
-        f"{utils.compose_entries_content(x_txn)}\n\n"
-        f"Incoming Transaction:\n{utils.compose_entries_content(matches[0])}\n"
+        f"{utils.compose_entries_content(x_txn)}\n"
+        f"Incoming Transaction:\n{utils.compose_entries_content(matches[0])}"
     )
-    response = input(MSG_SINGLE_MATCH).lower()
+    response = get_input(MSG_SINGLE_MATCH).lower()
     while response not in ["n", "y"]:
-        response = input(f"{response} is not valid input, please try again, y/n: ")
+        response = get_input(f"{response} is not valid input, please try again, y/n: ")
     if response == "n":
         return None
     elif response == "y":
@@ -386,18 +411,20 @@ def get_mult_match(
         f"Incoming Transactions:\n"
     )
     for i, match in enumerate(matches):
-        print(f"{i}\n{utils.compose_entries_content(match)}\n")
+        print(f"{i}\n{utils.compose_entries_content(match)}")
 
     max_value = len(matches) - 1
     options = f"[0-{max_value}]/n"
-    response = input(
+    response = get_input(
         "Which of the above incoming transactions do you wish to match"
         f" with the expected transaction, or 'n' for None, {options}:"
     )
     while not (
         (response == "n") or utils.response_is_valid_number(response, max_value)
     ):
-        response = input(f"{response} is not valid input, please try again {options}: ")
+        response = get_input(
+            f"{response} is not valid input, please try again {options}: "
+        )
     if response == "n":
         return None
     return matches[int(response)]
@@ -486,6 +513,7 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
     postings are treated as defined on underlying ledger from which data
     loaded - i.e. any numbers that are interpolated on loading are ignored.
     """
+    # reverse_automatic_balancing returns copies
     x_txn = utils.reverse_automatic_balancing(x_txn)
     new_txn = utils.reverse_automatic_balancing(new_txn)
 
@@ -495,6 +523,7 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
     if tags_to_add := x_txn.tags - utils.TAGS_X:
         new_txn = utils.add_tags(new_txn, tags_to_add)
 
+    new_txn = new_txn._replace(meta=new_txn.meta.copy())
     for k, v in x_txn.meta.items():
         if k in utils.RX_META_DFLTS or k in new_txn.meta or k == "freq":
             continue
@@ -506,9 +535,15 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
             new_txn.postings.append(posting)
         else:
             new_txn_posting = get_posting_to_account(new_txn, account)
-            if new_txn_posting.units is not None:
-                continue
-            updated_posting = new_txn_posting._replace(units=posting.units)
+
+            # carry over any meta not otherwise defined on new_txn
+            updated_posting = new_txn_posting._replace(meta=new_txn_posting.meta.copy())
+            for k, v in posting.meta.items():
+                updated_posting.meta.setdefault(k, v)
+
+            if updated_posting.units is None:
+                updated_posting = updated_posting._replace(units=posting.units)
+
             new_txn.postings.remove(new_txn_posting)
             new_txn.postings.append(updated_posting)
     return new_txn
@@ -579,6 +614,7 @@ def map_path_to_reconciled_x_txns(
     return mapping
 
 
+# TODO HERERE, WRITING TESTS
 def reconcile_new_txns(
     new_entries: str,
     x_txns_ledgers: list[str],
@@ -647,7 +683,7 @@ def reconcile_new_txns(
         False to order output latest transfer first.
     """
     input_path = utils.get_verified_path(new_entries)
-    new_entries_ = load_injection_file(input_path)
+    new_entries_ = load_extraction_file(input_path)
     new_txns, new_other = separate_out_txns(new_entries_)
 
     x_txns: dict[Path, list[Transaction]] = {}

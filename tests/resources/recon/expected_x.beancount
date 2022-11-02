@@ -1,0 +1,28 @@
+option "title" "Expected Transactions Ledger"
+pushtag #x_txn
+;; Enter expected transactions after this line...
+
+
+2022-10-01 * "Argo" ""
+  matches: "0"
+  Liabilities:US:Chase:Slate  -6.28 USD
+  Expenses:Food:Coffee
+
+2022-10-03 * "Modagor" "Eating out after work"
+  matches: "0"
+  Assets:US:BofA:Checking   -20.41 USD
+  Expenses:Food:Restaurant
+
+2022-10-03 * "Modor" "Eating out after work"
+  matches: "0"
+  Liabilities:US:Chase:Slate  -19.59 USD
+  Expenses:Food:Restaurant
+
+2022-10-09 * "Modagor" "Eating out after work"
+  matches: "0"
+  Liabilities:US:Chase:Slate  -20.41 USD
+  Expenses:Food:Restaurant
+
+
+;; ...enter expected transactions before this line.
+poptag #x_txn

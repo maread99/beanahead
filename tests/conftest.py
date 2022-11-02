@@ -3,10 +3,10 @@
 from collections import abc
 import datetime
 import io
-from pathlib import Path
 import os
+from pathlib import Path
 import shutil
-
+import textwrap
 
 import beancount
 from beancount.core import data
@@ -28,6 +28,10 @@ import pytest
 #   invalid-name: names in tests not expected to strictly conform with snake_case.
 
 
+# TODO MOVE any fixtures defined here but only used on one test module to
+# the test module on which they are used - keep them as local as useful.
+
+
 TEST_ROOT = Path(__file__).parent
 TEMP_DIR = TEST_ROOT / r"./_temp"
 ENCODING = "utf-8"
@@ -35,6 +39,13 @@ ENCODING = "utf-8"
 
 def get_fileobj(filepath: Path, mode="r") -> io.TextIOWrapper:
     return filepath.open(mode, encoding=ENCODING)
+
+
+def get_entries_from_string(string: str) -> data.Entries:
+    """Get entries as parsed from a string."""
+    string = textwrap.dedent(string)
+    entries, _, _ = beancount.loader.load_string(string)
+    return entries
 
 
 @pytest.fixture

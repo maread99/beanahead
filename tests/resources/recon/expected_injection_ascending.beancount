@@ -1,0 +1,176 @@
+;; -*- mode: beancount -*-
+
+2022-11-01 balance Liabilities:US:Chase:Slate                      -520.33 USD
+
+2022-11-01 balance Assets:US:BofA:Checking                         5320.22 USD
+
+2022-10-31 * "Chase Hire Purchase" "Chase Hire Purchase"
+  matches: "7"
+  tid: "7"
+  Liabilities:US:Chase:HirePurchase   324.61 USD
+  Assets:US:BofA:Checking            -324.61 USD
+
+2022-10-31 * "Chase Bank Slate" "Credit Card payment"
+  matches: "6"
+  tid: "6"
+  Assets:US:BofA:Checking     -461.00 USD
+  Liabilities:US:Chase:Slate   461.00 USD
+
+2022-10-30 * "Mercadito" "Alcohol on 62 should be 40, coffee 8, restaurant empty"
+  matches: "62"
+  tid: "62"
+  Liabilities:US:Chase:Slate  -102.93 USD
+  Expenses:Food:Alcohol        -40.00 USD
+  Expenses:Food:Coffee          -8.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-30 * "25 Degrees Burger Bar" ""
+  tid: "61"
+  Liabilities:US:Chase:Slate  -8.00 USD
+
+2022-10-29 * "25 Degrees Burger Bar" ""
+  tid: "60"
+  Liabilities:US:Chase:Slate  -8.00 USD
+
+2022-10-29 * "25 Degrees Burger Bar" "The only one of three that was included to expected txns"
+  matches: "59, 60"
+  tid: "59"
+  Liabilities:US:Chase:Slate  -8.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-25 * "Kin Soy" "Eating out with Bill"
+  matches: "56, 57, 58"
+  tid: "58"
+  Liabilities:US:Chase:Slate  -20.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-25 * "Chichipotle" "Eating out with Natasha"
+  matches: "55, 54, 53"
+  tid: "55"
+  Liabilities:US:Chase:Slate  -33.01 USD
+  Expenses:Food:Restaurant
+
+2022-10-23 * "Kin Soy" ""
+  tid: "57"
+  Liabilities:US:Chase:Slate  -20.20 USD
+
+2022-10-23 * "Chichipotle Hot" ""
+  tid: "54"
+  Liabilities:US:Chase:Slate  -55.30 USD
+
+2022-10-21 * "Kin Soy" ""
+  tid: "56"
+  Liabilities:US:Chase:Slate  -20.40 USD
+
+2022-10-21 * "Chichipotle Extreme" ""
+  tid: "53"
+  Liabilities:US:Chase:Slate  -77.60 USD
+
+2022-10-21 * "RGAGX" "Investing 60% of cash in RGAGX"
+  matches: "11"
+  tid: "11"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:RGAGX  12.78 RGAGX @ 56.3396 USD
+
+2022-10-21 * "VBMPX" "Investing 40% of cash in VBMPX"
+  matches: "10"
+  tid: "10"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:VBMPX  49.13 VBMPX @ 9.7688 USD
+
+2022-10-21 * "BayBook 2022-10-07 through 2022-10-20" "Payroll"
+  matches: "5"
+  tid: "5"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:BayBook:Salary                    -4615.38 USD
+  Income:US:BayBook:GroupTermLife               -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2020:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2020:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2020:US:State                 365.08 USD
+  Expenses:Taxes:Y2020:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2020:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2020:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2020:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:BayBook:Vacation                         5 VACHR
+  Income:US:BayBook:Vacation                        -5 VACHR
+
+2022-10-17 * "Metro Transport Authority" "Tram tickets, Metro Authority"
+  matches: "12"
+  test_meta: "You can include meta fields"
+  tid: "12"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram
+
+2022-10-17 * "Verizon Mobile" "Telecoms, monthly variable" #you-can-inc-tags
+  matches: "4"
+  tid: "4"
+  Assets:US:BofA:Checking  -72.63 USD
+  Expenses:Home:Phone
+
+2022-10-15 * "Goba Goba" "Eating out after work"
+  matches: "52"
+  tid: "52"
+  Liabilities:US:Chase:Slate  -40.00 USD
+  Expenses:Food:Restaurant
+
+2022-10-07 * "RGAGX" "Investing 60% of cash in RGAGX"
+  matches: "9"
+  tid: "9"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:RGAGX  12.84 RGAGX @ 56.0763 USD
+
+2022-10-07 * "VBMPX" "Investing 40% of cash in VBMPX"
+  matches: "8"
+  tid: "8"
+  Assets:US:Vanguard:Cash
+  Assets:US:Vanguard:VBMPX  49.42 VBMPX @ 9.7115 USD
+
+2022-10-07 * "BayBook 2022-09-23 through 2022-10-06" "Payroll"
+  matches: "3"
+  tid: "3"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:BayBook:Salary                    -4615.38 USD
+  Income:US:BayBook:GroupTermLife               -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2020:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2020:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2020:US:State                 365.08 USD
+  Expenses:Taxes:Y2020:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2020:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2020:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2020:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:BayBook:Vacation                         5 VACHR
+  Income:US:BayBook:Vacation                        -5 VACHR
+
+2022-10-05 * "Edison Power green tariff" "Electricity, monthly fixed tarrif"
+  matches: "2"
+  tid: "2"
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity
+
+2022-10-03 * "Cafe Modagor" ""
+  tid: "51"
+  Liabilities:US:Chase:Slate  -20.00 USD
+
+2022-10-03 * "Jewel of Morroco" "Eating out with work buddies"
+  matches: "50"
+  tid: "50"
+  Liabilities:US:Chase:Slate  -71.42 USD
+  Expenses:Food:Restaurant
+
+2022-10-03 * "Account Fee" "Monthly bank fee"
+  matches: "1"
+  tid: "1"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees
