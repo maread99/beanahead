@@ -38,6 +38,16 @@ from .conftest import get_entries_from_string
 
 
 @pytest.fixture
+def filepath_recon_x(recon_dir) -> abc.Iterator[Path]:
+    yield recon_dir / "x.beancount"
+
+
+@pytest.fixture
+def filepath_recon_extraction(recon_dir) -> abc.Iterator[Path]:
+    yield recon_dir / "extraction.beancount"
+
+
+@pytest.fixture
 def extraction_txns(filepath_recon_extraction) -> abc.Iterator[list[data.Transaction]]:
     txns, _, _ = beancount.loader.load_file(filepath_recon_extraction)
     yield txns

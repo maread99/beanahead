@@ -32,7 +32,35 @@ from . import cmn
 #   invalid-name: names in tests not expected to strictly conform with snake_case.
 
 
-# Module-specific fixtures
+@pytest.fixture
+def defs_dir(res_dir) -> abc.Iterator[Path]:
+    yield res_dir / "defs"
+
+
+@pytest.fixture
+def filepath_defs(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "defs.beancount"
+
+
+@pytest.fixture
+def filepath_defs_ledger(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "ledger.beancount"
+
+
+@pytest.fixture
+def filepath_defs_rx(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "rx.beancount"
+
+
+@pytest.fixture
+def filepath_defs_ledger_with_error(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "ledger_with_error.beancount"
+
+
+@pytest.fixture
+def defs(filepath_defs) -> abc.Iterator[list[data.Transaction]]:
+    entries, errors, options = beancount.loader.load_file(filepath_defs)
+    yield entries
 
 
 @pytest.fixture
