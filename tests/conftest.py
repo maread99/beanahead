@@ -71,11 +71,11 @@ def mock_input(monkeypatch) -> abc.Iterator:
     """Mock built-in input command to return pre-defined responses."""
 
     class MockInput:
-        def __init__(self, responses: abc.Generator):
+        def __init__(self, responses: abc.Generator[str]):
             self.responses = responses
             monkeypatch.setattr("beanahead.utils.get_input", self.input)
 
-        def input(self, string: str):
+        def input(self, string: str) -> str:
             print(string)
             return next(self.responses)
 
