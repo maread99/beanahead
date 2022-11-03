@@ -598,7 +598,6 @@ def map_path_to_reconciled_x_txns(
     return mapping
 
 
-# TODO HERERE, WRITING TESTS
 def reconcile_new_txns(
     new_entries: str,
     x_txns_ledgers: list[str],

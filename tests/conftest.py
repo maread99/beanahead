@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 import shutil
+import sys
 import textwrap
 
 import beancount
@@ -33,6 +34,20 @@ TEMP_DIR = TEST_ROOT / r"./_temp"
 ENCODING = "utf-8"
 
 
+def set_cl_args(cl: str):
+    """Set system command line arguments.
+
+    Parameters
+    ----------
+    cl
+        String representing command passed to command line, for example
+        'beanahead exp x rx'
+    """
+    args = cl.split(" ")
+    args.insert(0, "beanahead")
+    sys.argv = args
+
+
 def get_fileobj(filepath: Path, mode="r") -> io.TextIOWrapper:
     return filepath.open(mode, encoding=ENCODING)
 
@@ -54,16 +69,39 @@ def temp_dir() -> abc.Iterator[Path]:
     yield TEMP_DIR
 
 
-def pytest_sessionstart(session):
-    """Hook executed before session starts.
+@pytest.fixture
+def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
+    """Set cwd to `tests._temp` over fixture's duration.
 
-    Clean temporary test folder.
+    Yields temporary cwd.
     """
+    prev_cwd = Path.cwd()
+    os.chdir(temp_dir)
+    yield Path.cwd()
+    os.chdir(prev_cwd)
+
+
+def _clean_test_dir():
+    """Remove all files and directories from the test directory"""
     assert TEMP_DIR.is_dir()
     for dirpath, dirname, filenames in os.walk(TEMP_DIR):
         for filename in filenames:
             path = Path(dirpath) / filename
             os.remove(path)
+
+
+def pytest_sessionstart(session):
+    """Hook executed before session starts.
+
+    Clean temporary test folder.
+    """
+    _clean_test_dir()
+
+
+@pytest.fixture
+def clean_test_dir() -> abc.Iterator[Path]:
+    _clean_test_dir()
+    yield
 
 
 @pytest.fixture

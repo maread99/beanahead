@@ -14,8 +14,10 @@ import pytest
 
 from beanahead import rx_txns as m
 from beanahead import errors
+from beanahead.scripts import cli
 
 from . import cmn
+from .conftest import set_cl_args
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -347,7 +349,7 @@ class TestAdmin:
         with pytest.raises(errors.BeancountLoaderErrors):
             m.Admin(defs, rx_ledger, filepath_defs_ledger_with_error)
 
-    def test_admin_0(
+    def test_admin(
         self,
         filepaths_defs_copy_0,
         defs,
@@ -430,6 +432,49 @@ class TestAdmin:
         output = io.StringIO()
         with redirect_stdout(output):
             admin.add_txns(datetime.date(2023, 6, 30))
+        expected_output = (
+            "80 transactions have been added to the ledger 'rx'."
+            "\nDefinitions on 'defs' have been updated to reflect the"
+            " most recent transactions.\n"
+        )
+        assert output.getvalue() == expected_output
+        assert defs_path.read_text(encoding) == defs_230630_content
+        assert rx_path.read_text(encoding) == rx_230630_content
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_addrx(
+        self,
+        filepaths_defs_copy_0,
+        defs_221231_content,
+        rx_221231_content,
+        defs_230630_content,
+        rx_230630_content,
+        encoding,
+    ):
+        """Test calling `Admin.add_txns` via cli.
+
+        Test based on `test_admin`.
+        """
+        defs_path = filepaths_defs_copy_0["defs"]
+        rx_path = filepaths_defs_copy_0["rx"]
+
+        output = io.StringIO()
+        set_cl_args("addrx defs rx ledger -e 2022-12-31")
+        with redirect_stdout(output):
+            cli.main()
+        expected_output = (
+            "42 transactions have been added to the ledger 'rx'.\n"
+            "Definitions on 'defs' have been updated to reflect the"
+            " most recent transactions.\n"
+        )
+        assert output.getvalue() == expected_output
+        assert defs_path.read_text(encoding) == defs_221231_content
+        assert rx_path.read_text(encoding) == rx_221231_content
+
+        output = io.StringIO()
+        set_cl_args("addrx defs rx ledger -e 2023-06-30")
+        with redirect_stdout(output):
+            cli.main()
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"

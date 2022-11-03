@@ -1,4 +1,11 @@
-"""Script for dispatching from command line."""
+"""Script for dispatching from command line.
+
+Notes
+-----
+This module does not have a dedicated tests module, rather for each
+subcommand a test is included to the test module for the module on which
+the corresponding underlying function is located.
+"""
 
 import argparse
 import datetime

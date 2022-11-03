@@ -13,8 +13,9 @@ import pytest
 
 from beanahead import expired as m
 from beanahead import errors
+from beanahead.scripts import cli
 
-from .conftest import get_entries_from_string
+from .conftest import get_entries_from_string, set_cl_args
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -345,3 +346,41 @@ class TestAdminExpiredTxns:
         assert output.getvalue().endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
         assert filepath_rx.read_text(encoding) == orig_contents_rx
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_exp(
+        self,
+        monkeypatch,
+        mock_input,
+        filepaths_copy,
+        expected_x,
+        expected_rx,
+        encoding,
+    ):
+        """Test calling via cli.
+
+        Test based on `test_all_options`.
+        """
+        mock_today(datetime.date(2022, 11, 15), monkeypatch)
+        tomorrow = datetime.date(2022, 11, 16)
+        mock_tomorrow(tomorrow, monkeypatch)
+
+        filepath_x = filepaths_copy["x"]
+        filepath_rx = filepaths_copy["rx"]
+
+        expected_print = textwrap.dedent(
+            rf"""
+            The following ledgers have been updated:
+            {filepath_x}
+            {filepath_rx}
+            """
+        )
+        expected_print = expected_print[1:]
+        mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
+        output = io.StringIO()
+        set_cl_args("exp x rx")
+        with contextlib.redirect_stdout(output):
+            cli.main()
+        assert output.getvalue().endswith(expected_print)
+        assert filepath_x.read_text(encoding) == expected_x
+        assert filepath_rx.read_text(encoding) == expected_rx

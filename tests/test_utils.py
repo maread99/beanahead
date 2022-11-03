@@ -12,12 +12,13 @@ import textwrap
 
 import beancount
 from beancount.core import data
+from beanahead.scripts import cli
 import pytest
 
 from beanahead import utils as m
 from beanahead import errors
 
-from .conftest import get_fileobj
+from .conftest import get_fileobj, set_cl_args
 from . import cmn
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -63,18 +64,6 @@ def file_keys() -> abc.Iterator[set[str]]:
 @pytest.fixture
 def ledger_file_keys() -> abc.Iterator[set[str]]:
     yield {"x", "rx"}
-
-
-@pytest.fixture
-def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
-    """Set cwd to `tests._temp` over fixture's duration.
-
-    Yields temporary cwd.
-    """
-    prev_cwd = Path.cwd()
-    os.chdir(temp_dir)
-    yield Path.cwd()
-    os.chdir(prev_cwd)
 
 
 # Fixtures from files in make folder
@@ -338,6 +327,66 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir):
     dirname = "not_a_directory"
     with pytest.raises(NotADirectoryError, match=f"{dirname}"):
         f(key, dirpath="./" + dirname)
+
+
+@pytest.mark.usefixtures("clean_test_dir")
+def test_cli_make(files_make, cwd_as_temp_dir):
+    """Test calling `create_beanahead_file` via cli.
+
+    Test based on `test_create_beanahead_file`.
+    """
+    make_contents = {k: fileobj.read() for k, fileobj in files_make.items()}
+
+    def assertions(expected_path: Path, file_key: str):
+        assert expected_path.is_file()
+        with get_fileobj(expected_path) as file:
+            assert file.read() == make_contents[file_key]
+
+    # verify default behaviour
+    for key in files_make:
+        expected_path = cwd_as_temp_dir / f"{key}.beancount"
+        assert not expected_path.is_file()
+        set_cl_args(f"make {key}")
+        cli.main()
+        assertions(expected_path, key)
+
+    # verify can pass filename
+    key = "rx"
+    filename = "rx_alt"
+    expected_path = cwd_as_temp_dir / f"{filename}.beancount"
+    assert not expected_path.is_file()
+    set_cl_args(f"make {key} --filename {filename}")
+    cli.main()
+    assertions(expected_path, key)
+
+    # verify can pass dirpath
+    key = "x"
+    rel_path = "./_temp2"
+    expected_path = cwd_as_temp_dir / rel_path / f"{key}.beancount"
+    assert not expected_path.is_file()
+    set_cl_args(f"make {key} --dirpath {rel_path}")
+    cli.main()
+    assertions(expected_path, key)
+
+    # verify can pass dirpath and filename
+    key = "rx_def"
+    expected_path = cwd_as_temp_dir / rel_path / f"{filename}.beancount"
+    assert not expected_path.is_file()
+    set_cl_args(f"make {key} -f {filename} -d {rel_path}")
+    cli.main()
+    assertions(expected_path, key)
+
+    # verify raises error when filepath already exists
+    with pytest.raises(FileExistsError, match=f"{expected_path.stem}"):
+        set_cl_args(f"make {key} -f {filename} -d {rel_path}")
+        cli.main()
+
+    # verify raises error when dirpath does not exists
+    dirname = "not_a_directory"
+    dirpath = "./" + dirname
+    with pytest.raises(NotADirectoryError, match=f"{dirname}"):
+        set_cl_args(f"make {key} -d {dirpath}")
+        cli.main()
 
 
 def test_verify_path(filepath_ledger, filepath_no_file, filepath_empty_txt_file):
@@ -723,6 +772,25 @@ def test_inject_txns(
     injection = str(filepath_rx)
     ledger = str(filepath_ledger_copy)
     m.inject_txns(injection, ledger)
+    new_contents = filepath_ledger_copy.read_text(encoding)
+    assert new_contents == filepath_ledger_content + "\n" + filepath_rx_content
+
+
+@pytest.mark.usefixtures("cwd_as_temp_dir")
+def test_cli_inject(
+    filepath_rx,
+    filepath_rx_content,
+    filepath_ledger_copy,
+    filepath_ledger_content,
+    encoding,
+):
+    """Test calling `inject_txns` via cli.
+
+    Test based on `test_inject_txns`.
+    """
+    injection = str(filepath_rx)
+    set_cl_args(f"inject {injection} example_ledger")
+    cli.main()
     new_contents = filepath_ledger_copy.read_text(encoding)
     assert new_contents == filepath_ledger_content + "\n" + filepath_rx_content
 

@@ -17,9 +17,10 @@ from beancount.core import data
 import pytest
 
 from beanahead import reconcile as m
+from beanahead.scripts import cli
 
 from . import cmn
-from .conftest import get_entries_from_string
+from .conftest import get_entries_from_string, set_cl_args
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -1039,6 +1040,8 @@ class TestReconcileNewTxns:
         filepath = temp_dir / "injection.beancount"
         assert not filepath.is_file()
         yield filepath
+        if filepath.is_file():
+            filepath.unlink()
 
     @pytest.fixture
     def expected_injection_content(self, recon_dir, encoding) -> abc.Iterator[str]:
@@ -1236,6 +1239,159 @@ class TestReconcileNewTxns:
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             f(str(extraction), ledgers, ascending=False)
+
+        expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
+        assert output.getvalue().endswith(expected_print)
+
+        self.assert_expected_injection(
+            extraction, expected_injection_ascending_content, extraction_txns, encoding
+        )
+        assert len(expected_injection_ascending_content) == len(
+            expected_injection_content
+        )
+
+        assert expected_rx_content == rx_path.read_text(encoding)
+        assert expected_x_content == x_path.read_text(encoding)
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_recon_default(
+        self,
+        filepaths_recon_copy,
+        extraction_txns,
+        mock_input,
+        input_responses,
+        encoding,
+        expected_injection_content,
+        expected_x_content,
+        expected_rx_content,
+    ):
+        """Test calling `reconcile_new_txns` via cli for with default options.
+
+        Test based on `test_default`.
+        """
+        x_path = filepaths_recon_copy["x"]
+        rx_path = filepaths_recon_copy["rx"]
+        extraction = filepaths_recon_copy["extraction"]
+
+        mock_input(input_responses)
+        output = io.StringIO()
+        set_cl_args("recon extraction rx x")
+        with contextlib.redirect_stdout(output):
+            cli.main()
+
+        expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
+        assert output.getvalue().endswith(expected_print)
+
+        self.assert_expected_injection(
+            extraction, expected_injection_content, extraction_txns, encoding
+        )
+        assert expected_rx_content == rx_path.read_text(encoding)
+        assert expected_x_content == x_path.read_text(encoding)
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_recon_output(
+        self,
+        filepaths_recon_copy,
+        injection_output,
+        extraction_txns,
+        mock_input,
+        input_responses,
+        encoding,
+        expected_injection_content,
+        expected_x_content,
+        expected_rx_content,
+    ):
+        """Test calling `reconcile_new_txns` via cli with output option.
+
+        Test based on `test_output`.
+        """
+        x_path = filepaths_recon_copy["x"]
+        rx_path = filepaths_recon_copy["rx"]
+
+        mock_input(input_responses)
+        output = io.StringIO()
+        set_cl_args("recon extraction rx x --output injection")
+        with contextlib.redirect_stdout(output):
+            cli.main()
+
+        expected_print = self.get_expected_print(
+            12, 6, x_path, rx_path, injection_output
+        )
+        assert output.getvalue().endswith(expected_print)
+
+        self.assert_expected_injection(
+            injection_output, expected_injection_content, extraction_txns, encoding
+        )
+        assert expected_rx_content == rx_path.read_text(encoding)
+        assert expected_x_content == x_path.read_text(encoding)
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_recon_remove(
+        self,
+        filepaths_recon_copy,
+        extraction_txns,
+        mock_input,
+        input_responses,
+        encoding,
+        expected_injection_content,
+    ):
+        """Test calling `reconcile_new_txns` via cli with remove option as False
+
+        Test based on `test_remove`.
+        """
+        x_path = filepaths_recon_copy["x"]
+        rx_path = filepaths_recon_copy["rx"]
+        extraction = filepaths_recon_copy["extraction"]
+
+        expected_rx_content = rx_path.read_text(encoding)
+        expected_x_content = x_path.read_text(encoding)
+
+        mock_input(input_responses)
+        output = io.StringIO()
+        set_cl_args("recon extraction rx x -k")
+        with contextlib.redirect_stdout(output):
+            cli.main()
+
+        expected_print = textwrap.dedent(
+            rf"""
+            18 incoming transactions have been reconciled against expected transactions.
+            Updated transactions have been output to '{extraction}'.
+            """
+        )
+        assert output.getvalue().endswith(expected_print)
+
+        self.assert_expected_injection(
+            extraction, expected_injection_content, extraction_txns, encoding
+        )
+        assert expected_rx_content == rx_path.read_text(encoding)
+        assert expected_x_content == x_path.read_text(encoding)
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_recon_ascending(
+        self,
+        filepaths_recon_copy,
+        extraction_txns,
+        mock_input,
+        input_responses,
+        encoding,
+        expected_injection_ascending_content,
+        expected_injection_content,
+        expected_x_content,
+        expected_rx_content,
+    ):
+        """Test calling `reconcile_new_txns` via cli with reverse option.
+
+        Test based on `test_ascending`.
+        """
+        x_path = filepaths_recon_copy["x"]
+        rx_path = filepaths_recon_copy["rx"]
+        extraction = filepaths_recon_copy["extraction"]
+
+        mock_input(input_responses)
+        output = io.StringIO()
+        set_cl_args("recon extraction rx x -r")
+        with contextlib.redirect_stdout(output):
+            cli.main()
 
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
         assert output.getvalue().endswith(expected_print)
