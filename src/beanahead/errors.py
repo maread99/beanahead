@@ -17,6 +17,10 @@ class BeanaheadFileKeyError(Exception):
     """A file does not reflect the expected beanahead file key."""
 
 
+class RegularTransactionsDefinitionError(Exception):
+    """Error in a regular transactions definition file"""
+
+
 class BeanaheadLedgerFileExistsError(FileExistsError):
     """A file is a beanahead file, but not a ledger."""
 

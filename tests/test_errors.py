@@ -31,6 +31,7 @@ def test_errors_reliant_on_subclass_message():
     assert isinstance(m.BeancountFileExistsError(), FileExistsError)
     assert isinstance(m.BeanaheadFileExistsError(), FileExistsError)
     assert isinstance(m.BeanaheadFileKeyError(), Exception)
+    assert isinstance(m.RegularTransactionsDefinitionError(), Exception)
 
 
 def test_BeanaheadLedgerFileExistsError(path):

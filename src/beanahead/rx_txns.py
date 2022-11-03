@@ -17,7 +17,7 @@ from beancount.core.data import Transaction
 from beancount.parser import parser
 from beancount.parser.printer import EntryPrinter
 
-from . import utils
+from . import utils, errors
 from .errors import BeanaheadWriteError, BeancountLoaderErrors
 
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
@@ -362,10 +362,6 @@ def compose_new_content(file_key: str, txns: list[Transaction]) -> str:
     return content
 
 
-class RegularTransactionsDefinitionError(Exception):
-    """Error in a regular transactions definition file"""
-
-
 class Admin:
     """Administrator of regular expected transactions.
 
@@ -413,6 +409,25 @@ class Admin:
                 for path in [self.path_ledger, self.path_defs]:
                     self._store_content(path)
 
+    def _verify_payees_unique(self):
+        """Raise error if rx txn payees are not unique.
+
+        Payee uniqueness is case-INsensitive, i.e. "Rent" and "rent" are
+        considered to be repeated payees, not unique.
+        """
+        txns = utils.get_unverified_txns(self.path_defs)
+        payees = [txn.payee.lower() for txn in txns]
+        if len((unique_payees := set(payees))) < len(payees):
+            repeated_payees = [
+                payee for payee in unique_payees if payees.count(payee) > 1
+            ]
+            msg = (
+                "The payee of each regular expected transaction must be unique"
+                " (case insensitive) although the following payees are"
+                f" repeated in the file {self.path_defs}:\n{repeated_payees}."
+            )
+            raise errors.RegularTransactionsDefinitionError(msg)
+
     @functools.cached_property
     def rx_defs(self) -> dict[str, Transaction]:
         """Last transaction of each Regular Expected Transaction.
@@ -435,24 +450,6 @@ class Admin:
     def payees(self) -> list[str]:
         """Payees defined Regular Expected Transactions."""
         return list(self.rx_defs.keys())
-
-    def _verify_payees_unique(self):
-        """Raise error if rx txn payees are not unique.
-
-        Payee uniqueness is case-INsensitive, i.e. "Rent" and "rent" are
-        considered to be repeated payees, not unique.
-        """
-        payees = [payee.lower() for payee in self.payees]
-        if len((unique_payees := set(payees))) < len(payees):
-            repeated_payees = [
-                payee for payee in unique_payees if payees.count(payee) > 1
-            ]
-            msg = (
-                "The payee of each regular expected transaction must be unique"
-                " (case insensitive) although the following payees are"
-                f" repeated in the file {self.path_defs}:\n{repeated_payees}."
-            )
-            raise RegularTransactionsDefinitionError(msg)
 
     @property
     def rx_files(self) -> tuple[Path]:
@@ -574,7 +571,7 @@ class Admin:
         else:
             for path in paths:
                 self._revert_to_stored_content(path)
-            raise RegularTransactionsDefinitionError(
+            raise errors.RegularTransactionsDefinitionError(
                 "Changes resulted in the main ledger loading with the following errors:"
                 f"\n{errors}\n.The following files have been reverted to their prior"
                 f" content:\n{paths}"

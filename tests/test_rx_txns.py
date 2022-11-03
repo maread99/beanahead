@@ -4,6 +4,7 @@ from collections import abc
 from contextlib import redirect_stdout
 import datetime
 import io
+import re
 from pathlib import Path
 import shutil
 
@@ -286,6 +287,10 @@ class TestAdmin:
     """
 
     @pytest.fixture
+    def defs_repeat_payee_filepath(self, defs_dir) -> abc.Iterator[Path]:
+        yield defs_dir / "defs_repeat_payee.beancount"
+
+    @pytest.fixture
     def defs_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "defs_221231.beancount"
 
@@ -342,11 +347,24 @@ class TestAdmin:
         yield txns
 
     def test_constructor_raises(
-        self, filepaths_defs_copy_0, filepath_defs_ledger_with_error
+        self,
+        filepaths_defs_copy_0,
+        filepath_defs_ledger_with_error,
+        defs_repeat_payee_filepath,
     ):
         """Test contructor raises error with ledger loads with errors."""
         defs, rx_ledger = filepaths_defs_copy_0["defs"], filepaths_defs_copy_0["rx"]
         with pytest.raises(errors.BeancountLoaderErrors):
+            m.Admin(defs, rx_ledger, filepath_defs_ledger_with_error)
+
+        # verify raises error if definitions' payees' not unique
+        defs = defs_repeat_payee_filepath
+        match = re.escape(
+            "The payee of each regular expected transaction must be unique"
+            " (case insensitive) although the following payees are"
+            f" repeated in the file {defs}:\n['edison']."
+        )
+        with pytest.raises(errors.RegularTransactionsDefinitionError, match=match):
             m.Admin(defs, rx_ledger, filepath_defs_ledger_with_error)
 
     def test_admin(
