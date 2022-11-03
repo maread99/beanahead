@@ -9,7 +9,6 @@ import io
 import itertools
 from pathlib import Path
 import re
-import shutil
 import textwrap
 from types import GeneratorType
 
@@ -35,16 +34,6 @@ from .conftest import get_entries_from_string
 #       redefined-outer-name, missing-any-param-doc, missing-type-doc
 #   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
 #   invalid-name: names in tests not expected to strictly conform with snake_case.
-
-
-@pytest.fixture
-def filepath_recon_x(recon_dir) -> abc.Iterator[Path]:
-    yield recon_dir / "x.beancount"
-
-
-@pytest.fixture
-def filepath_recon_extraction(recon_dir) -> abc.Iterator[Path]:
-    yield recon_dir / "extraction.beancount"
 
 
 @pytest.fixture
@@ -363,20 +352,7 @@ class TestNumberAndSort:
         )
 
     def test_number_diff(self, txns):
-        (
-            a,
-            b,
-            c,
-            d,
-            e,
-            f_,
-            g,
-            h,
-            i,
-            j,
-            k,
-            l,
-        ) = txns
+        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         f = m.number_diff
         assert f(a, b) == Decimal("1")
         assert f(a, c) == Decimal("1")
@@ -391,20 +367,7 @@ class TestNumberAndSort:
         assert f(a, l) == Decimal("0")
 
     def test_have_same_number(self, txns):
-        (
-            a,
-            b,
-            c,
-            d,
-            e,
-            f_,
-            g,
-            h,
-            i,
-            j,
-            k,
-            l,
-        ) = txns
+        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         expected = (
             (a, e),
             (a, f_),
@@ -421,20 +384,7 @@ class TestNumberAndSort:
 
     def test_get_number_matches(self, txns):
         f = m.get_number_matches
-        (
-            a,
-            b,
-            c,
-            d,
-            e,
-            f_,
-            g,
-            h,
-            i,
-            j,
-            k,
-            l,
-        ) = txns
+        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
 
         # verify for 'exact' only
         # also check exact by default...
@@ -458,38 +408,12 @@ class TestNumberAndSort:
         assert f(txns, a, Decimal(1)) == txns
 
     def test_sort_by_number(self, txns):
-        (
-            a,
-            b,
-            c,
-            d,
-            e,
-            f_,
-            g,
-            h,
-            i,
-            j,
-            k,
-            l,
-        ) = txns
+        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         sorted_txns = m.sort_by_number(txns[1:], txns[0])
         assert sorted_txns == [e, f_, l, j, g, h, i, b, c, d, k]
 
     def test_sort_by_date(self, txns):
-        (
-            a,
-            b,
-            c,
-            d,
-            e,
-            f_,
-            g,
-            h,
-            i,
-            j,
-            k,
-            l,
-        ) = txns
+        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         f_ = txns.pop(5)
         sorted_txns = m.sort_by_date(txns, f_)
         assert sorted_txns == [e, g, d, h, c, j, i, b, a, k, l]
@@ -659,20 +583,6 @@ class TestGetMatches:
 
         # verify returns all remaining matches, but only those considered to match
         assert f(txns, txn) == [b, h, i, j, k, l]
-
-
-@pytest.fixture
-def mock_input(monkeypatch) -> abc.Iterator:
-    class MockInput:
-        def __init__(self, responses: abc.Generator):
-            self.responses = responses
-            monkeypatch.setattr("beanahead.reconcile.get_input", self.input)
-
-        def input(self, string: str):
-            print(string)
-            return next(self.responses)
-
-    yield lambda responses: MockInput(responses)
 
 
 class TestUserInput:
@@ -1123,30 +1033,6 @@ class TestUpdateNewTxn:
 
 class TestReconcileNewTxns:
     """Tests for `reconcile_new_txns` function."""
-
-    @pytest.fixture
-    def filepaths_recon_copy(
-        self, filepath_recon_extraction, filepath_recon_rx, filepath_recon_x, temp_dir
-    ) -> abc.Iterator[dict[str, Path]]:
-        """Filepaths to copies of files before reconciling new transactions.
-
-        Copies of each file saved to temporary folder.
-
-        Yields mapping to temporary paths with keys as:
-            "extraction" - file representing extracted transactions
-            "rx" - expected regular transactions ledger
-            "x" - expected transactions ledger
-        """
-        d = {}
-        for k, filepath in zip(
-            ("extraction", "rx", "x"),
-            (filepath_recon_extraction, filepath_recon_rx, filepath_recon_x),
-        ):
-            string = shutil.copy(filepath, temp_dir)
-            d[k] = Path(string)
-        yield d
-        for path in d.values():
-            path.unlink()
 
     @pytest.fixture
     def injection_output(self, temp_dir) -> abc.Iterator[Path]:

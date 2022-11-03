@@ -337,24 +337,6 @@ def get_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction
     return sort_by_number(matches, x_txn)
 
 
-def get_input(text: str) -> str:
-    """Get user input.
-
-    Parameters
-    ----------
-    text
-        String to introduce request for user input.
-
-    Returns
-        User input
-
-    Notes
-    -----
-    Function included to facilitate mocking user input when testing.
-    """
-    return input(text)
-
-
 MSG_SINGLE_MATCH = "Do you want to match the above transactions? y/n: "
 
 
@@ -382,9 +364,11 @@ def confirm_single(
         f"{utils.compose_entries_content(x_txn)}\n"
         f"Incoming Transaction:\n{utils.compose_entries_content(matches[0])}"
     )
-    response = get_input(MSG_SINGLE_MATCH).lower()
+    response = utils.get_input(MSG_SINGLE_MATCH).lower()
     while response not in ["n", "y"]:
-        response = get_input(f"{response} is not valid input, please try again, y/n: ")
+        response = utils.get_input(
+            f"{response} is not valid input, please try again, y/n: "
+        )
     if response == "n":
         return None
     elif response == "y":
@@ -415,14 +399,14 @@ def get_mult_match(
 
     max_value = len(matches) - 1
     options = f"[0-{max_value}]/n"
-    response = get_input(
+    response = utils.get_input(
         "Which of the above incoming transactions do you wish to match"
         f" with the expected transaction, or 'n' for None, {options}:"
     )
     while not (
         (response == "n") or utils.response_is_valid_number(response, max_value)
     ):
-        response = get_input(
+        response = utils.get_input(
             f"{response} is not valid input, please try again {options}: "
         )
     if response == "n":

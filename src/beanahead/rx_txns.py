@@ -550,12 +550,6 @@ class Admin:
         """
         return utils.get_unverified_txns(self.path_ledger)
 
-    # TODO no apparent clients, remove if not required
-    # @property
-    # def rx_txns_expired(self) -> list[Transaction]:
-    #     """Get Regular Expected Transactions dated prior to today."""
-    #     return utils.get_expired_txns(self.rx_txns)
-
     def _validate_main_ledger(self, paths: list[Path]):
         """Validate main ledger loads without errors.
 

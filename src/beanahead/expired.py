@@ -12,8 +12,6 @@ from beancount.core.data import Transaction
 from . import utils
 from .errors import BeanaheadWriteError
 
-# TODO TESTS!!!
-
 TODAY = utils.TODAY
 TOMORROW = TODAY + timedelta(1)
 
@@ -26,11 +24,32 @@ VALID_DATE_FORMAT_REGEXES = [
 
 
 def is_valid_date_format(string: str) -> bool:
-    """Query if a string is in valid date format."""
+    """Query if a string is in valid date format.
+
+    Examples
+    --------
+    >>> is_valid_date_format("2022-08-15")
+    True
+    >>> is_valid_date_format("2022-8-15")
+    True
+    >>> is_valid_date_format("08-15")
+    True
+    >>> is_valid_date_format("15-08")  # NB Not a valid date, but a valid date format
+    True
+    >>> is_valid_date_format("15")
+    True
+    >>> is_valid_date_format("22-08-15")
+    False
+    >>> is_valid_date_format("2022")
+    False
+    >>> is_valid_date_format("08-15-2022")
+    False
+    >>> is_valid_date_format("08-15-22")
+    False
+    """
     return any(regex.match(string) is not None for regex in VALID_DATE_FORMAT_REGEXES)
 
 
-# TODO for test mock now and test either side of the boundaries
 def _get_date_parts(response: str) -> tuple[int, int, int]:
     """Return parts of date to be formed from user response.
 
@@ -102,7 +121,7 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
     Transaction
         Existing `txn` if user chooses to leave 'as is'.
         None if user choose to remove.
-        Otherwise a new Transaction object with revised date to which.
+        Otherwise a new Transaction object with revised date.
     """
     print(
         f"{utils.SEPARATOR_LINE}\nThe following transaction has expired."
@@ -112,9 +131,11 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
         f"\n2 Remove transaction from ledger {path.stem}."
         f"\n3 Leave transaction as is."
     )
-    response: str = input("Choose one of the above options, [0-3]:")
+    response: str = utils.get_input("Choose one of the above options, [0-3]:")
     while not utils.response_is_valid_number(response, 3):
-        response = input(f"'{response}' is not valid input, please try again, [0-3]: ")
+        response = utils.get_input(
+            f"'{response}' is not valid input, please try again, [0-3]: "
+        )
     if response == "3":
         return txn
     elif response == "2":
@@ -122,15 +143,15 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
     elif response[0] == "0":
         return txn._replace(date=TOMORROW)
 
-    response = input(f"Enter a new date {DATE_FORMATS}: ")
+    response = utils.get_input(f"Enter a new date {DATE_FORMATS}: ")
     while (date := _get_date_from_response(response)) is None or (date < TODAY):
         if date is None:
-            response = input(
+            response = utils.get_input(
                 f"'{response}' does not represent a valid date."
                 f"\nPlease enter a valid date {DATE_FORMATS}: "
             )
         else:
-            response = input(
+            response = utils.get_input(
                 f"'{response}' does not represent a date >= {TODAY}."
                 f"\nPlease enter a valid date {DATE_FORMATS}: "
             )

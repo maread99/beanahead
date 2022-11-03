@@ -830,6 +830,24 @@ def compile_strings_regex(
     return re.compile(regex, flags=flags)
 
 
+def get_input(text: str) -> str:
+    """Get user input.
+
+    Parameters
+    ----------
+    text
+        String to introduce request for user input.
+
+    Returns
+        User input
+
+    Notes
+    -----
+    Function included to facilitate mocking user input when testing.
+    """
+    return input(text)
+
+
 def response_is_valid_number(response: str, max_value: int) -> bool:
     """Query if a response represents an integer less than a max_value.
 

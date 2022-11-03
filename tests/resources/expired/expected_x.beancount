@@ -1,0 +1,24 @@
+option "title" "Expected Transactions Ledger"
+pushtag #x_txn
+;; Enter expected transactions after this line...
+
+
+2022-10-01 * "A" ""
+  Liabilities:US:Chase:Slate  -1.11 USD
+  Expenses:Food:Restaurant
+
+2022-11-16 * "B" ""
+  Liabilities:US:Chase:Slate  -2.22 USD
+  Expenses:Food:Restaurant
+
+2022-11-20 * "C" ""
+  Liabilities:US:Chase:Slate  -3.33 USD
+  Expenses:Food:Restaurant
+
+2022-11-30 * "E" ""
+  Liabilities:US:Chase:Slate  -5.55 USD
+  Expenses:Food:Restaurant
+
+
+;; ...enter expected transactions before this line.
+poptag #x_txn

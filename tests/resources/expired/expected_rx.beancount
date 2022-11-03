@@ -1,0 +1,16 @@
+option "title" "Regular Expected Transactions Ledger"
+plugin "rx_txn_plugin"
+pushtag #rx_txn
+;; Transactions should not be manually added to this file.
+
+
+2022-11-16 * "F" ""
+  Assets:US:BofA:Checking  -111.11 USD
+  Expenses:Financial:Fees
+
+2022-11-28 * "H" ""
+  Assets:US:BofA:Checking  -222.22 USD
+  Expenses:Financial:Fees
+
+
+poptag #rx_txn

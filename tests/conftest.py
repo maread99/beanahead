@@ -5,6 +5,7 @@ import datetime
 import io
 import os
 from pathlib import Path
+import shutil
 import textwrap
 
 import beancount
@@ -66,6 +67,22 @@ def pytest_sessionstart(session):
 
 
 @pytest.fixture
+def mock_input(monkeypatch) -> abc.Iterator:
+    """Mock built-in input command to return pre-defined responses."""
+
+    class MockInput:
+        def __init__(self, responses: abc.Generator):
+            self.responses = responses
+            monkeypatch.setattr("beanahead.utils.get_input", self.input)
+
+        def input(self, string: str):
+            print(string)
+            return next(self.responses)
+
+    yield MockInput
+
+
+@pytest.fixture
 def res_dir() -> abc.Iterator[Path]:
     yield TEST_ROOT / "resources"
 
@@ -79,8 +96,43 @@ def recon_dir(res_dir) -> abc.Iterator[Path]:
 
 
 @pytest.fixture
+def filepath_recon_x(recon_dir) -> abc.Iterator[Path]:
+    yield recon_dir / "x.beancount"
+
+
+@pytest.fixture
 def filepath_recon_rx(recon_dir) -> abc.Iterator[Path]:
     yield recon_dir / "rx.beancount"
+
+
+@pytest.fixture
+def filepath_recon_extraction(recon_dir) -> abc.Iterator[Path]:
+    yield recon_dir / "extraction.beancount"
+
+
+@pytest.fixture
+def filepaths_recon_copy(
+    filepath_recon_extraction, filepath_recon_rx, filepath_recon_x, temp_dir
+) -> abc.Iterator[dict[str, Path]]:
+    """Filepaths to copies of files before reconciling new transactions.
+
+    Copies of each file saved to temporary folder.
+
+    Yields mapping to temporary paths with keys as:
+        "extraction" - file representing extracted transactions
+        "rx" - expected regular transactions ledger
+        "x" - expected transactions ledger
+    """
+    d = {}
+    for k, filepath in zip(
+        ("extraction", "rx", "x"),
+        (filepath_recon_extraction, filepath_recon_rx, filepath_recon_x),
+    ):
+        string = shutil.copy(filepath, temp_dir)
+        d[k] = Path(string)
+    yield d
+    for path in d.values():
+        path.unlink()
 
 
 # Common fixtures from files in resources folder
