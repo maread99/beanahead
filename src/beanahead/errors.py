@@ -5,9 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 
-# TODO Need tests for these exception classes!
-
-
 class BeancountFileExistsError(FileExistsError):
     """A declared beancount file does not exist."""
 
