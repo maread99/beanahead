@@ -233,7 +233,7 @@ The reconciliation of new transactions with expected transactions ([reconciling]
 Beanahead will treat each 'word' defined in the expected payee as a separate string. An expected payee will match with the payee of any new transaction that includes **any** of those strings. So:
   - Do not include short words that represent common syllables.
     For example, "Top of the World" will match with "The corner shop", "Another Day" and "Super Offers".
-  - Use few unambiguous words. For example "Top World". Even just "Top" might be a better choice, unless you subscribe to "utopia".
+  - Use few unambiguous words. For example "Top World". Even just "Top" might be a better choice.
 
 You'll get the hang of it. And don't worry, the transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!
 

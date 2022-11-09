@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import re
 import shutil
-import textwrap
 
 import beancount
 from beancount.core import data
@@ -18,7 +17,7 @@ import pytest
 from beanahead import utils as m
 from beanahead import errors
 
-from .conftest import get_fileobj, set_cl_args
+from .conftest import get_fileobj, set_cl_args, get_expected_output
 from . import cmn
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -250,7 +249,7 @@ def test_validate_ledger_file_key(ledger_file_keys):
 def test_compose_header_footer():
     f = m.compose_header_footer
 
-    expected_start = textwrap.dedent(
+    expected_start = get_expected_output(
         """
         option "title" "Regular Expected Transactions Ledger"
         plugin "rx_txn_plugin"
@@ -258,10 +257,10 @@ def test_compose_header_footer():
         ;; Transactions should not be manually added to this file.
         """
     )
-    expected_rx = (expected_start[1:], "poptag #rx_txn\n")
+    expected_rx = (expected_start, "poptag #rx_txn\n")
     assert f("rx") == expected_rx
 
-    expected_rx_def_start = textwrap.dedent(
+    expected_rx_def_start = get_expected_output(
         """
         option "title" "Regular Expected Transaction Definitions"
         plugin "rx_txn_plugin"
@@ -269,13 +268,13 @@ def test_compose_header_footer():
         ;; All accounts referenced by definitions should be defined on the main ledger.
         ;; Enter definitions after this line...
         """
-    )[1:]
-    expected_rx_def_end = textwrap.dedent(
+    )
+    expected_rx_def_end = get_expected_output(
         """
         ;; ...enter definitions before this line.
         poptag #rx_txn
         """
-    )[1:]
+    )
     assert f("rx_def") == (expected_rx_def_start, expected_rx_def_end)
 
 
@@ -668,7 +667,7 @@ def test_compose_entries_content(rx_txn_chase, txns_rx, txns_rx_content):
     # verify can pass a single entry, also tests removing
     f = m.compose_entries_content
     txn = rx_txn_chase
-    expected = textwrap.dedent(
+    expected = get_expected_output(
         """
         2022-10-31 * "Chase" "Chase Hire Purchase" #retained-tag
           final: 2022-11-30
@@ -677,7 +676,7 @@ def test_compose_entries_content(rx_txn_chase, txns_rx, txns_rx_content):
           Liabilities:US:Chase:HirePurchase  322.00 USD
           Assets:US:BofA:Checking
         """
-    )[1:]
+    )
     assert f(txn) == expected
 
     # check a balance_dir to make sure included unchanged in contents

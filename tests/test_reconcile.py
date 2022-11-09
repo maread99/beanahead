@@ -1,15 +1,12 @@
 """Tests for `reconcile` module."""
 
 from collections import abc
-import contextlib
 import copy
 import datetime
 from decimal import Decimal
-import io
 import itertools
 from pathlib import Path
 import re
-import textwrap
 from types import GeneratorType
 
 import beancount
@@ -20,7 +17,12 @@ from beanahead import reconcile as m
 from beanahead.scripts import cli
 
 from . import cmn
-from .conftest import get_entries_from_string, set_cl_args
+from .conftest import (
+    get_entries_from_string,
+    set_cl_args,
+    get_expected_output,
+    also_get_stdout,
+)
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -631,8 +633,9 @@ class TestUserInput:
 
     def test_confirm_single(self, mock_input, txn, txns):
         f = m.confirm_single
-        expected_print = textwrap.dedent(
-            """
+        expected_print = (
+            get_expected_output(
+                """
             ---
             Expected Transaction:
             2022-10-06 * "X" "Transaction to match"
@@ -645,36 +648,31 @@ class TestUserInput:
               Assets:US:BofA:Checking  -51 USD
 
             Do you want to match the above transactions? y/n: """
+            )
+            + "\n"
         )
-        expected_print = expected_print[1:] + "\n"
 
         # verify confirmed match
         inputs = (v for v in ("y",))
         mock_input(inputs)
-        output = io.StringIO()
         poss_match = txns[1]
-        with contextlib.redirect_stdout(output):
-            rtrn = f(txn, [poss_match])
-        assert output.getvalue().endswith(expected_print)
+        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        assert output.endswith(expected_print)
         assert rtrn is poss_match
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            rtrn = f(txn, [poss_match])
-        assert output.getvalue().endswith(expected_print)
+        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        assert output.endswith(expected_print)
         assert rtrn is None
 
         # verify invalid input
         expected_print += "3 is not valid input, please try again, y/n: \n"
         inputs = (v for v in ("3", "y"))
         mock_input(inputs)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            rtrn = f(txn, [poss_match])
-        assert output.getvalue().endswith(expected_print)
+        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        assert output.endswith(expected_print)
         assert rtrn is poss_match
 
         # verify multiple invalid input
@@ -684,7 +682,7 @@ class TestUserInput:
 
     def test_get_mult_match(self, mock_input, txn, txns):
         f = m.get_mult_match
-        expected_print = textwrap.dedent(
+        expected_print = get_expected_output(
             """
             ---
             Expected Transaction:
@@ -712,36 +710,29 @@ class TestUserInput:
             "Which of the above incoming transactions do you wish to match with the"
             " expected transaction, or 'n' for None, [0-1]/n:\n"
         )
-        expected_print = expected_print[1:]
         txns = txns[:2]
 
         # verify confirmed matches
         for i in (0, 1):
             inputs = (v for v in (str(i),))
             mock_input(inputs)
-            output = io.StringIO()
-            with contextlib.redirect_stdout(output):
-                rtrn = f(txn, txns)
-            assert output.getvalue().endswith(expected_print)
+            rtrn, output = also_get_stdout(f, txn, txns)
+            assert output.endswith(expected_print)
             assert rtrn is txns[i]
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            rtrn = f(txn, txns)
-        assert output.getvalue().endswith(expected_print)
+        rtrn, output = also_get_stdout(f, txn, txns)
+        assert output.endswith(expected_print)
         assert rtrn is None
 
         # verify invalid input
         expected_print += "2 is not valid input, please try again [0-1]/n: \n"
         inputs = (v for v in ("2", "0"))
         mock_input(inputs)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            rtrn = f(txn, txns)
-        assert output.getvalue().endswith(expected_print)
+        rtrn, output = also_get_stdout(f, txn, txns)
+        assert output.endswith(expected_print)
         assert rtrn is txns[0]
 
         # verify multiple invalid input
@@ -808,8 +799,7 @@ class TestUpdateNewTxn:
         [2] and [3] represent further new transactions for which no
         corresponding expected transactions are defined.
         """
-        input_ = textwrap.dedent(
-            """
+        input_ = """
             2022-10-08 * "new payee" ""
               Assets:US:BofA:Checking                  -52.44 USD
 
@@ -829,7 +819,6 @@ class TestUpdateNewTxn:
             2022-10-26 * "Yet Another Txn" "Not matched to an x_txn"
               Assets:US:BofA:Checking                  -88.88 USD
             """
-        )
         yield get_entries_from_string(input_)
 
     @pytest.fixture
@@ -840,8 +829,7 @@ class TestUpdateNewTxn:
         `new_txns`.
         [2] and [3] do not correspond with any defined new transaction.
         """
-        input_ = textwrap.dedent(
-            """
+        input_ = """
             2022-10-06 * "x_txn payee" "x_txn narration"  #x_txn #other_tag
               freq: "2w"
               roll: FALSE
@@ -872,7 +860,6 @@ class TestUpdateNewTxn:
             2022-10-22 * "Another Extra x-txn" "Not matched to an new_txn"
               Assets:US:Liabilities:Chase                  -453.21 USD
             """
-        )
         yield get_entries_from_string(input_)
 
     @pytest.fixture
@@ -1098,13 +1085,14 @@ class TestReconcileNewTxns:
         injection_path,
     ) -> str:
         num_removals = num_removals_frm_rx + num_removals_frm_x
-        return textwrap.dedent(
-            rf"""
-            {num_removals} incoming transactions have been reconciled against expected transactions.
-            Updated transactions have been output to '{injection_path}'.
-            {num_removals_frm_rx} transactions have been removed from ledger {rx_path}.
-            {num_removals_frm_x} transactions have been removed from ledger {x_path}.
-            """
+        return (
+            f"{num_removals} incoming transactions have been reconciled against"
+            " expected transactions."
+            f"\nUpdated transactions have been output to '{injection_path}'."
+            f"\n{num_removals_frm_rx} transactions have been removed from ledger"
+            f" {rx_path}."
+            f"\n{num_removals_frm_x} transactions have been removed from ledger"
+            f" {x_path}.\n"
         )
 
     def test_default(
@@ -1127,12 +1115,10 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(str(extraction), ledgers)
+        _, output = also_get_stdout(f, str(extraction), ledgers)
 
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1161,14 +1147,14 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(str(extraction), ledgers, output=str(injection_output))
+        _, output = also_get_stdout(
+            f, str(extraction), ledgers, output=str(injection_output)
+        )
 
         expected_print = self.get_expected_print(
             12, 6, x_path, rx_path, injection_output
         )
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             injection_output, expected_injection_content, extraction_txns, encoding
@@ -1197,17 +1183,12 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(str(extraction), ledgers, remove=False)
-
-        expected_print = textwrap.dedent(
-            rf"""
-            18 incoming transactions have been reconciled against expected transactions.
-            Updated transactions have been output to '{extraction}'.
-            """
+        _, output = also_get_stdout(f, str(extraction), ledgers, remove=False)
+        expected_print = (
+            "18 incoming transactions have been reconciled against expected "
+            f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
         )
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1236,12 +1217,9 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(str(extraction), ledgers, ascending=False)
-
+        _, output = also_get_stdout(f, str(extraction), ledgers, ascending=False)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_ascending_content, extraction_txns, encoding
@@ -1274,13 +1252,10 @@ class TestReconcileNewTxns:
         extraction = filepaths_recon_copy["extraction"]
 
         mock_input(input_responses)
-        output = io.StringIO()
         set_cl_args("recon extraction rx x")
-        with contextlib.redirect_stdout(output):
-            cli.main()
-
+        _, output = also_get_stdout(cli.main)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1309,15 +1284,12 @@ class TestReconcileNewTxns:
         rx_path = filepaths_recon_copy["rx"]
 
         mock_input(input_responses)
-        output = io.StringIO()
         set_cl_args("recon extraction rx x --output injection")
-        with contextlib.redirect_stdout(output):
-            cli.main()
-
+        _, output = also_get_stdout(cli.main)
         expected_print = self.get_expected_print(
             12, 6, x_path, rx_path, injection_output
         )
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             injection_output, expected_injection_content, extraction_txns, encoding
@@ -1347,18 +1319,13 @@ class TestReconcileNewTxns:
         expected_x_content = x_path.read_text(encoding)
 
         mock_input(input_responses)
-        output = io.StringIO()
         set_cl_args("recon extraction rx x -k")
-        with contextlib.redirect_stdout(output):
-            cli.main()
-
-        expected_print = textwrap.dedent(
-            rf"""
-            18 incoming transactions have been reconciled against expected transactions.
-            Updated transactions have been output to '{extraction}'.
-            """
+        _, output = also_get_stdout(cli.main)
+        expected_print = (
+            "18 incoming transactions have been reconciled against expected "
+            f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
         )
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1388,13 +1355,10 @@ class TestReconcileNewTxns:
         extraction = filepaths_recon_copy["extraction"]
 
         mock_input(input_responses)
-        output = io.StringIO()
         set_cl_args("recon extraction rx x -r")
-        with contextlib.redirect_stdout(output):
-            cli.main()
-
+        _, output = also_get_stdout(cli.main)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.getvalue().endswith(expected_print)
+        assert output.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_ascending_content, extraction_txns, encoding

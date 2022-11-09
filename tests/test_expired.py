@@ -1,13 +1,10 @@
 """Tests for `expired` module."""
 
 from collections import abc
-import contextlib
 import datetime
-import io
 from pathlib import Path
 import re
 import shutil
-import textwrap
 
 import pytest
 
@@ -15,7 +12,12 @@ from beanahead import expired as m
 from beanahead import errors
 from beanahead.scripts import cli
 
-from .conftest import get_entries_from_string, set_cl_args
+from .conftest import (
+    get_entries_from_string,
+    set_cl_args,
+    get_expected_output,
+    also_get_stdout,
+)
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -137,7 +139,7 @@ def test_update_txn(monkeypatch, mock_input):
     txn = get_entries_from_string(input_)[0]
     path = Path("dummy/path/to/x.beancount")
 
-    expected_print = textwrap.dedent(
+    expected_print = get_expected_output(
         r"""
         ---
 
@@ -153,28 +155,20 @@ def test_update_txn(monkeypatch, mock_input):
         Choose one of the above options, [0-3]:
         """
     )
-    expected_print = expected_print[1:]
 
     mock_input((v for v in ["0"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-    assert output.getvalue().endswith(expected_print)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=tomorrow)
 
     mock_input((v for v in ["2"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-    assert output.getvalue().endswith(expected_print)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print)
     assert rtrn is None
 
     mock_input((v for v in ["3"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-
-    assert output.getvalue().endswith(expected_print)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print)
     assert rtrn is txn
 
     # verify handles invalid input
@@ -184,19 +178,15 @@ def test_update_txn(monkeypatch, mock_input):
         " please try again, [0-3]: \n"
     )
     mock_input((v for v in ["n", "y", "4", "3"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-    assert output.getvalue().endswith(expected_print_)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print_)
     assert rtrn is txn
 
     # verify option to enter a new date
     expected_print += "Enter a new date (YYYY-MM-DD or MM-DD or DD): \n"
     mock_input((v for v in ["1", "2022-12-03"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-    assert output.getvalue().endswith(expected_print)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
     # verify handles invalid date input
@@ -207,10 +197,8 @@ def test_update_txn(monkeypatch, mock_input):
         " (YYYY-MM-DD or MM-DD or DD): \n"
     )
     mock_input((v for v in ["1", "22-12-03", "2022-11-14", "2022-12-03"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output):
-        rtrn = f(txn, path)
-    assert output.getvalue().endswith(expected_print)
+    rtrn, output = also_get_stdout(f, txn, path)
+    assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
 
@@ -282,19 +270,16 @@ class TestAdminExpiredTxns:
         filepath_rx = filepaths_copy["rx"]
         ledgers = [filepath_x, filepath_rx]
 
-        expected_print = textwrap.dedent(
+        expected_print = get_expected_output(
             rf"""
             The following ledgers have been updated:
             {filepath_x}
             {filepath_rx}
             """
         )
-        expected_print = expected_print[1:]
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(ledgers)
-        assert output.getvalue().endswith(expected_print)
+        _, output = also_get_stdout(f, ledgers)
+        assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx
 
@@ -314,10 +299,8 @@ class TestAdminExpiredTxns:
         )
         expected_print = expected_print[1:]
         mock_input((v for v in ["3", "3", "3", "3"]))
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f([str(filepath_x)])
-        assert output.getvalue().endswith(expected_print)
+        _, output = also_get_stdout(f, [str(filepath_x)])
+        assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
 
     def test_none_expired(self, monkeypatch, filepaths_copy, encoding):
@@ -332,18 +315,15 @@ class TestAdminExpiredTxns:
         orig_contents_x = filepath_x.read_text(encoding)
         orig_contents_rx = filepath_rx.read_text(encoding)
 
-        expected_print = textwrap.dedent(
+        expected_print = get_expected_output(
             rf"""
             There are no expired transactions on any of the following ledgers:
             {filepath_rx}
             {filepath_x}
             """
         )
-        expected_print = expected_print[1:]
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            f(ledgers)
-        assert output.getvalue().endswith(expected_print)
+        _, output = also_get_stdout(f, ledgers)
+        assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
         assert filepath_rx.read_text(encoding) == orig_contents_rx
 
@@ -368,19 +348,16 @@ class TestAdminExpiredTxns:
         filepath_x = filepaths_copy["x"]
         filepath_rx = filepaths_copy["rx"]
 
-        expected_print = textwrap.dedent(
+        expected_print = get_expected_output(
             rf"""
             The following ledgers have been updated:
             {filepath_x}
             {filepath_rx}
             """
         )
-        expected_print = expected_print[1:]
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
-        output = io.StringIO()
         set_cl_args("exp x rx")
-        with contextlib.redirect_stdout(output):
-            cli.main()
-        assert output.getvalue().endswith(expected_print)
+        _, output = also_get_stdout(cli.main)
+        assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx

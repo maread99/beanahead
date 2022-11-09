@@ -1,6 +1,7 @@
 """Common pytest fixtures and hooks."""
 
 from collections import abc
+import contextlib
 import datetime
 import io
 import os
@@ -8,6 +9,7 @@ from pathlib import Path
 import shutil
 import sys
 import textwrap
+import typing
 
 import beancount
 from beancount.core import data
@@ -57,6 +59,19 @@ def get_entries_from_string(string: str) -> data.Entries:
     string = textwrap.dedent(string)
     entries, _, _ = beancount.loader.load_string(string)
     return entries
+
+
+def get_expected_output(string: str):
+    """Convert raw triple quoted string to string representing expected output."""
+    return textwrap.dedent(string)[1:]
+
+
+def also_get_stdout(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
+    """Return a function's return together with output to stdout."""
+    stdout = io.StringIO()
+    with contextlib.redirect_stdout(stdout):
+        rtrn = f(*args, **kwargs)
+    return rtrn, stdout.getvalue()
 
 
 @pytest.fixture

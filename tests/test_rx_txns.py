@@ -1,9 +1,7 @@
 """Tests for `rx_txns` module."""
 
 from collections import abc
-from contextlib import redirect_stdout
 import datetime
-import io
 import re
 from pathlib import Path
 import shutil
@@ -18,7 +16,7 @@ from beanahead import errors
 from beanahead.scripts import cli
 
 from . import cmn
-from .conftest import set_cl_args
+from .conftest import set_cl_args, also_get_stdout
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -429,15 +427,13 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         assert admin.rx_txns == []
 
-        output = io.StringIO()
-        with redirect_stdout(output):
-            admin.add_txns(datetime.date(2022, 12, 31))
+        _, output = also_get_stdout(admin.add_txns, datetime.date(2022, 12, 31))
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output.getvalue() == expected_output
+        assert output == expected_output
         assert defs_path.read_text(encoding) == defs_221231_content
         assert rx_path.read_text(encoding) == rx_221231_content
 
@@ -447,15 +443,13 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         cmn.assert_txns_equal(admin.rx_txns, rx_txns_221231)
 
-        output = io.StringIO()
-        with redirect_stdout(output):
-            admin.add_txns(datetime.date(2023, 6, 30))
+        _, output = also_get_stdout(admin.add_txns, datetime.date(2023, 6, 30))
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output.getvalue() == expected_output
+        assert output == expected_output
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
 
@@ -476,28 +470,24 @@ class TestAdmin:
         defs_path = filepaths_defs_copy_0["defs"]
         rx_path = filepaths_defs_copy_0["rx"]
 
-        output = io.StringIO()
         set_cl_args("addrx defs rx ledger -e 2022-12-31")
-        with redirect_stdout(output):
-            cli.main()
+        _, output = also_get_stdout(cli.main)
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output.getvalue() == expected_output
+        assert output == expected_output
         assert defs_path.read_text(encoding) == defs_221231_content
         assert rx_path.read_text(encoding) == rx_221231_content
 
-        output = io.StringIO()
         set_cl_args("addrx defs rx ledger -e 2023-06-30")
-        with redirect_stdout(output):
-            cli.main()
+        _, output = also_get_stdout(cli.main)
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output.getvalue() == expected_output
+        assert output == expected_output
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
