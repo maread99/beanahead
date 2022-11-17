@@ -7,37 +7,36 @@
 
 **TODO** - all links to absolute references
 
-Love [beancount][beancount] but just wish it supported forecasting? Voila!
-
-Beanahead is a beancount extension to manage future transactions.
-- Define regular and ad-hoc expected transactions.
-- Reconcile actual transactions with expected transactions.
+Beanahead generates and administers future transactions for [beancount][beancount] ledgers.
+- Generate regular expected transactions.
+- Define ad-hoc expected transactions.
+- Reconcile expected transactions against imported transactions.
 
 It´s useful to:
 - Forecast account balances based on expected income and payments.
-- Define transactions between updating accounts. (This is great if, like me, by the time you update your accounts at the end of the month you've forgotten what some of the transactions were or to which accounts you wanted to post them to.)
+- Add transactions between updating accounts.
 
 ## Installation
 
 `$ pip install beanahead`
 
-The only direct dependencies are beancount and pandas (and pandas could be made optional, see [#1]()TODO INCLUDE REFERENCE).
+The only direct dependencies are `beancount` and `pandas` (and pandas could be made optional, see [#1]()TODO INCLUDE REFERENCE).
 
-> :information: The requirement is beancount v2. It's intended that beanahead will be upgraded to support beancount v3 (currently in development) when v3 is completed and available from PyPI.
+> :information: The requirement is beancount v2. It's intended that beanahead will be upgraded to support beancount v3 (currently in development) when v3 is completed and published to PyPI.
 
 ## Really briefly, how it works
 
 - Expected transactions are defined on separate ledgers.
-- New entries are reconciled with expected transactions before being included to the main ledger.
+- Newly imported entries are reconciled against expected transactions before being included to the main ledger.
 
 **Beanahead does not need to touch your main ledger**.
 
 ## Briefly, how it works
-- Regular Expected Transactions (electicity bill, rent, etc) are defined on a dedicated beancount file (by convention 'rx_def.beancount').
-- The `addrx` command is used to populate a Regular Expected Transactions ledger (by convention 'rx.beancount'). This ledger is 'included' to your main .beancount ledger.
-- ad-hoc Expected Transactions are added to the Expected Transactions ledger  (by convention 'x.beancount'). This ledger is also 'included' to your main .beancount ledger.
-- The `recon` comamnd offers a cli to reconcile new entries extracted from your statements with entries on the expected transactions ledgers.
-  - New transactions are updated to reflect any missing narration, tags, meta and 'other side' postings defined on the corresponding expected transactions.
+- Regular Expected Transactions (electicity bill, rent, etc) are defined by including a single transaction to a dedicated beancount file, by convention 'rx_def.beancount'.
+- The `addrx` command is used to populate a Regular Expected Transactions ledger with transactions. This ledger, by convention 'rx.beancount', is 'included' to your main .beancount ledger.
+- ad-hoc Expected Transactions are added to the Expected Transactions ledger, by convention 'x.beancount'. This ledger is also 'included' to your main .beancount ledger.
+- The `recon` comamnd offers a cli to reconcile newly imported entries with entries on the expected transactions ledgers.
+  - Newly imported transactions are updated to reflect any missing narration, tags, meta and 'other side' postings defined on the corresponding expected transactions.
   - Reconciled expected transactions are removed from their respective ledgers.
 
 In keeping with the beancount spirit, beanahead provides all its functionality via a CLI (the underlying functions are available within the codebase should you prefer). There are five commands, all subcommands of beanahead.
@@ -58,7 +57,25 @@ subcommands:
 
 # Using beanahead
 
-TODO INCLUDE AN INDEX HERE FOR ALL SUBSECTIONS OF THIS SECTION
+## Index
+* [Making beanahead files](#making-beanahead-files)
+* [Regular Expected Transactions](#regular-expected-transactions)
+  * [Defining regular transactions](#defining-regular-transactions)
+    * [freq](#freq)
+    * [Postings](#postings)
+    * [roll](#roll)
+    * [final](#final)
+  * [Updating definitions](#updating-definitions)
+  * [Adding regular transactions](#adding-regular-transactions)
+* [Defining the payee](#defining-the-payee)
+* [Reconciling](#reconciling)
+  * [Matching](#matching)
+  * [Updating](#updating)
+* [Injection](#injection)
+* [Expired expected transactions](#expired-expected-transactions)
+* [Worth remembering](#worth-remembering)
+* [Environment recommendations](#environment-recommendations)
+* [Licence](#license)
 
 ## Making beanahead files
 
@@ -113,11 +130,11 @@ The following initial definition would generate regular transactions on the 5th 
 
 Each initial definition must:
 - have a **unique [payee](#defining-the-payee)**.
-- include the [freq](#freq) meta field.
+- include the [freq](#freq) meta field to define the transaction frequency.
 - include at least two [postings](#postings) of which at least one should be to a balance sheet account ("Assets" or "Liabilities").
 
 Initial definitions can optionally include:
-- the [roll](#roll) meta field.
+- the [roll](#roll) meta field to define if a transactions falling on weekends should roll forwards.
 - the [final](#final) meta field to define the last transaction date.
 - additional [postings](#postings).
 - custom meta fields.
@@ -182,7 +199,7 @@ A definition will be automaticaly removed from the definitions file after any fi
 ### Updating definitions
 The `addrx` command updates the definitions file whenever the ledger is populated with new transactions:
 - any definition for which a new transaction was generated will be updated to reflect the transaction that would immediately follow the last transaction that was added to the ledger.
-- Defintions are grouped by balance sheet account* and type of account(s) of the 'other side', for example 'Income', 'Expenses' etc. Each group is introduced with a title row. Within each group definitions are sorted by payee. (*The balance sheet account is assumed as the as the first "Assets" or "Liabilities" account defined in the postings.)
+- Defintions are grouped by balance sheet account* and type of account(s) of the 'other side', for example 'Income', 'Expenses' etc. Each group is introduced with a title row. Within each group definitions are sorted by payee. (*The balance sheet account is assumed as the first "Assets" or "Liabilities" account defined in the postings.)
 
 > :information: New definitions can be added at any time anywhwere under the line ```;; Enter definitions after this line...``` - they'll find their way to the corresponding section when the file is next updated.
 
@@ -208,11 +225,11 @@ For example...
 $ beanahead addrx rx_def rx ledger -e 2022-12-31
 ```
 The above command:
-- Gets the definitions from the file `rx_def.beancount` in the currency working directory.
+- Gets the definitions from the file `rx_def.beancount` in the current working directory.
 - For each definition, generates transactions from (and inclusive of) the defintion date through to and, if applicable, inclusive of '2022-12-31'.
 - Adds transactions to the `rx.beancount` ledger.
 - Updates the `rx_def.beancount` file (as [Updating definitions](#updating-definitions)).
-- Verifies that the main ledger, `ledger.beancount`, loads without error. The path to the main ledger is passed as the third positional argument (this ledger should be the main ledger to which the 'insert "rx.beancount"' line was added). `addrx` requires this file only to verify that no errors have arisen as a result of introducing the new transactions to the Regular Expected Transactions Ledger.
+- Verifies that the main ledger, `ledger.beancount`, loads without errors. The path to the main ledger is passed as the third positional argument (this ledger should be the main ledger to which the 'insert "rx.beancount"' line was added). `addrx` requires this file only to verify that no errors have arisen as a result of introducing the new transactions to the Regular Expected Transactions Ledger.
   - In the event the main ledger loads with errors then changes made to the definitions file and Regular Expected Transactions Ledger are reverted and advices printed.
 
 If the command is executed as above with the files in the [examples/defs](./examples/defs) folder then the empty rx ledger there will be populated with transactions. The rx ledger would end up as [rx_updated.beancount][rx_def_updated] whilst the definitions file would be updated as [rx_def_updated.beancount][rx_def_updated].
@@ -276,7 +293,7 @@ The above command:
 - [Matches](#Matching) expected transactions with new transactions.
   - The user is requested to confirm or reject each propsosed match.
   - Where an expected transaction matches more than one new transaction, the user is requested to select which of the new transactions to match (or none).
-- [Updates](#Updating) matched new transactions with information gleanded from the corresponding expected transaction.
+- [Updates](#Updating) matched new transactions with information gleaned from the corresponding expected transaction.
 - Outputs the updated entries. By default overwrites the file passed as the `new` argument (`extraction.beancount` above). Alternatively, a path can be passed to the `--output` option, as in this case where output will be written to `injection.beancount` in the current working directory.
   - Entries are by default sorted in ascending order. Pass the `-r` flag or `--reverse` option to sort in descending order.
 - Removes reconciled expected transactions from their respective ledgers. (The `-k` flag can be passed to 'keep' the expected transactions.)
@@ -301,7 +318,7 @@ As a bare minimum, matches require that the new and expected transactions:
 If you want a better insight into how matches are evaluated, check out the [reconcile](./src/beanahead/reconcile.py) module to get under-the-bonnet.
 
 ### Updating
-Beanahead will update the following fields of matched new transactions to include any values specifed for the corresponding expected transaction. Existing values on the new transaction will **not** be overwritten.
+Beanahead will update the following fields of matched new transactions to include any values specifed for the corresponding expected transaction. Any existing values on the new transaction will **not** be overwritten.
 - **narration**
 - **tags** (excluding #rx_txn and #x_txn)
 - **meta** (excluding beanahead meta fields such as 'final', 'roll' etc)
@@ -364,16 +381,27 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 ## Environment recommendations
 If you don't already, try out a beancount syntax-highlighter extension. Have a look at the ['Editor Support' section of the Awesome Beancount](https://github.com/siddhantgoel/awesome-beancount#editor-support) repo to see if there's one available for your prefered editor.
 
-Indeed, check out [Awesome Beancount](https://github.com/siddhantgoel/awesome-beancount) for all things beancount!
+## Alternative packages
+An active beancount community offers a considerable number of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what beanahead offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.
+* [beancount-import](https://github.com/jbms/beancount-import) - an importer interface. Functionality provides for adding expected transactions directly to the main ledger and later merging these with imported transactions via a web-based UI. It requires implementing the importer interface and doesn't directly provide for regular expected transactions. But, if that import interface works for you then you'll probably want to be using beancount-import. (If you need the regular trasactions functionality provided by beanahead, just use beanahead to generate the transactions, copy them over to your ledger and let beancount-import handle the subsequent reconcilation.)
+
+If you would recommend any other alternative package please raise a PR to add it here.
+
+More broadly, [awesome-beancount][awesome] is a great refrence for all things beancount. FWIW, these are my most-awesome of [awesome-beancount][awesome]:
+* [Siddharnt Goel's blog post](https://sgoel.dev/posts/how-you-can-track-your-personal-finances-using-python/) uses beancount examples to explain Plain Text Accounting and double-entry accounting. A great introduction to these concepts.
+* [reds-rants](https://reds-rants.netlify.app/personal-finance/the-five-minute-ledger-update/) offers a comprehensive set of blogs on everything importing. It's tremendous.
+* [smart_importer](https://github.com/beancount/smart_importer) import hooks that include auto-completion of postings based on machine-learning trained on past entries.
+* [beancount-import](https://github.com/jbms/beancount-import) importer interface. If it works for you to be locked into an importer interface, this is a great one to be locked into.
 
 ## License
 
 [MIT License][license]
 
 
-[license]: https://github.com/maread99/beanahead/blob/master/LICENSE.txt
 [beancount]: https://github.com/beancount/beancount
+[license]: https://github.com/maread99/beanahead/blob/master/LICENSE.txt
 [rx_defs_initial]: ./examples/defs/rx_def.beancount
 [beancount_example]: https://github.com/beancount/beancount/tree/master/examples
 [rx_def_updated]: ./examples/defs/rx_def_updated.beancount
 [x_ledger]: ./examples/recon/x.beancount
+[awesome]: https://github.com/siddhantgoel/awesome-beancount
