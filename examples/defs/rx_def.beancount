@@ -14,7 +14,7 @@ pushtag #rx_txn
 2022-10-16 * "Verizon" "Telecoms, monthly variable" #you-can-inc-tags
   ; 2022-10-16 is a Sunday. By default, the next generated transaction
   ; will be rolled forwards to 2022-10-17 (Monday) although transactions
-  ; thereafter will be dated the 15 of each month whenever the 15 is a
+  ; thereafter will be dated the 16 of each month whenever the 16 is a
   ; weekday.
   freq: "m"
   Assets:US:BofA:Checking                     -55.00 USD
@@ -49,7 +49,7 @@ pushtag #rx_txn
 
 2022-11-13 * "ETrade Transfer" "Transfering accumulated savings to other account"
   ; As roll is defined as FALSE the next transaction will be dated
-  ; 2022-11-13 even through this is a Sunday.
+  ; 2022-11-13 even though this is a Sunday.
   freq: "3m"
   roll: FALSE
   Assets:US:BofA:Checking                           -4000 USD
