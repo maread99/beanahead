@@ -1,8 +1,5 @@
 ;; -*- mode: beancount -*-
 
-2022-01-20 * "Corner Deli" ""
-  Liabilities:US:Chase:Slate  -83.67 USD
-
 2022-10-01 * "Argo Tea" ""
   Liabilities:US:Chase:Slate  -6.42 USD
 
@@ -80,6 +77,9 @@
   test_meta: "You can include meta fields"
   Liabilities:US:Chase:Slate  -120.00 USD
   Expenses:Transport:Tram
+
+2022-10-20 * "Corner Deli" ""
+  Liabilities:US:Chase:Slate  -83.67 USD
 
 2022-10-21 * "BayBook 2022-10-07 through 2022-10-20" "Payroll"
   freq: "2w"
