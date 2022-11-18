@@ -72,8 +72,8 @@ subcommands:
 * [Injection](#injection)
 * [Expired expected transactions](#expired-expected-transactions)
 * [Worth remembering](#worth-remembering)
-* [Environment recommendations](#environment-recommendations)
 * [Alternative packages](#alternative-packages)
+* [beancount recommendations](#beancount-recommendations)
 * [Licence](#license)
 
 ## Making beanahead files
