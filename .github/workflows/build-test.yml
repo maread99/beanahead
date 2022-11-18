@@ -36,9 +36,10 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'requirements_tests.txt'
       - name: Install dependencies
+        # --use-pep517 required by Windows Python 3.11 runner
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements_tests.txt
+          pip install -r requirements_tests.txt --use-pep517
           pip install -e .
       - name: Lint with flake8
         # fail it if doesn't pass flake8
