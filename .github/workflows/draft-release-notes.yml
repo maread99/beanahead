@@ -3,9 +3,9 @@ name: Release Drafter
 on:
   push:
     branches:
-      - master
+      - main
 
-# Updates next release notes on any push to master. Label a PR to categorize it
+# Updates next release notes on any push to main. Label a PR to categorize it
 # in accordance with .github/release_drafter.yml.
 jobs:
   update_release_draft:
