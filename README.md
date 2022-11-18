@@ -386,6 +386,7 @@ If you don't already, it worth trying out a beancount syntax-highlighter extensi
 
 More broadly, [awesome-beancount][awesome] is a great refrence for all things beancount. FWIW, these are my most-awesome of awesome-beancount:
 * [Siddharnt Goel's blog post](https://sgoel.dev/posts/how-you-can-track-your-personal-finances-using-python/) uses `beancount` examples to explain Plain Text Accounting and double-entry accounting. A great introduction to these concepts.
+* [beancount mailing list](https://groups.google.com/g/beancount) is the place to look for answers and raise questions.
 * [reds-rants](https://reds-rants.netlify.app/personal-finance/the-five-minute-ledger-update/) offers a comprehensive set of blogs on everything importing. It's tremendous.
 * [smart_importer](https://github.com/beancount/smart_importer) offers import hooks that include one for auto-completion of postings based on machine-learning trained on past entries. Smart stuff indeed.
 * [beancount-import](https://github.com/jbms/beancount-import) is an importer interface. If it works for you to be locked into an importer interface, this is a great one to be locked into.
