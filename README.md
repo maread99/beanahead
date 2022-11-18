@@ -4,7 +4,9 @@
 <!-- TODO INCLUDE BADGES
 [![PyPI](https://img.shields.io/pypi/v/beanahead)](https://pypi.org/project/beanahead/) ![Python Support](https://img.shields.io/pypi/pyversions/beanahead) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 -->
-Beanahead administers future transactions for [beancount][beancount] ledgers. It let's you:
+Beanahead administers future transactions for [beancount][beancount] ledgers.
+
+It let's you:
 - Generate regular expected transactions.
 - Define ad hoc expected transactions.
 - Reconcile expected transactions against imported transactions.
@@ -17,7 +19,7 @@ It's useful to:
 
 `$ pip install beanahead`
 
-The only direct dependencies are `beancount` and `pandas` (`pandas` could be made optional, see [#1](https://github.com/maread99/beanahead/issues/1)).
+The only direct dependencies are `beancount` and `pandas` (pandas could be made optional, see [#1](https://github.com/maread99/beanahead/issues/1)).
 
 > :information_source: The `beancount` requirement is beancount v2. It's intended that `beanahead` will be upgraded to support beancount v3 (currently in development) when v3 is completed and published to PyPI.
 
@@ -376,18 +378,18 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 
 ## Alternative packages
 The beancount community offers a considerable array of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what `beanahead` offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.
-* [beancount-import](https://github.com/jbms/beancount-import) - an importer interface. Functionality provides for adding expected transactions directly to the main ledger and later merging these with imported transactions via a web-based UI. It requires implementing the importer interface and doesn't directly provide for regular expected transactions. But, if that import interface works for you then you'll probably want to be using beancount-import. (If you need the regular trasactions functionality provided by beanahead, just use beanahead to generate the transactions, copy them over to your ledger and let beancount-import handle the subsequent reconcilation.)
+* [beancount-import](https://github.com/jbms/beancount-import) - an importer interface. Functionality provides for adding expected transactions directly to the main ledger and later merging these with imported transactions via a web-based UI. It requires implementing the importer interface and doesn't directly provide for regular expected transactions. But, if that import interface works for you then you'll probably want to be using `beancount-import`. (If you need the regular trasactions functionality provided by `beanahead`, just use `beanahead` to generate the transactions, copy them over to your ledger and let `beancount-import` handle the subsequent reconcilation.)
 
 If you can recommend any other alternative package please raise a PR to add it here.
 
 ## `beancount` recommendations
 If you don't already, it worth trying out a beancount syntax-highlighter extension. Have a look at the ['Editor Support' section of the Awesome Beancount](https://github.com/siddhantgoel/awesome-beancount#editor-support) repo to see if there's one available for your prefered editor.
 
-More broadly, [awesome-beancount][awesome] is a great refrence for all things beancount. FWIW, these are my most-awesome of [awesome-beancount][awesome]:
+More broadly, [awesome-beancount][awesome] is a great refrence for all things beancount. FWIW, these are my most-awesome of awesome-beancount:
 * [Siddharnt Goel's blog post](https://sgoel.dev/posts/how-you-can-track-your-personal-finances-using-python/) uses `beancount` examples to explain Plain Text Accounting and double-entry accounting. A great introduction to these concepts.
 * [reds-rants](https://reds-rants.netlify.app/personal-finance/the-five-minute-ledger-update/) offers a comprehensive set of blogs on everything importing. It's tremendous.
-* [smart_importer](https://github.com/beancount/smart_importer) import hooks that include auto-completion of postings based on machine-learning trained on past entries.
-* [beancount-import](https://github.com/jbms/beancount-import) importer interface. If it works for you to be locked into an importer interface, this is a great one to be locked into.
+* [smart_importer](https://github.com/beancount/smart_importer) offers import hooks that include one for auto-completion of postings based on machine-learning trained on past entries. Smart stuff indeed.
+* [beancount-import](https://github.com/jbms/beancount-import) is an importer interface. If it works for you to be locked into an importer interface, this is a great one to be locked into.
 
 ## License
 
