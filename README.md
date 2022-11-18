@@ -1,9 +1,8 @@
-<!-- DEFINE ALL LINKS AS ABSOLUTE address so that resolve on PyPI page -->
+<!-- NB any links not defined as aboslute will not resolve on PyPI page -->
 # beanahead
 
-<!-- TODO INCLUDE BADGES
 [![PyPI](https://img.shields.io/pypi/v/beanahead)](https://pypi.org/project/beanahead/) ![Python Support](https://img.shields.io/pypi/pyversions/beanahead) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
--->
+
 Beanahead administers future transactions for [beancount][beancount] ledgers.
 
 It let's you:
