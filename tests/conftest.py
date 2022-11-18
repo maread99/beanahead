@@ -34,8 +34,10 @@ import pytest
 ENCODING = "utf-8"
 TEST_ROOT = Path(__file__).parent
 TEMP_DIR = TEST_ROOT / r"./_temp"
-if not TEMP_DIR.is_dir():
-    TEMP_DIR.mkdir()
+TEMP_SUBDIR = TEMP_DIR / r"./_tempsub"
+for temp_dir in (TEMP_DIR, TEMP_SUBDIR):
+    if not temp_dir.is_dir():
+        temp_dir.mkdir()
 
 
 def set_cl_args(cl: str):

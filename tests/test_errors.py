@@ -68,8 +68,7 @@ def test_BeanaheadWriteError(path):
     expected = (
         f"An error occurred when attempting to overwrite '{path}'."
         " The following files have been reverted to their most recent saved content:"
-        "\nreverted\\path\\x.beancount"
-        "\nreverted\\path\\rx.beancount"
+        f"\n{str(reverted[0])}\n{str(reverted[1])}"
     )
     assert str(error) == expected
 
