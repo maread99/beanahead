@@ -4,15 +4,12 @@
 <!-- TODO INCLUDE BADGES
 [![PyPI](https://img.shields.io/pypi/v/beanahead)](https://pypi.org/project/beanahead/) ![Python Support](https://img.shields.io/pypi/pyversions/beanahead) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 -->
-
-**TODO** - all links to absolute references
-
-Beanahead generates and administers future transactions for [beancount][beancount] ledgers.
+Beanahead administers future transactions for [beancount][beancount] ledgers. It let's you:
 - Generate regular expected transactions.
-- Define ad-hoc expected transactions.
+- Define ad hoc expected transactions.
 - Reconcile expected transactions against imported transactions.
 
-It´s useful to:
+It's useful to:
 - Forecast account balances based on expected income and payments.
 - Add transactions between updating accounts.
 
@@ -20,16 +17,15 @@ It´s useful to:
 
 `$ pip install beanahead`
 
-The only direct dependencies are `beancount` and `pandas` (and pandas could be made optional, see [#1]()TODO INCLUDE REFERENCE).
+The only direct dependencies are `beancount` and `pandas` (`pandas` could be made optional, see [#1](https://github.com/maread99/beanahead/issues/1).
 
-> :information: The requirement is beancount v2. It's intended that beanahead will be upgraded to support beancount v3 (currently in development) when v3 is completed and published to PyPI.
+> :information_source: The requirement is beancount v2. It's intended that `beanahead` will be upgraded to support beancount v3 (currently in development) when v3 is completed and published to PyPI.
 
 ## Really briefly, how it works
 
 - Expected transactions are defined on separate ledgers.
 - Newly imported entries are reconciled against expected transactions before being included to the main ledger.
-
-**Beanahead does not need to touch your main ledger**.
+- **Beanahead does not need to touch your main ledger**.
 
 ## Briefly, how it works
 - Regular Expected Transactions (electicity bill, rent, etc) are defined by including a single transaction to a dedicated beancount file, by convention 'rx_def.beancount'.
@@ -39,7 +35,7 @@ The only direct dependencies are `beancount` and `pandas` (and pandas could be m
   - Newly imported transactions are updated to reflect any missing narration, tags, meta and 'other side' postings defined on the corresponding expected transactions.
   - Reconciled expected transactions are removed from their respective ledgers.
 
-In keeping with the beancount spirit, beanahead provides all its functionality via a CLI (the underlying functions are available within the codebase should you prefer). There are five commands, all subcommands of beanahead.
+In keeping with the `beancount` spirit, `beanahead` provides all its functionality via a CLI (the underlying functions are available within the codebase should you prefer). There are five commands, all subcommands of `beanahead`.
 ```
 $ beanahead --help
 usage: beanahead [-h] [--version] {make,addrx,recon,exp,inject} ...
@@ -53,7 +49,7 @@ subcommands:
     inject              inject new transactions.
 ```
 
-> :information_source: Wherever this README shows the return from a `--help` option, in reality only an abridged version of the return if shown. For the full help run the command at the command line, e.g. `beanahead --help`. For subcommands this help will include the documentation of the underlying function.
+> :information_source: Wherever this README shows the return from a `--help` option, only an abridged version of the return is actually shown. Run the command at the command line for the full help, e.g. `beanahead --help`. For subcommands this help will include the documentation of the underlying function.
 
 # Using beanahead
 
@@ -81,7 +77,7 @@ subcommands:
 
 First off, you'll need to use the `make` command to create a new `.beancount` file or three.
 
-> :information: You'll probably want these files to be in the same directory as your exisitng main ledger. The following examples assume you want to create the files in the current working directory. Pass the --dirpath (or -d) option to specify a different directory.
+> :information_source: You'll probably want these files to be in the same directory as your exisitng main ledger. The following examples assume you want to create the files in the current working directory. Pass the --dirpath (or -d) option to specify a different directory.
 
 If you want to include Regular Expected Transactions you'll need to create a definitions file and a dedicated ledger....
 ```
@@ -105,7 +101,7 @@ So, if you want to include both regular and ad-hoc expected transactions then yo
 
 > : information: The -f option provides for defining the filename (`make` will add the `.beancount` extension). If -f is not passed then default names will be used which are as those explicitly passed in the examples.
 
-> :information: The quoted file in the 'include' lines should reflect the path to the expected transactions ledger from the directory in which your main ledger is located. The above examples assume that the expected transactions ledgers have the default filenames and are located in the same directory as the main ledger.
+> :information_source: The quoted file in the 'include' lines should reflect the path to the expected transactions ledger from the directory in which your main ledger is located. The above examples assume that the expected transactions ledgers have the default filenames and are located in the same directory as the main ledger.
 
 The examples folder includes a sample of each of the above newly created files.
 - [Regular Expected Transaction Definitions file](./examples/new_empty_files/rx_def.beancount)
@@ -134,7 +130,7 @@ Each initial definition must:
 - include at least two [postings](#postings) of which at least one should be to a balance sheet account ("Assets" or "Liabilities").
 
 Initial definitions can optionally include:
-- the [roll](#roll) meta field to define if a transactions falling on weekends should roll forwards.
+- the [roll](#roll) meta field to define if transactions falling on weekends should roll forwards.
 - the [final](#final) meta field to define the last transaction date.
 - additional [postings](#postings).
 - custom meta fields.
@@ -156,9 +152,9 @@ At least one posting to an account on the 'other side' must be included (e.g. to
 
 When the regular expected transactions are later reconciled with transactions extracted from your statements, the `recon` command will update the extracted transactions with these 'other-side' postings (see [reconciling](#reconciling)).
 
-> :information: If the transaction is balanced with only one 'other-side' posting then you're better off not including an amount for it. (By including an amount, if the extracted transaction has a different amount then you'll need to manually amend the posting on the updated extracted transaction.)
+> :information_source: If the transaction is balanced with only one 'other-side' posting then you're better off not including an amount for it. (By including an amount, if the extracted transaction has a different amount then you'll need to manually amend the posting on the updated extracted transaction.)
 
-> :information: If the transaction is split between various 'other-side' postings then it will be necessary to define an amount for at least all but one of these. In this case, if the extracted transaction value differs from the expected transaction value then it may be necessary to revise the amounts of those postings for which estimates were included.
+> :information_source: If the transaction is split between various 'other-side' postings then it will be necessary to define an amount for at least all but one of these. In this case, if the extracted transaction value differs from the expected transaction value then it may be necessary to revise the amounts of those postings for which estimates were included.
 
 #### Roll
 Any generated transaction that would be dated on a weekend will be rolled forward by default to the following Monday. This behaviour can be overriden by the 'roll' meta field.
@@ -173,7 +169,7 @@ The above initial definition is dated 2022-11-13, which is a Sunday. By specifyi
 
 > :warning: the roll field's value must be in captials and NOT quoted.
 
-> :information: initial definitions should always be dated on the 'usual' payment day even if that falls on a weekend. For example...
+> :information_source: initial definitions should always be dated on the 'usual' payment day even if that falls on a weekend. For example...
 > ```
 > 2022-10-15 * "Verizon" "Telecoms, monthly variable"
 > freq: "m"
@@ -201,7 +197,7 @@ The `addrx` command updates the definitions file whenever the ledger is populate
 - any definition for which a new transaction was generated will be updated to reflect the transaction that would immediately follow the last transaction that was added to the ledger.
 - Defintions are grouped by balance sheet account* and type of account(s) of the 'other side', for example 'Income', 'Expenses' etc. Each group is introduced with a title row. Within each group definitions are sorted by payee. (*The balance sheet account is assumed as the first "Assets" or "Liabilities" account defined in the postings.)
 
-> :information: New definitions can be added at any time anywhwere under the line ```;; Enter definitions after this line...``` - they'll find their way to the corresponding section when the file is next updated.
+> :information_source: New definitions can be added at any time anywhwere under the line ```;; Enter definitions after this line...``` - they'll find their way to the corresponding section when the file is next updated.
 
 [rx_def_updated.beancount][rx_def_updated] is the updated [rx_def.beancount][rx_defs_initial] file after adding regular transactions to the ledger through to 2022-12-31. :warning: Notice that all comments are lost when a definitions file is updated.
 
@@ -254,7 +250,7 @@ Beanahead will treat each 'word' defined in the expected payee as a separate str
 
 You'll get the hang of it. And don't worry, the transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!
 
-> :information: matches are case-insensitive
+> :information_source: matches are case-insensitive
 
 ## Reconciling 
 
@@ -373,7 +369,7 @@ The above command:
 
 With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` should now be checking out.
 
-> :information: An alternative to using `exp` is to manually redate / remove transactions on the expected transactions ledgers.
+> :information_source: An alternative to using `exp` is to manually redate / remove transactions on the expected transactions ledgers.
 
 ## Worth remembering
 > :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost. 
@@ -385,10 +381,10 @@ If you don't already, try out a beancount syntax-highlighter extension. Have a l
 An active beancount community offers a considerable number of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what beanahead offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.
 * [beancount-import](https://github.com/jbms/beancount-import) - an importer interface. Functionality provides for adding expected transactions directly to the main ledger and later merging these with imported transactions via a web-based UI. It requires implementing the importer interface and doesn't directly provide for regular expected transactions. But, if that import interface works for you then you'll probably want to be using beancount-import. (If you need the regular trasactions functionality provided by beanahead, just use beanahead to generate the transactions, copy them over to your ledger and let beancount-import handle the subsequent reconcilation.)
 
-If you would recommend any other alternative package please raise a PR to add it here.
+If you can recommend any other alternative package please raise a PR to add it here.
 
 More broadly, [awesome-beancount][awesome] is a great refrence for all things beancount. FWIW, these are my most-awesome of [awesome-beancount][awesome]:
-* [Siddharnt Goel's blog post](https://sgoel.dev/posts/how-you-can-track-your-personal-finances-using-python/) uses beancount examples to explain Plain Text Accounting and double-entry accounting. A great introduction to these concepts.
+* [Siddharnt Goel's blog post](https://sgoel.dev/posts/how-you-can-track-your-personal-finances-using-python/) uses `beancount` examples to explain Plain Text Accounting and double-entry accounting. A great introduction to these concepts.
 * [reds-rants](https://reds-rants.netlify.app/personal-finance/the-five-minute-ledger-update/) offers a comprehensive set of blogs on everything importing. It's tremendous.
 * [smart_importer](https://github.com/beancount/smart_importer) import hooks that include auto-completion of postings based on machine-learning trained on past entries.
 * [beancount-import](https://github.com/jbms/beancount-import) importer interface. If it works for you to be locked into an importer interface, this is a great one to be locked into.
