@@ -10,7 +10,7 @@ authors = [
   {name = "Marcus Read"},
 ]
 readme = "README.md"
-license = {file = "LICENSE.txt"}
+license = {text = "MIT License"}
 keywords = ["accounting", "beancount", "ledger", "finance"]
 requires-python = "~=3.9"
 

@@ -8,12 +8,16 @@ astroid==2.12.12
     # via pylint
 attrs==22.1.0
     # via pytest
-beancount==2.3.5
+beanahead[tests]==0.1.0
     # via beanahead (pyproject.toml)
+beancount==2.3.5
+    # via
+    #   beanahead
+    #   beanahead (pyproject.toml)
 beautifulsoup4==4.11.1
     # via beancount
 black==22.10.0
-    # via beanahead (pyproject.toml)
+    # via beanahead
 bottle==0.12.23
     # via beancount
 build==0.9.0
@@ -48,10 +52,10 @@ filelock==3.8.0
     # via virtualenv
 flake8==5.0.4
     # via
-    #   beanahead (pyproject.toml)
+    #   beanahead
     #   flake8-docstrings
 flake8-docstrings==1.6.0
-    # via beanahead (pyproject.toml)
+    # via beanahead
 google-api-core==2.10.2
     # via google-api-python-client
 google-api-python-client==2.66.0
@@ -69,7 +73,7 @@ httplib2==0.21.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
-identify==2.5.8
+identify==2.5.9
     # via pre-commit
 idna==3.4
     # via requests
@@ -100,7 +104,9 @@ packaging==21.3
     #   build
     #   pytest
 pandas==1.5.1
-    # via beanahead (pyproject.toml)
+    # via
+    #   beanahead
+    #   beanahead (pyproject.toml)
 pathspec==0.10.2
     # via black
 pep517==0.13.0
@@ -142,7 +148,7 @@ pyparsing==3.0.9
     #   packaging
 pytest==7.2.0
     # via
-    #   beanahead (pyproject.toml)
+    #   beanahead
     #   beancount
 python-dateutil==2.8.2
     # via
