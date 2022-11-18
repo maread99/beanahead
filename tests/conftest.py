@@ -31,9 +31,13 @@ import pytest
 #   invalid-name: names in tests not expected to strictly conform with snake_case.
 
 
+ENCODING = "utf-8"
 TEST_ROOT = Path(__file__).parent
 TEMP_DIR = TEST_ROOT / r"./_temp"
-ENCODING = "utf-8"
+TEMP_SUBDIR = TEMP_DIR / r"./_tempsub"
+for temp_dir in (TEMP_DIR, TEMP_SUBDIR):
+    if not temp_dir.is_dir():
+        temp_dir.mkdir()
 
 
 def set_cl_args(cl: str):
@@ -98,7 +102,6 @@ def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
 
 def _clean_test_dir():
     """Remove all files and directories from the test directory"""
-    assert TEMP_DIR.is_dir()
     for dirpath, dirname, filenames in os.walk(TEMP_DIR):
         for filename in filenames:
             path = Path(dirpath) / filename

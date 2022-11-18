@@ -39,15 +39,18 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = [
+tests = [
     "black",
     "flake8",
     "flake8-docstrings",
+    "pytest",
+]
+dev = [
+    "beanahead[tests]",
     "mypy",
     "pip-tools",
     "pre-commit",
     "pylint",
-    "pytest",
 ]
 
 [project.urls]

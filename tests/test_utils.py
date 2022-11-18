@@ -305,7 +305,7 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir):
 
     # verify can pass dirpath
     key = "x"
-    rel_path = "./_temp2"
+    rel_path = "./_tempsub"
     expected_path = cwd_as_temp_dir / rel_path / f"{key}.beancount"
     assert not expected_path.is_file()
     f(key, dirpath=rel_path)
@@ -360,7 +360,7 @@ def test_cli_make(files_make, cwd_as_temp_dir):
 
     # verify can pass dirpath
     key = "x"
-    rel_path = "./_temp2"
+    rel_path = "./_tempsub"
     expected_path = cwd_as_temp_dir / rel_path / f"{key}.beancount"
     assert not expected_path.is_file()
     set_cl_args(f"make {key} --dirpath {rel_path}")
