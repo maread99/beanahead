@@ -560,7 +560,7 @@ class Admin:
                 "is unknown."
             )
 
-        if not (errors := self._get_main_ledger_errors()):
+        if not (errors_ := self._get_main_ledger_errors()):
             for path in paths:
                 self._store_content(path)
             if self.path_defs in paths:
@@ -573,7 +573,7 @@ class Admin:
                 self._revert_to_stored_content(path)
             raise errors.RegularTransactionsDefinitionError(
                 "Changes resulted in the main ledger loading with the following errors:"
-                f"\n{errors}\n.The following files have been reverted to their prior"
+                f"\n{errors_}\n.The following files have been reverted to their prior"
                 f" content:\n{paths}"
             )
 
