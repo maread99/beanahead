@@ -4,21 +4,21 @@
 #
 #    pip-compile --extra=tests --output-file=requirements_tests.txt pyproject.toml
 #
-attrs==22.1.0
+attrs==22.2.0
     # via pytest
 beancount==2.3.5
     # via beanahead (pyproject.toml)
 beautifulsoup4==4.11.1
     # via beancount
-black==22.10.0
+black==22.12.0
     # via beanahead (pyproject.toml)
 bottle==0.12.23
     # via beancount
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
-chardet==5.0.0
+chardet==5.1.0
     # via beancount
 charset-normalizer==2.1.1
     # via requests
@@ -28,19 +28,19 @@ colorama==0.4.6
     # via
     #   click
     #   pytest
-exceptiongroup==1.0.4
+exceptiongroup==1.1.0
     # via pytest
-flake8==5.0.4
+flake8==6.0.0
     # via
     #   beanahead (pyproject.toml)
     #   flake8-docstrings
 flake8-docstrings==1.6.0
     # via beanahead (pyproject.toml)
-google-api-core==2.10.2
+google-api-core==2.11.0
     # via google-api-python-client
-google-api-python-client==2.66.0
+google-api-python-client==2.70.0
     # via beancount
-google-auth==2.14.1
+google-auth==2.15.0
     # via
     #   google-api-core
     #   google-api-python-client
@@ -57,27 +57,27 @@ idna==3.4
     # via requests
 iniconfig==1.1.1
     # via pytest
-lxml==4.9.1
+lxml==4.9.2
     # via beancount
 mccabe==0.7.0
     # via flake8
 mypy-extensions==0.4.3
     # via black
-numpy==1.23.4
+numpy==1.24.1
     # via pandas
-packaging==21.3
+packaging==22.0
     # via pytest
-pandas==1.5.1
+pandas==1.5.2
     # via beanahead (pyproject.toml)
-pathspec==0.10.2
+pathspec==0.10.3
     # via black
-platformdirs==2.5.4
+platformdirs==2.6.0
     # via black
 pluggy==1.0.0
     # via pytest
 ply==3.11
     # via beancount
-protobuf==4.21.9
+protobuf==4.21.12
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -87,16 +87,14 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pycodestyle==2.9.1
+pycodestyle==2.10.0
     # via flake8
 pydocstyle==6.1.1
     # via flake8-docstrings
-pyflakes==2.5.0
+pyflakes==3.0.1
     # via flake8
 pyparsing==3.0.9
-    # via
-    #   httplib2
-    #   packaging
+    # via httplib2
 pytest==7.2.0
     # via
     #   beanahead (pyproject.toml)
@@ -105,7 +103,7 @@ python-dateutil==2.8.2
     # via
     #   beancount
     #   pandas
-pytz==2022.6
+pytz==2022.7
     # via pandas
 requests==2.28.1
     # via
@@ -130,5 +128,5 @@ typing-extensions==4.4.0
     # via black
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==1.26.12
+urllib3==1.26.13
     # via requests

@@ -4,9 +4,9 @@
 #
 #    pip-compile --extra=dev --output-file=requirements_dev.txt pyproject.toml
 #
-astroid==2.12.12
+astroid==2.12.13
     # via pylint
-attrs==22.1.0
+attrs==22.2.0
     # via pytest
 beanahead[tests]==0.1.0
     # via beanahead (pyproject.toml)
@@ -16,7 +16,7 @@ beancount==2.3.5
     #   beanahead (pyproject.toml)
 beautifulsoup4==4.11.1
     # via beancount
-black==22.10.0
+black==22.12.0
     # via beanahead
 bottle==0.12.23
     # via beancount
@@ -24,11 +24,11 @@ build==0.9.0
     # via pip-tools
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 cfgv==3.3.1
     # via pre-commit
-chardet==5.0.0
+chardet==5.1.0
     # via beancount
 charset-normalizer==2.1.1
     # via requests
@@ -46,21 +46,21 @@ dill==0.3.6
     # via pylint
 distlib==0.3.6
     # via virtualenv
-exceptiongroup==1.0.4
+exceptiongroup==1.1.0
     # via pytest
-filelock==3.8.0
+filelock==3.8.2
     # via virtualenv
-flake8==5.0.4
+flake8==6.0.0
     # via
     #   beanahead
     #   flake8-docstrings
 flake8-docstrings==1.6.0
     # via beanahead
-google-api-core==2.10.2
+google-api-core==2.11.0
     # via google-api-python-client
-google-api-python-client==2.66.0
+google-api-python-client==2.70.0
     # via beancount
-google-auth==2.14.1
+google-auth==2.15.0
     # via
     #   google-api-core
     #   google-api-python-client
@@ -73,17 +73,17 @@ httplib2==0.21.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
-identify==2.5.9
+identify==2.5.11
     # via pre-commit
 idna==3.4
     # via requests
 iniconfig==1.1.1
     # via pytest
-isort==5.10.1
+isort==5.11.4
     # via pylint
 lazy-object-proxy==1.8.0
     # via astroid
-lxml==4.9.1
+lxml==4.9.2
     # via beancount
 mccabe==0.7.0
     # via
@@ -97,23 +97,23 @@ mypy-extensions==0.4.3
     #   mypy
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.23.4
+numpy==1.24.1
     # via pandas
-packaging==21.3
+packaging==22.0
     # via
     #   build
     #   pytest
-pandas==1.5.1
+pandas==1.5.2
     # via
     #   beanahead
     #   beanahead (pyproject.toml)
-pathspec==0.10.2
+pathspec==0.10.3
     # via black
 pep517==0.13.0
     # via build
-pip-tools==6.10.0
+pip-tools==6.12.1
     # via beanahead (pyproject.toml)
-platformdirs==2.5.4
+platformdirs==2.6.0
     # via
     #   black
     #   pylint
@@ -122,9 +122,9 @@ pluggy==1.0.0
     # via pytest
 ply==3.11
     # via beancount
-pre-commit==2.20.0
+pre-commit==2.21.0
     # via beanahead (pyproject.toml)
-protobuf==4.21.9
+protobuf==4.21.12
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -134,18 +134,16 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pycodestyle==2.9.1
+pycodestyle==2.10.0
     # via flake8
 pydocstyle==6.1.1
     # via flake8-docstrings
-pyflakes==2.5.0
+pyflakes==3.0.1
     # via flake8
-pylint==2.15.5
+pylint==2.15.9
     # via beanahead (pyproject.toml)
 pyparsing==3.0.9
-    # via
-    #   httplib2
-    #   packaging
+    # via httplib2
 pytest==7.2.0
     # via
     #   beanahead
@@ -154,7 +152,7 @@ python-dateutil==2.8.2
     # via
     #   beancount
     #   pandas
-pytz==2022.6
+pytz==2022.7
     # via pandas
 pyyaml==6.0
     # via pre-commit
@@ -173,8 +171,6 @@ snowballstemmer==2.2.0
     # via pydocstyle
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-toml==0.10.2
-    # via pre-commit
 tomli==2.0.1
     # via
     #   black
@@ -193,9 +189,9 @@ typing-extensions==4.4.0
     #   pylint
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==1.26.12
+urllib3==1.26.13
     # via requests
-virtualenv==20.16.7
+virtualenv==20.17.1
     # via pre-commit
 wheel==0.38.4
     # via pip-tools
