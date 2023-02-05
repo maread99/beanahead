@@ -554,7 +554,7 @@ def update_new_txns(
     list of Transaction
         `new_txns` as updated. Received order is NOT maintained.
     """
-    for (x_txn, new_txn) in reconciled_x_txns:
+    for x_txn, new_txn in reconciled_x_txns:
         updated_txn = update_new_txn(new_txn, x_txn)
         new_txns.insert(0, updated_txn)
         new_txns.remove(new_txn)
