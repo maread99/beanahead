@@ -124,7 +124,7 @@ def create_entries(
     end = END_DFLT if end is None else end
     offset = get_freq_offset(rx_def)
     dates = pd.date_range(rx_def.date, end + offset, freq=offset)
-    if len(dates) == 1:
+    if len(dates) < 2:
         # no txns dated < end (only new definition date was evaluated)
         return ([], None)
     txns = []
