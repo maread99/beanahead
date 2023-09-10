@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "beanahead"
 description = "Beancount extension for future transactions"
 authors = [
-  {email = "marcusaread@gmail.com"},
+  {email = "marcusaread.prog@proton.me"},
   {name = "Marcus Read"},
 ]
 readme = "README.md"
@@ -47,7 +47,10 @@ tests = [
     "pytest",
 ]
 dev = [
-    "beanahead[tests]",
+    "black",
+    "flake8",
+    "flake8-docstrings",
+    "pytest",
     "mypy",
     "pip-tools",
     "pre-commit",
@@ -56,7 +59,6 @@ dev = [
 
 [project.urls]
 homepage = "https://github.com/maread99/beanahead"
-# UPDATE DOC reference to README or as applic
 documentation = "https://github.com/maread99/beanahead"
 "Issue Tracker" = "https://github.com/maread99/beanahead/issues"
 "Source Code" = "https://github.com/maread99/beanahead"
@@ -69,4 +71,4 @@ write_to = "src/beanahead/_version.py"
 
 [tool.black]
 line-length = 88
-target-version = ['py39', 'py310']
+target-version = ['py39', 'py310', 'py311']
