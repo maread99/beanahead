@@ -16,6 +16,7 @@ from beanahead import utils, rx_txns, reconcile, expired
 
 def make_file(args: argparse.Namespace):
     """Pass through command line args to make a new beanahead file."""
+    utils.set_root_accounts_context(args.main_ledger)
     utils.create_beanahead_file(args.key, args.dirpath, args.filename)
 
 
@@ -88,6 +89,11 @@ def main():
         ),
         choices=["x", "rx", "rx_def"],
         metavar="key",
+    )
+    parser_make.add_argument(
+        "main_ledger",
+        help="Path to the main ledger file to read its options.",
+        metavar="main_ledger",
     )
     parser_make.add_argument(
         *["-d", "--dirpath"],

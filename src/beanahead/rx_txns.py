@@ -209,9 +209,9 @@ def get_definition_group(definition: Transaction) -> GrouperKey:
         if account == bal_sheet_account:
             continue
         account_type = get_account_type(account)
-        if account_type == "Assets":
+        if account_type == utils.RootAccountsContext.get("name_assets", "Assets"):
             other_sides.add("Assets")
-        elif account_type == "Income":
+        elif account_type == utils.RootAccountsContext.get("name_income", "Income"):
             other_sides.add("Income")
         else:
             other_sides.add("Expenses")
@@ -657,8 +657,9 @@ class Admin:
         ledger_txns = self.rx_txns + new_txns
 
         # ensure all new content checks out before writting anything
-        content_ledger = compose_new_content("rx", ledger_txns)
-        content_defs = compose_new_content("rx_def", new_defs)
+        name_options = utils.set_root_accounts_context(self.path_ledger_main)
+        content_ledger = compose_new_content("rx", ledger_txns, name_options)
+        content_defs = compose_new_content("rx_def", new_defs, name_options)
 
         self._overwrite_beancount_file(self.path_ledger, content_ledger)
         also_revert = [self.path_ledger]
