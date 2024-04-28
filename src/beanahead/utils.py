@@ -6,6 +6,7 @@ import copy
 import datetime
 from pathlib import Path
 import re
+import sys
 
 from beancount import loader
 from beancount.core import data
@@ -553,7 +554,7 @@ def reverse_automatic_balancing(txn: Transaction) -> Transaction:
     """
     new_postings = []
     for posting in txn.postings:
-        if AUTOMATIC_META in posting.meta:
+        if AUTOMATIC_META in (posting.meta or {}):
             meta = {k: v for k, v in posting.meta.items() if k != AUTOMATIC_META}
             posting = posting._replace(units=None, meta=meta)
         new_postings.append(posting)
@@ -883,7 +884,8 @@ def get_input(text: str) -> str:
     -----
     Function included to facilitate mocking user input when testing.
     """
-    return input(text)
+    print(text, file=sys.stderr, end=": ")
+    return input()
 
 
 def response_is_valid_number(response: str, max_value: int) -> bool:
