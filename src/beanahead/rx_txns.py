@@ -657,9 +657,9 @@ class Admin:
         ledger_txns = self.rx_txns + new_txns
 
         # ensure all new content checks out before writting anything
-        name_options = utils.set_root_accounts_context(self.path_ledger_main)
-        content_ledger = compose_new_content("rx", ledger_txns, name_options)
-        content_defs = compose_new_content("rx_def", new_defs, name_options)
+        utils.set_root_accounts_context(self.path_ledger_main)
+        content_ledger = compose_new_content("rx", ledger_txns)
+        content_defs = compose_new_content("rx_def", new_defs)
 
         self._overwrite_beancount_file(self.path_ledger, content_ledger)
         also_revert = [self.path_ledger]
