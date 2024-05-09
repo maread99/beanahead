@@ -16,7 +16,7 @@ from beanahead import errors
 from beanahead.scripts import cli
 
 from . import cmn
-from .conftest import set_cl_args, also_get_stdout
+from .conftest import set_cl_args, also_get_stderr
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -427,7 +427,7 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         assert admin.rx_txns == []
 
-        _, output = also_get_stdout(admin.add_txns, datetime.date(2022, 12, 31))
+        _, output = also_get_stderr(admin.add_txns, datetime.date(2022, 12, 31))
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
@@ -443,7 +443,7 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         cmn.assert_txns_equal(admin.rx_txns, rx_txns_221231)
 
-        _, output = also_get_stdout(admin.add_txns, datetime.date(2023, 6, 30))
+        _, output = also_get_stderr(admin.add_txns, datetime.date(2023, 6, 30))
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"
@@ -471,7 +471,7 @@ class TestAdmin:
         rx_path = filepaths_defs_copy_0["rx"]
 
         set_cl_args("addrx defs rx ledger -e 2022-12-31")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
@@ -482,7 +482,7 @@ class TestAdmin:
         assert rx_path.read_text(encoding) == rx_221231_content
 
         set_cl_args("addrx defs rx ledger -e 2023-06-30")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"

@@ -30,13 +30,13 @@ TAG_X = "x_txn"
 TAG_RX = "rx_txn"
 TAGS_X = set([TAG_X, TAG_RX])
 
-ADOPT_OPTIONS = [
-    "name_assets",
-    "name_liabilities",
-    "name_income",
-    "name_expenses",
-    "name_equity",
-]
+NAME_OPTIONS = {
+    "name_assets": "Assets",
+    "name_liabilities": "Liabilities",
+    "name_income": "Income",
+    "name_expenses": "Expenses",
+    "name_equity": "Equity",
+}
 
 RX_META_DFLTS = {
     "final": None,
@@ -89,8 +89,8 @@ def set_root_accounts_context(path_ledger: str) -> dict[str]:
     """
     name_options: dict[str] = {}
     options = get_options(path_ledger)
-    for opt in ADOPT_OPTIONS:
-        if opt in options:
+    for opt, dflt in NAME_OPTIONS.items():
+        if options[opt] != dflt:
             name_options[opt] = options[opt]
     global RootAccountsContext
     RootAccountsContext = name_options

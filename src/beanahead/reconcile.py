@@ -739,4 +739,4 @@ def reconcile_new_txns(
     for path, txns in x_txns_to_remove.items():
         msg += f"\n{len(txns)} transactions have been removed from ledger {path}."
 
-    print(msg)
+    print(msg, file=sys.stderr)

@@ -8,6 +8,7 @@ import datetime
 import functools
 from pathlib import Path
 import re
+import sys
 
 import pandas as pd
 from beancount import loader
@@ -651,7 +652,10 @@ class Admin:
 
         new_txns, new_defs = self._get_new_txns_data(end)
         if not new_txns:
-            print(f"There are no new Regular Expected Transactions to add with {end=}.")
+            print(
+                f"There are no new Regular Expected Transactions to add with {end=}.",
+                file=sys.stderr,
+            )
             return
 
         ledger_txns = self.rx_txns + new_txns
@@ -668,5 +672,6 @@ class Admin:
         print(
             f"{len(new_txns)} transactions have been added to the ledger"
             f" '{self.path_ledger.stem}'.\nDefinitions on '{self.path_defs.stem}' have"
-            f" been updated to reflect the most recent transactions."
+            f" been updated to reflect the most recent transactions.",
+            file=sys.stderr,
         )
