@@ -15,7 +15,7 @@ from beancount.core import data
 from beancount.core.data import Transaction
 from beancount.core.getters import get_entry_accounts
 from beancount.core import number
-from beancount.ingest.extract import HEADER
+from beangulp.extract import HEADER
 
 from . import utils
 from .errors import BeanaheadWriteError
@@ -40,12 +40,13 @@ def load_extraction_file(path: Path) -> data.Entries:
 
     balance_errors = []
     for error in errors:
-        if (
-            isinstance(error, beancount.ops.balance.BalanceError)
-            and error.message.startswith("Account ")
-            and "does not exist" in error.message
-        ):
-            balance_errors.append(error)
+        if isinstance(error, beancount.ops.balance.BalanceError):
+            version = int(beancount.__version__[0])
+            msg = error.message
+            if version > 2 and msg.startswith("Invalid reference to unknown account"):
+                balance_errors.append(error)
+            elif msg.startswith("Account ") and "does not exist" in msg:
+                balance_errors.append(error)
 
     if balance_errors:
         # when these errors are 'raised' the associated balance directive is not
