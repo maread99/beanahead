@@ -16,7 +16,7 @@ from .conftest import (
     get_entries_from_string,
     set_cl_args,
     get_expected_output,
-    also_get_stdout,
+    also_get_stderr,
 )
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -157,17 +157,17 @@ def test_update_txn(monkeypatch, mock_input):
     )
 
     mock_input((v for v in ["0"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=tomorrow)
 
     mock_input((v for v in ["2"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print)
     assert rtrn is None
 
     mock_input((v for v in ["3"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print)
     assert rtrn is txn
 
@@ -178,14 +178,14 @@ def test_update_txn(monkeypatch, mock_input):
         " please try again, [0-3]: \n"
     )
     mock_input((v for v in ["n", "y", "4", "3"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print_)
     assert rtrn is txn
 
     # verify option to enter a new date
     expected_print += "Enter a new date (YYYY-MM-DD or MM-DD or DD): \n"
     mock_input((v for v in ["1", "2022-12-03"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
@@ -197,7 +197,7 @@ def test_update_txn(monkeypatch, mock_input):
         " (YYYY-MM-DD or MM-DD or DD): \n"
     )
     mock_input((v for v in ["1", "22-12-03", "2022-11-14", "2022-12-03"]))
-    rtrn, output = also_get_stdout(f, txn, path)
+    rtrn, output = also_get_stderr(f, txn, path)
     assert output.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
@@ -278,7 +278,7 @@ class TestAdminExpiredTxns:
             """
         )
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
-        _, output = also_get_stdout(f, ledgers)
+        _, output = also_get_stderr(f, ledgers)
         assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx
@@ -299,7 +299,7 @@ class TestAdminExpiredTxns:
         )
         expected_print = expected_print[1:]
         mock_input((v for v in ["3", "3", "3", "3"]))
-        _, output = also_get_stdout(f, [str(filepath_x)])
+        _, output = also_get_stderr(f, [str(filepath_x)])
         assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
 
@@ -322,7 +322,7 @@ class TestAdminExpiredTxns:
             {filepath_x}
             """
         )
-        _, output = also_get_stdout(f, ledgers)
+        _, output = also_get_stderr(f, ledgers)
         assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
         assert filepath_rx.read_text(encoding) == orig_contents_rx
@@ -357,7 +357,7 @@ class TestAdminExpiredTxns:
         )
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
         set_cl_args("exp x rx")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx

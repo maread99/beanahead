@@ -6,6 +6,7 @@ import datetime
 from datetime import timedelta
 from pathlib import Path
 import re
+import sys
 
 from beancount.core.data import Transaction
 
@@ -129,7 +130,8 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
         f"\n0 Move transaction forwards to tomorrow ({TOMORROW})."
         f"\n1 Move transaction forwards to another date."
         f"\n2 Remove transaction from ledger {path.stem}."
-        f"\n3 Leave transaction as is."
+        f"\n3 Leave transaction as is.",
+        file=sys.stderr,
     )
     response: str = utils.get_input("Choose one of the above options, [0-3]:")
     while not utils.response_is_valid_number(response, 3):
@@ -247,7 +249,8 @@ def admin_expired_txns(ledgers: list[str]):
         paths_string = "\n".join([str(path) for path in paths])
         print(
             "There are no expired transactions on any of the following"
-            f" ledgers:\n{paths_string}"
+            f" ledgers:\n{paths_string}",
+            file=sys.stderr,
         )
         return
 
@@ -256,7 +259,8 @@ def admin_expired_txns(ledgers: list[str]):
     if not updated_paths:
         print(
             "\nYou have not choosen to modify any expired transactions."
-            "\nNo ledger has been altered."
+            "\nNo ledger has been altered.",
+            file=sys.stderr,
         )
         return
 
@@ -266,4 +270,6 @@ def admin_expired_txns(ledgers: list[str]):
         updated_contents[path] = content
 
     overwrite_ledgers(updated_contents)
-    print(f"\nThe following ledgers have been updated:\n{paths_string}")
+    print(
+        f"\nThe following ledgers have been updated:\n{paths_string}", file=sys.stderr
+    )

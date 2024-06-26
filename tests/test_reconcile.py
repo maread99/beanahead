@@ -21,7 +21,7 @@ from .conftest import (
     get_entries_from_string,
     set_cl_args,
     get_expected_output,
-    also_get_stdout,
+    also_get_stderr,
 )
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -656,14 +656,14 @@ class TestUserInput:
         inputs = (v for v in ("y",))
         mock_input(inputs)
         poss_match = txns[1]
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        rtrn, output = also_get_stderr(f, txn, [poss_match])
         assert output.endswith(expected_print)
         assert rtrn is poss_match
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        rtrn, output = also_get_stderr(f, txn, [poss_match])
         assert output.endswith(expected_print)
         assert rtrn is None
 
@@ -671,7 +671,7 @@ class TestUserInput:
         expected_print += "3 is not valid input, please try again, y/n: \n"
         inputs = (v for v in ("3", "y"))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
+        rtrn, output = also_get_stderr(f, txn, [poss_match])
         assert output.endswith(expected_print)
         assert rtrn is poss_match
 
@@ -716,14 +716,14 @@ class TestUserInput:
         for i in (0, 1):
             inputs = (v for v in (str(i),))
             mock_input(inputs)
-            rtrn, output = also_get_stdout(f, txn, txns)
+            rtrn, output = also_get_stderr(f, txn, txns)
             assert output.endswith(expected_print)
             assert rtrn is txns[i]
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, txns)
+        rtrn, output = also_get_stderr(f, txn, txns)
         assert output.endswith(expected_print)
         assert rtrn is None
 
@@ -731,7 +731,7 @@ class TestUserInput:
         expected_print += "2 is not valid input, please try again [0-1]/n: \n"
         inputs = (v for v in ("2", "0"))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, txns)
+        rtrn, output = also_get_stderr(f, txn, txns)
         assert output.endswith(expected_print)
         assert rtrn is txns[0]
 
@@ -1115,7 +1115,7 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers)
+        _, output = also_get_stderr(f, str(extraction), ledgers)
 
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
         assert output.endswith(expected_print)
@@ -1147,7 +1147,7 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(
+        _, output = also_get_stderr(
             f, str(extraction), ledgers, output=str(injection_output)
         )
 
@@ -1183,7 +1183,7 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers, remove=False)
+        _, output = also_get_stderr(f, str(extraction), ledgers, remove=False)
         expected_print = (
             "18 incoming transactions have been reconciled against expected "
             f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
@@ -1217,7 +1217,7 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers, ascending=False)
+        _, output = also_get_stderr(f, str(extraction), ledgers, ascending=False)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
         assert output.endswith(expected_print)
 
@@ -1253,7 +1253,7 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
         assert output.endswith(expected_print)
 
@@ -1285,7 +1285,7 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x --output injection")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_print = self.get_expected_print(
             12, 6, x_path, rx_path, injection_output
         )
@@ -1320,7 +1320,7 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x -k")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_print = (
             "18 incoming transactions have been reconciled against expected "
             f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
@@ -1356,7 +1356,7 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x -r")
-        _, output = also_get_stdout(cli.main)
+        _, output = also_get_stderr(cli.main)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
         assert output.endswith(expected_print)
 

@@ -6,6 +6,7 @@ import copy
 import datetime
 from pathlib import Path
 import re
+import sys
 
 from beancount import loader
 from beancount.core import data
@@ -28,6 +29,14 @@ ENCODING = "utf-8"
 TAG_X = "x_txn"
 TAG_RX = "rx_txn"
 TAGS_X = set([TAG_X, TAG_RX])
+
+NAME_OPTIONS = {
+    "name_assets": "Assets",
+    "name_liabilities": "Liabilities",
+    "name_income": "Income",
+    "name_expenses": "Expenses",
+    "name_equity": "Equity",
+}
 
 RX_META_DFLTS = {
     "final": None,
@@ -66,6 +75,26 @@ FILE_CONFIG = {
 }
 
 LEDGER_FILE_KEYS = ["x", "rx"]
+
+RootAccountsContext = {}  # global context
+
+
+def set_root_accounts_context(path_ledger: str) -> dict[str]:
+    """Set the root accounts context from the ledger file path.
+
+    Returns
+    -------
+    dict[str]
+        The name options set in the ledger.
+    """
+    name_options: dict[str] = {}
+    options = get_options(path_ledger)
+    for opt, dflt in NAME_OPTIONS.items():
+        if options[opt] != dflt:
+            name_options[opt] = options[opt]
+    global RootAccountsContext
+    RootAccountsContext = name_options
+    return name_options
 
 
 def validate_file_key(file_key: str):
@@ -114,8 +143,15 @@ def compose_header_footer(file_key: str) -> tuple[str, str]:
     """
     config = FILE_CONFIG[file_key]
     plugin, tag, comment = config["plugin"], config["tag"], config["comment"]
+    extra_headers = ""
+    for k, v in RootAccountsContext.items():
+        extra_headers += f'option "{k}" "{v}"\n'
 
     header = f"""option "title" "{config['title']}"\n"""
+    if extra_headers:
+        header += "\n"
+        header += extra_headers
+        header += "\n"
     if plugin is not None:
         header += f'plugin "{plugin}"\n'
     header += f"pushtag #{tag}\n"
@@ -518,7 +554,7 @@ def reverse_automatic_balancing(txn: Transaction) -> Transaction:
     """
     new_postings = []
     for posting in txn.postings:
-        if AUTOMATIC_META in posting.meta:
+        if AUTOMATIC_META in (posting.meta or {}):
             meta = {k: v for k, v in posting.meta.items() if k != AUTOMATIC_META}
             posting = posting._replace(units=None, meta=meta)
         new_postings.append(posting)
@@ -537,10 +573,7 @@ def is_assets_account(string: str) -> bool:
     >>> is_assets_account("Assets:US:BofA:Checking")
     True
     """
-    return is_account_type("Assets", string)
-
-
-BAL_SHEET_ACCS = ["Assets", "Liabilities"]
+    return is_account_type(RootAccountsContext.get("name_assets", "Assets"), string)
 
 
 def is_balance_sheet_account(string: str) -> bool:
@@ -566,7 +599,13 @@ def is_balance_sheet_account(string: str) -> bool:
     >>> is_balance_sheet_account("Income:US:BayBook:Match401k")
     False
     """
-    return any(is_account_type(acc_type, string) for acc_type in BAL_SHEET_ACCS)
+    return any(
+        is_account_type(acc_type, string)
+        for acc_type in [
+            RootAccountsContext.get("name_assets", "Assets"),
+            RootAccountsContext.get("name_liabilities", "Liabilities"),
+        ]
+    )
 
 
 def get_balance_sheet_accounts(txn: Transaction) -> list[str]:
@@ -845,7 +884,8 @@ def get_input(text: str) -> str:
     -----
     Function included to facilitate mocking user input when testing.
     """
-    return input(text)
+    print(text, file=sys.stderr, end=": ")
+    return input()
 
 
 def response_is_valid_number(response: str, max_value: int) -> bool:

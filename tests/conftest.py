@@ -70,12 +70,12 @@ def get_expected_output(string: str):
     return textwrap.dedent(string)[1:]
 
 
-def also_get_stdout(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
-    """Return a function's return together with output to stdout."""
-    stdout = io.StringIO()
-    with contextlib.redirect_stdout(stdout):
+def also_get_stderr(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
+    """Return a function's return together with output to stderr."""
+    stderr = io.StringIO()
+    with contextlib.redirect_stderr(stderr):
         rtrn = f(*args, **kwargs)
-    return rtrn, stdout.getvalue()
+    return rtrn, stderr.getvalue()
 
 
 @pytest.fixture
@@ -132,7 +132,7 @@ def mock_input(monkeypatch) -> abc.Iterator:
             monkeypatch.setattr("beanahead.utils.get_input", self.input)
 
         def input(self, string: str) -> str:
-            print(string)
+            print(string, file=sys.stderr)
             return next(self.responses)
 
     yield MockInput

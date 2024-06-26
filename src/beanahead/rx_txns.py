@@ -8,6 +8,7 @@ import datetime
 import functools
 from pathlib import Path
 import re
+import sys
 
 import pandas as pd
 from beancount import loader
@@ -209,9 +210,9 @@ def get_definition_group(definition: Transaction) -> GrouperKey:
         if account == bal_sheet_account:
             continue
         account_type = get_account_type(account)
-        if account_type == "Assets":
+        if account_type == utils.RootAccountsContext.get("name_assets", "Assets"):
             other_sides.add("Assets")
-        elif account_type == "Income":
+        elif account_type == utils.RootAccountsContext.get("name_income", "Income"):
             other_sides.add("Income")
         else:
             other_sides.add("Expenses")
@@ -651,12 +652,16 @@ class Admin:
 
         new_txns, new_defs = self._get_new_txns_data(end)
         if not new_txns:
-            print(f"There are no new Regular Expected Transactions to add with {end=}.")
+            print(
+                f"There are no new Regular Expected Transactions to add with {end=}.",
+                file=sys.stderr,
+            )
             return
 
         ledger_txns = self.rx_txns + new_txns
 
         # ensure all new content checks out before writting anything
+        utils.set_root_accounts_context(self.path_ledger_main)
         content_ledger = compose_new_content("rx", ledger_txns)
         content_defs = compose_new_content("rx_def", new_defs)
 
@@ -667,5 +672,6 @@ class Admin:
         print(
             f"{len(new_txns)} transactions have been added to the ledger"
             f" '{self.path_ledger.stem}'.\nDefinitions on '{self.path_defs.stem}' have"
-            f" been updated to reflect the most recent transactions."
+            f" been updated to reflect the most recent transactions.",
+            file=sys.stderr,
         )
