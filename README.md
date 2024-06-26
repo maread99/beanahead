@@ -18,9 +18,9 @@ It's useful to:
 
 `$ pip install beanahead`
 
-The only direct dependencies are `beancount` and `pandas` (pandas could be made optional, see [#1](https://github.com/maread99/beanahead/issues/1)).
+The only direct dependencies are `beancount`, `beangulp` and `pandas` (pandas could be made optional, see [#1](https://github.com/maread99/beanahead/issues/1)).
 
-> :information_source: The `beancount` requirement is beancount v2. It's intended that `beanahead` will be upgraded to support beancount v3 (currently in development) when v3 is completed and published to PyPI.
+Beanahead is compatible with both beancount v2 and v3.
 
 ## Really briefly, how it works
 
@@ -184,7 +184,7 @@ The above initial definition is dated 2022-11-13, which is a Sunday. By specifyi
 The 'final' meta field can be used to define a final transaction date. No transactions will be generated that would be dated later than this date (as evaluated prior to any rolling).
 ```
 2022-10-31 * "Chase" "Chase Hire Purchase"
-  freq: "BM"
+  freq: "BME"
   final: 2022-11-30
   Liabilities:US:Chase:HirePurchase                322.00 USD
   Assets:US:BofA:Checking
