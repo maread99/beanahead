@@ -32,7 +32,7 @@ pushtag #rx_txn
   Expenses:Home:Insurance
 
 2023-07-31 * "Slate" "Credit Card payment"
-  freq: "BM"
+  freq: "BME"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 

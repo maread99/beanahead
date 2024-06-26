@@ -671,7 +671,7 @@ def test_compose_entries_content(rx_txn_chase, txns_rx, txns_rx_content):
         """
         2022-10-31 * "Chase" "Chase Hire Purchase" #retained-tag
           final: 2022-11-30
-          freq: "BM"
+          freq: "BME"
           test_meta: "Test meta on Chase HP"
           Liabilities:US:Chase:HirePurchase  322.00 USD
           Assets:US:BofA:Checking
