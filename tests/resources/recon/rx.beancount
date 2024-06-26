@@ -104,14 +104,14 @@ pushtag #rx_txn
 2022-10-31 * "Slate" "Credit Card payment"
   matches: "6" ; matches on payee, value miles out
   ; also tests updated txn has other-side posting with value as defined on extraction
-  freq: "BM"
+  freq: "BME"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 
 2022-10-31 * "Chase" "Chase Hire Purchase"
   matches: "7" ; matches on payee, value not exact but within 2%
   final: 2022-11-30
-  freq: "BM"
+  freq: "BME"
   Liabilities:US:Chase:HirePurchase  322.00 USD
   Assets:US:BofA:Checking
 
@@ -211,13 +211,13 @@ pushtag #rx_txn
   Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
 
 2022-11-30 * "Slate" "Credit Card payment"
-  freq: "BM"
+  freq: "BME"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 
 2022-11-30 * "Chase" "Chase Hire Purchase"
   final: 2022-11-30
-  freq: "BM"
+  freq: "BME"
   Liabilities:US:Chase:HirePurchase  322.00 USD
   Assets:US:BofA:Checking
 
@@ -316,7 +316,7 @@ pushtag #rx_txn
   Assets:US:Vanguard:RGAGX  13.3 RGAGX @ 54.13684210526315789473684211 USD
 
 2022-12-30 * "Slate" "Credit Card payment"
-  freq: "BM"
+  freq: "BME"
   Assets:US:BofA:Checking     -250.00 USD
   Liabilities:US:Chase:Slate
 

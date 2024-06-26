@@ -34,7 +34,7 @@ pushtag #rx_txn
   Expenses:Financial:Fees
 
 2022-10-31 * "Slate" "Credit Card payment"
-  freq: "BM" ; date transactions as last business day of each month
+  freq: "BME" ; date transactions as last business day of each month
   Assets:US:BofA:Checking                     -250.00 USD
   Liabilities:US:Chase:Slate
 
@@ -59,7 +59,7 @@ pushtag #rx_txn
 * Including a 'final' transaction date
 
 2022-10-31 * "Chase" "Chase Hire Purchase"
-  freq: "BM"
+  freq: "BME"
   ; No transaction will be created which would be dated (before any
   ; rolling) later than 2022-11-30
   final: 2022-11-30

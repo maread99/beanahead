@@ -120,11 +120,11 @@
   Expenses:Food:Restaurant
 
 2022-10-31 * "Chase Bank Slate" "Credit Card payment"
-  freq: "BM"
+  freq: "BME"
   Assets:US:BofA:Checking     -461.00 USD
   Liabilities:US:Chase:Slate   461.00 USD
 
 2022-10-31 * "Chase Hire Purchase" "Chase Hire Purchase"
-  freq: "BM"
+  freq: "BME"
   Liabilities:US:Chase:HirePurchase   324.61 USD
   Assets:US:BofA:Checking            -324.61 USD
