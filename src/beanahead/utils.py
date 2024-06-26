@@ -12,7 +12,7 @@ from beancount.core import data
 from beancount.core.account_types import is_account_type
 from beancount.core.data import Transaction
 from beancount.core.interpolate import AUTOMATIC_META
-from beancount.ingest.extract import HEADER
+from beangulp.extract import HEADER
 from beancount.parser import parser, printer
 
 from .errors import (
