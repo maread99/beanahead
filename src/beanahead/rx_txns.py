@@ -651,7 +651,9 @@ class Admin:
 
         new_txns, new_defs = self._get_new_txns_data(end)
         if not new_txns:
-            print(f"There are no new Regular Expected Transactions to add with {end=}.")
+            utils.print_it(
+                f"There are no new Regular Expected Transactions to add with {end=}."
+            )
             return
 
         ledger_txns = self.rx_txns + new_txns
@@ -664,7 +666,7 @@ class Admin:
         also_revert = [self.path_ledger]
         self._overwrite_beancount_file(self.path_defs, content_defs, also_revert)
         self._validate_main_ledger(self.rx_files)
-        print(
+        utils.print_it(
             f"{len(new_txns)} transactions have been added to the ledger"
             f" '{self.path_ledger.stem}'.\nDefinitions on '{self.path_defs.stem}' have"
             f" been updated to reflect the most recent transactions."

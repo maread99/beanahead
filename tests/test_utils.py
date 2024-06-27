@@ -15,9 +15,15 @@ from beanahead.scripts import cli
 import pytest
 
 from beanahead import utils as m
-from beanahead import errors
+from beanahead import errors, config
 
-from .conftest import get_fileobj, set_cl_args, get_expected_output
+from .conftest import (
+    get_fileobj,
+    set_cl_args,
+    get_expected_output,
+    also_get_stderr,
+    also_get_stdout,
+)
 from . import cmn
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -226,6 +232,31 @@ def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
         assert m.FILE_CONFIG[file_key]["tag"] == tag_rx
 
     assert set(m.LEDGER_FILE_KEYS) == ledger_file_keys
+
+
+def test_print_it():
+    def print_something():
+        m.print_it("something")
+
+    _, prnt = also_get_stdout(print_something)
+    assert prnt == "something\n"
+    _, prnt = also_get_stderr(print_something)
+    assert not prnt
+
+    config.set_print_stderr()
+    _, prnt = also_get_stdout(print_something)
+    assert not prnt
+    _, prnt = also_get_stderr(print_something)
+    assert prnt == "something\n"
+
+    def print_something_else():
+        m.print_it("something else", end=":")  # Verify can pass through kwargs
+
+    config.set_print_stdout()
+    _, prnt = also_get_stdout(print_something_else)
+    assert prnt == "something else:"
+    _, prnt = also_get_stderr(print_something_else)
+    assert not prnt
 
 
 def test_validate_file_key(file_keys):

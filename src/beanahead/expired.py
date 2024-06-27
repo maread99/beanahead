@@ -123,7 +123,7 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
         None if user choose to remove.
         Otherwise a new Transaction object with revised date.
     """
-    print(
+    utils.print_it(
         f"{utils.SEPARATOR_LINE}\nThe following transaction has expired."
         f"\n\n{utils.compose_entries_content(txn)}"
         f"\n0 Move transaction forwards to tomorrow ({TOMORROW})."
@@ -245,7 +245,7 @@ def admin_expired_txns(ledgers: list[str]):
 
     if no_expired_txns:
         paths_string = "\n".join([str(path) for path in paths])
-        print(
+        utils.print_it(
             "There are no expired transactions on any of the following"
             f" ledgers:\n{paths_string}"
         )
@@ -254,7 +254,7 @@ def admin_expired_txns(ledgers: list[str]):
     updated_paths = [path for path in paths if ledger_updated[path]]
     paths_string = "\n".join([str(path) for path in updated_paths])
     if not updated_paths:
-        print(
+        utils.print_it(
             "\nYou have not choosen to modify any expired transactions."
             "\nNo ledger has been altered."
         )
@@ -266,4 +266,4 @@ def admin_expired_txns(ledgers: list[str]):
         updated_contents[path] = content
 
     overwrite_ledgers(updated_contents)
-    print(f"\nThe following ledgers have been updated:\n{paths_string}")
+    utils.print_it(f"\nThe following ledgers have been updated:\n{paths_string}")

@@ -15,6 +15,7 @@ import beancount
 from beancount.core import data
 import pytest
 
+from beanahead import utils
 
 # pylint: disable=missing-function-docstring, missing-type-doc
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -71,11 +72,19 @@ def get_expected_output(string: str):
 
 
 def also_get_stdout(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
-    """Return a function's return together with output to stdout."""
-    stdout = io.StringIO()
-    with contextlib.redirect_stdout(stdout):
+    """Return a function's return together with print to stdout."""
+    prnt = io.StringIO()
+    with contextlib.redirect_stdout(prnt):
         rtrn = f(*args, **kwargs)
-    return rtrn, stdout.getvalue()
+    return rtrn, prnt.getvalue()
+
+
+def also_get_stderr(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
+    """Return a function's return together with print to stderr."""
+    prnt = io.StringIO()
+    with contextlib.redirect_stderr(prnt):
+        rtrn = f(*args, **kwargs)
+    return rtrn, prnt.getvalue()
 
 
 @pytest.fixture
@@ -132,7 +141,7 @@ def mock_input(monkeypatch) -> abc.Iterator:
             monkeypatch.setattr("beanahead.utils.get_input", self.input)
 
         def input(self, string: str) -> str:
-            print(string)
+            utils.print_it(string)
             return next(self.responses)
 
     yield MockInput

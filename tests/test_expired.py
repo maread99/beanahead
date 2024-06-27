@@ -17,6 +17,7 @@ from .conftest import (
     set_cl_args,
     get_expected_output,
     also_get_stdout,
+    also_get_stderr,
 )
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -358,6 +359,41 @@ class TestAdminExpiredTxns:
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
         set_cl_args("exp x rx")
         _, output = also_get_stdout(cli.main)
+        assert output.endswith(expected_print)
+        assert filepath_x.read_text(encoding) == expected_x
+        assert filepath_rx.read_text(encoding) == expected_rx
+
+    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    def test_cli_exp_print_to_stderr(
+        self,
+        monkeypatch,
+        mock_input,
+        filepaths_copy,
+        expected_x,
+        expected_rx,
+        encoding,
+    ):
+        """As `test_cli_exp` with print to stderr.
+
+        Serves to test --print_stderr cli arg.
+        """
+        mock_today(datetime.date(2022, 11, 15), monkeypatch)
+        tomorrow = datetime.date(2022, 11, 16)
+        mock_tomorrow(tomorrow, monkeypatch)
+
+        filepath_x = filepaths_copy["x"]
+        filepath_rx = filepaths_copy["rx"]
+
+        expected_print = get_expected_output(
+            rf"""
+            The following ledgers have been updated:
+            {filepath_x}
+            {filepath_rx}
+            """
+        )
+        mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
+        set_cl_args("--print_stderr exp x rx")
+        _, output = also_get_stderr(cli.main)
         assert output.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx
