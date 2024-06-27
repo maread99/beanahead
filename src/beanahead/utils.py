@@ -15,6 +15,7 @@ from beancount.core.interpolate import AUTOMATIC_META
 from beangulp.extract import HEADER
 from beancount.parser import parser, printer
 
+from . import config
 from .errors import (
     BeancountFileExistsError,
     BeanaheadFileExistsError,
@@ -66,6 +67,21 @@ FILE_CONFIG = {
 }
 
 LEDGER_FILE_KEYS = ["x", "rx"]
+
+
+def print_it(text: str, **kwargs):
+    """Print to the selected stream.
+
+    Parameters
+    ----------
+    text
+        Text to print.
+
+    kwargs
+        Kwargs to pass to 'print' function.
+    """
+    kwargs["file"] = config.get_print_file()
+    print(text, **kwargs)
 
 
 def validate_file_key(file_key: str):
@@ -320,8 +336,8 @@ def get_verified_file_key(path: Path) -> str:
     opts = get_options(path)
     title = opts["title"]
     all_titles = []
-    for file_key, config in FILE_CONFIG.items():
-        if title == (config_title := config["title"]):
+    for file_key, config_ in FILE_CONFIG.items():
+        if title == (config_title := config_["title"]):
             return file_key
         all_titles.append(config_title)
     titles_string = "\n".join(all_titles)
@@ -845,7 +861,8 @@ def get_input(text: str) -> str:
     -----
     Function included to facilitate mocking user input when testing.
     """
-    return input(text)
+    print_it(text, end=": ")
+    return input()
 
 
 def response_is_valid_number(response: str, max_value: int) -> bool:

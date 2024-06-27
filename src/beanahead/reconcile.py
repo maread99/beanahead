@@ -148,7 +148,9 @@ def get_pattern(x_txn: Transaction) -> re.Pattern:
 def get_payee_matches(txns: list[Transaction], x_txn: Transaction) -> list[Transaction]:
     """Return transactions matching an Expected Transaction's payee."""
     pattern = get_pattern(x_txn)
-    return [txn for txn in txns if pattern.search(txn.payee) is not None]
+    return [
+        txn for txn in txns if (txn.payee and pattern.search(txn.payee) is not None)
+    ]
 
 
 def get_common_accounts(a: Transaction, b: Transaction) -> set[str]:
@@ -360,7 +362,7 @@ def confirm_single(
         Matched transaction, if user confirm match.
         None if user rejects match.
     """
-    print(
+    utils.print_it(
         f"{utils.SEPARATOR_LINE}Expected Transaction:\n"
         f"{utils.compose_entries_content(x_txn)}\n"
         f"Incoming Transaction:\n{utils.compose_entries_content(matches[0])}"
@@ -390,13 +392,13 @@ def get_mult_match(
         Matched transaction, as choosen by user.
         None if user rejects all matches.
     """
-    print(
+    utils.print_it(
         f"{utils.SEPARATOR_LINE}Expected Transaction:\n"
         f"{utils.compose_entries_content(x_txn)}\n\n"
         f"Incoming Transactions:\n"
     )
     for i, match in enumerate(matches):
-        print(f"{i}\n{utils.compose_entries_content(match)}")
+        utils.print_it(f"{i}\n{utils.compose_entries_content(match)}")
 
     max_value = len(matches) - 1
     options = f"[0-{max_value}]/n"
@@ -522,7 +524,12 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
             new_txn_posting = get_posting_to_account(new_txn, account)
 
             # carry over any meta not otherwise defined on new_txn
-            updated_posting = new_txn_posting._replace(meta=new_txn_posting.meta.copy())
+            if new_txn_posting.meta:
+                updated_posting = new_txn_posting._replace(
+                    meta=new_txn_posting.meta.copy()
+                )
+            else:
+                updated_posting = new_txn_posting._replace(meta={})
             for k, v in posting.meta.items():
                 updated_posting.meta.setdefault(k, v)
 
@@ -730,4 +737,4 @@ def reconcile_new_txns(
     for path, txns in x_txns_to_remove.items():
         msg += f"\n{len(txns)} transactions have been removed from ledger {path}."
 
-    print(msg)
+    utils.print_it(msg)

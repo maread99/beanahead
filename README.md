@@ -71,6 +71,7 @@ subcommands:
 * [Injection](#injection)
 * [Expired expected transactions](#expired-expected-transactions)
 * [Worth remembering](#worth-remembering)
+* [Developers](#developers)
 * [Alternative packages](#alternative-packages)
 * [beancount recommendations](#beancount-recommendations)
 * [Licence](#license)
@@ -374,6 +375,19 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 
 ## Worth remembering
 > :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost. 
+
+## Developers
+If you are employing a workflow that directs output through `sys.stdout` then this will merge with Beanahead's own output to this stream. To avoid such conflicts `beanahead` provides for directing its output to `sys.stderr`. This can be set from the command line by preceeding any subcommand with --print_stderr, for example...
+```
+$ beanahead --print_stderr exp rx x
+```
+The same effect can be achieved with the flag -p.
+```
+$ beanahead -p exp rx x
+```
+If using the underlying functions directly in the codebase then the print stream can be set via the following methods of the `beanahead.config` module:
+- `set_print_stderr()`
+- `set_print_stdout()`
 
 ## Alternative packages
 The beancount community offers a considerable array of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what `beanahead` offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.

@@ -11,7 +11,7 @@ import argparse
 import datetime
 
 import beanahead
-from beanahead import utils, rx_txns, reconcile, expired
+from beanahead import utils, rx_txns, reconcile, expired, config
 
 
 def make_file(args: argparse.Namespace):
@@ -59,6 +59,16 @@ def main():
 
     parser.add_argument(
         "--version", "-V", action="version", version=beanahead.__version__
+    )
+
+    parser.add_argument(
+        *["-p", "--print_stderr"],
+        action="store_true",
+        help=(
+            "send any print to stderr rather than stdoud (this can"
+            "\nbe useful if the client wishes to use stdout for another"
+            "\npurpose)"
+        ),
     )
 
     subparsers = parser.add_subparsers(
@@ -259,7 +269,12 @@ def main():
 
     # Call pass-through function corresponding with subcommand
     args = parser.parse_args()
+
+    # Set print stream and revert to stdout
+    if args.print_stderr:
+        config.set_print_stderr()
     args.func(args)
+    config.set_print_stdout()
 
 
 if __name__ == "__main__":
