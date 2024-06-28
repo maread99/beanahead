@@ -112,8 +112,19 @@ def main():
     parser_make.add_argument(
         *["-f", "--filename"],
         help=(
-            "Name of new beanahead file. By default, as `key`.\nShould not"
-            " include the .beancount extension."
+            "Name of new beanahead file. By default, as `key`."
+            "\nShould not include the .beancount extension."
+        ),
+        metavar="",
+    )
+
+    parser_make.add_argument(
+        *["-m", "--main"],
+        help=(
+            "Path to existing main Ledger file. Only required if\n"
+            "account root names are not the default values, in\n"
+            "which case will use root names as defined by\n"
+            "the options on this ledger.\n"
         ),
         metavar="",
     )
@@ -270,11 +281,18 @@ def main():
     # Call pass-through function corresponding with subcommand
     args = parser.parse_args()
 
-    # Set print stream and revert to stdout
+    # Set print stream
     if args.print_stderr:
         config.set_print_stderr()
+    # Set root account names
+    if "main" in args and args.main is not None:
+        utils.set_account_root_names(args.main)
+
     args.func(args)
+
+    # Revert options to default values
     config.set_print_stdout()
+    config.reset_account_root_names()
 
 
 if __name__ == "__main__":

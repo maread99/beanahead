@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 
 from beanahead import rx_txns as m
-from beanahead import errors
+from beanahead import errors, config
 from beanahead.scripts import cli
 
 from . import cmn
@@ -54,6 +54,21 @@ def filepath_defs_rx(defs_dir) -> abc.Iterator[Path]:
 
 
 @pytest.fixture
+def filepath_defs_opts(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "defs_opts.beancount"
+
+
+@pytest.fixture
+def filepath_defs_ledger_opts(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "ledger_opts.beancount"
+
+
+@pytest.fixture
+def filepath_defs_rx_opts(defs_dir) -> abc.Iterator[Path]:
+    yield defs_dir / "rx_opts.beancount"
+
+
+@pytest.fixture
 def filepath_defs_ledger_with_error(defs_dir) -> abc.Iterator[Path]:
     yield defs_dir / "ledger_with_error.beancount"
 
@@ -61,6 +76,12 @@ def filepath_defs_ledger_with_error(defs_dir) -> abc.Iterator[Path]:
 @pytest.fixture
 def defs(filepath_defs) -> abc.Iterator[list[data.Transaction]]:
     entries, errors, options = beancount.loader.load_file(filepath_defs)
+    yield entries
+
+
+@pytest.fixture
+def defs_opts(filepath_defs_opts) -> abc.Iterator[list[data.Transaction]]:
+    entries, errors, options = beancount.loader.load_file(filepath_defs_opts)
     yield entries
 
 
@@ -129,6 +150,33 @@ def filepaths_defs_copy_0(
     for k, filepath in zip(
         ("defs", "rx", "ledger"),
         (filepath_defs, filepath_defs_rx, filepath_defs_ledger),
+    ):
+        string = shutil.copy(filepath, temp_dir)
+        d[k] = Path(string)
+    yield d
+    for path in d.values():
+        path.unlink()
+
+
+@pytest.fixture
+def filepaths_defs_opts_copy_0(
+    filepath_defs_opts, filepath_defs_rx_opts, filepath_defs_ledger_opts, temp_dir
+) -> abc.Iterator[dict[str, Path]]:
+    """Filepaths to files before generating regular transactions.
+
+    Files define non-default names for account root for Assets and Income.
+
+    Copies each of the defs files to temporary folder.
+
+    Yields mapping to temporary paths with keys as:
+        "defs" - Regular Transactions Definitions File
+        "rx" - Regular Transactions Ledger
+        "ledger" - Main ledger which references ledger 'rx'.
+    """
+    d = {}
+    for k, filepath in zip(
+        ("defs", "rx", "ledger"),
+        (filepath_defs_opts, filepath_defs_rx_opts, filepath_defs_ledger_opts),
     ):
         string = shutil.copy(filepath, temp_dir)
         d[k] = Path(string)
@@ -302,6 +350,23 @@ class TestAdmin:
         yield defs
 
     @pytest.fixture
+    def defs_opts_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
+        yield defs_dir / "defs_opts_221231.beancount"
+
+    @pytest.fixture
+    def defs_opts_221231_content(
+        self, defs_opts_221231_filepath, encoding
+    ) -> abc.Iterator[str]:
+        yield defs_opts_221231_filepath.read_text(encoding)
+
+    @pytest.fixture
+    def defs_opts_221231(
+        self, defs_opts_221231_filepath
+    ) -> abc.Iterator[list[data.Transaction]]:
+        defs, _, _ = beancount.loader.load_file(defs_opts_221231_filepath)
+        yield defs
+
+    @pytest.fixture
     def rx_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
         yield defs_dir / "rx_221231.beancount"
 
@@ -314,6 +379,23 @@ class TestAdmin:
         self, rx_221231_filepath
     ) -> abc.Iterator[list[data.Transaction]]:
         txns, _, _ = beancount.loader.load_file(rx_221231_filepath)
+        yield txns
+
+    @pytest.fixture
+    def rx_opts_221231_filepath(self, defs_dir) -> abc.Iterator[Path]:
+        yield defs_dir / "rx_opts_221231.beancount"
+
+    @pytest.fixture
+    def rx_opts_221231_content(
+        self, rx_opts_221231_filepath, encoding
+    ) -> abc.Iterator[str]:
+        yield rx_opts_221231_filepath.read_text(encoding)
+
+    @pytest.fixture
+    def rx_opts_txns_221231(
+        self, rx_opts_221231_filepath
+    ) -> abc.Iterator[list[data.Transaction]]:
+        txns, _, _ = beancount.loader.load_file(rx_opts_221231_filepath)
         yield txns
 
     @pytest.fixture
@@ -375,6 +457,12 @@ class TestAdmin:
         rx_txns_221231,
         defs_230630_content,
         rx_230630_content,
+        filepaths_defs_opts_copy_0,
+        defs_opts,
+        defs_opts_221231,
+        rx_opts_txns_221231,
+        defs_opts_221231_content,
+        rx_opts_221231_content,
         encoding,
     ):
         """Test for initial generation of rx txns.
@@ -453,6 +541,53 @@ class TestAdmin:
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
 
+        # verify as required when files include non-default account root names
+        config.set_account_root_names(
+            {"name_assets": "Biens", "name_income": "Ingresos"}
+        )
+        defs_opts_path = filepaths_defs_opts_copy_0["defs"]
+        rx_opts_path = filepaths_defs_opts_copy_0["rx"]
+        ledger_opts_path = filepaths_defs_copy_0["ledger"]
+        admin_opts = m.Admin(defs_opts_path, rx_opts_path, ledger_opts_path)
+
+        def_payees = {
+            "Account Fee",
+            "EDISON",
+            "BayBook",
+            "VBMPX",
+            "RGAGX",
+            "Metro",
+            "Verizon",
+            "Slate",
+            "Chase",
+            "ETrade Transfer",
+            "Dividend",
+            "Erie",
+        }
+
+        cmn.assert_txns_equal(admin_opts.rx_defs.values(), defs_opts)
+        assert set(admin_opts.payees) == def_payees
+        assert admin_opts.rx_files == [defs_opts_path, rx_opts_path]
+        assert admin_opts.rx_txns == []
+
+        _, output = also_get_stdout(admin_opts.add_txns, datetime.date(2022, 12, 31))
+        expected_output = (
+            "42 transactions have been added to the ledger 'rx_opts'.\n"
+            "Definitions on 'defs_opts' have been updated to reflect the"
+            " most recent transactions.\n"
+        )
+        assert output == expected_output
+        assert defs_opts_path.read_text(encoding) == defs_opts_221231_content
+        assert rx_opts_path.read_text(encoding) == rx_opts_221231_content
+
+        cmn.assert_txns_equal(admin_opts.rx_defs.values(), defs_opts_221231)
+        def_payees.remove("Chase")
+        assert set(admin_opts.payees) == def_payees
+        assert admin_opts.rx_files == [defs_opts_path, rx_opts_path]
+        cmn.assert_txns_equal(admin_opts.rx_txns, rx_opts_txns_221231)
+
+        config.reset_account_root_names()
+
     @pytest.mark.usefixtures("cwd_as_temp_dir")
     def test_cli_addrx(
         self,
@@ -461,6 +596,9 @@ class TestAdmin:
         rx_221231_content,
         defs_230630_content,
         rx_230630_content,
+        filepaths_defs_opts_copy_0,
+        defs_opts_221231_content,
+        rx_opts_221231_content,
         encoding,
     ):
         """Test calling `Admin.add_txns` via cli.
@@ -491,3 +629,18 @@ class TestAdmin:
         assert output == expected_output
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
+
+        # verify as required when files include non-default account root names
+        defs_opts_path = filepaths_defs_opts_copy_0["defs"]
+        rx_opts_path = filepaths_defs_opts_copy_0["rx"]
+
+        set_cl_args("addrx defs_opts rx_opts ledger_opts -e 2022-12-31")
+        _, output = also_get_stdout(cli.main)
+        expected_output = (
+            "42 transactions have been added to the ledger 'rx_opts'.\n"
+            "Definitions on 'defs_opts' have been updated to reflect the"
+            " most recent transactions.\n"
+        )
+        assert output == expected_output
+        assert defs_opts_path.read_text(encoding) == defs_opts_221231_content
+        assert rx_opts_path.read_text(encoding) == rx_opts_221231_content

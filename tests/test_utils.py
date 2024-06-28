@@ -97,6 +97,11 @@ def filepath_make_rx(make_dir) -> abc.Iterator[Path]:
 
 
 @pytest.fixture
+def filepath_make_rx_opts(make_dir) -> abc.Iterator[Path]:
+    yield make_dir / "rx_opts.beancount"
+
+
+@pytest.fixture
 def filepath_make_rx_def(make_dir) -> abc.Iterator[Path]:
     yield make_dir / "rx_def.beancount"
 
@@ -309,7 +314,7 @@ def test_compose_header_footer():
     assert f("rx_def") == (expected_rx_def_start, expected_rx_def_end)
 
 
-def test_create_beanahead_file(files_make, cwd_as_temp_dir):
+def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opts):
     f = m.create_beanahead_file
 
     make_contents = {k: fileobj.read() for k, fileobj in files_make.items()}
@@ -358,9 +363,26 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir):
     with pytest.raises(NotADirectoryError, match=f"{dirname}"):
         f(key, dirpath="./" + dirname)
 
+    # verify as expected with non-default account root names
+    key = "rx"
+    filename = "rx_opts"
+    expected_path = cwd_as_temp_dir / f"{filename}.beancount"
+    assert not expected_path.is_file()
+
+    config.set_account_root_names({"name_assets": "Biens", "name_income": "Ingresos"})
+    f(key, filename=filename)
+    config.reset_account_root_names()
+
+    assert expected_path.is_file()
+    fileobj = get_fileobj(filepath_make_rx_opts)
+    expected_contents = fileobj.read()
+    fileobj.close()
+    with get_fileobj(expected_path) as file:
+        assert file.read() == expected_contents
+
 
 @pytest.mark.usefixtures("clean_test_dir")
-def test_cli_make(files_make, cwd_as_temp_dir):
+def test_cli_make(files_make, cwd_as_temp_dir, filepath_make_rx_opts):
     """Test calling `create_beanahead_file` via cli.
 
     Test based on `test_create_beanahead_file`.
@@ -417,6 +439,23 @@ def test_cli_make(files_make, cwd_as_temp_dir):
     with pytest.raises(NotADirectoryError, match=f"{dirname}"):
         set_cl_args(f"make {key} -d {dirpath}")
         cli.main()
+
+    # verify can pass --main to define non-default account root names
+    key = "rx"
+    filename = "rx_opts"
+    expected_path = cwd_as_temp_dir / f"{filename}.beancount"
+    assert not expected_path.is_file()
+    # NB ledger used to define options has content as expected contents of file
+    # being made
+    set_cl_args(f"make {key} --filename {filename} --main {filepath_make_rx_opts}")
+    cli.main()
+
+    assert expected_path.is_file()
+    fileobj = get_fileobj(filepath_make_rx_opts)
+    expected_contents = fileobj.read()
+    fileobj.close()
+    with get_fileobj(expected_path) as file:
+        assert file.read() == expected_contents
 
 
 def test_verify_path(filepath_ledger, filepath_no_file, filepath_empty_txt_file):
@@ -487,6 +526,18 @@ def test_get_verified_path(cwd_as_make_dir, filepath_make_x, filepath_no_file):
 def test_get_options(filepath_make_rx):
     expected = "Regular Expected Transactions Ledger"
     assert m.get_options(filepath_make_rx)["title"] == expected
+
+
+def test_set_account_root_names(filepath_make_rx_opts, account_root_names_dflt):
+    rtrn = m.set_account_root_names(filepath_make_rx_opts)
+    changes = {
+        "name_assets": "Biens",
+        "name_income": "Ingresos",
+    }
+    expected = account_root_names_dflt | changes
+    assert rtrn == expected
+
+    config.reset_account_root_names()
 
 
 def test_get_verified_file_key(filepaths_make, filepath_no_file, filepath_ledger):
