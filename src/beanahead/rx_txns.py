@@ -17,7 +17,7 @@ from beancount.core.data import Transaction
 from beancount.parser import parser
 from beancount.parser.printer import EntryPrinter
 
-from . import utils, errors
+from . import utils, errors, config
 from .errors import BeanaheadWriteError, BeancountLoaderErrors
 
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
@@ -209,9 +209,9 @@ def get_definition_group(definition: Transaction) -> GrouperKey:
         if account == bal_sheet_account:
             continue
         account_type = get_account_type(account)
-        if account_type == "Assets":
+        if account_type == config.get_account_root_names()["name_assets"]:
             other_sides.add("Assets")
-        elif account_type == "Income":
+        elif account_type == config.get_account_root_names()["name_income"]:
             other_sides.add("Income")
         else:
             other_sides.add("Expenses")

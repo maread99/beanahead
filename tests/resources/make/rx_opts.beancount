@@ -1,0 +1,9 @@
+option "title" "Regular Expected Transactions Ledger"
+option "name_assets" "Biens"
+option "name_income" "Ingresos"
+plugin "rx_txn_plugin"
+pushtag #rx_txn
+;; Transactions should not be manually added to this file.
+
+
+poptag #rx_txn

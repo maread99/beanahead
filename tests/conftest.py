@@ -244,3 +244,15 @@ def rx_txn_chase(txns_rx) -> abc.Iterator[data.Transaction]:
     assert txn.payee == "Chase"
     assert txn.date == datetime.date(2022, 10, 31)
     yield txn
+
+
+@pytest.fixture
+def account_root_names_dflt() -> abc.Iterator[dict[str, str]]:
+    """Expected default account_root_names."""
+    yield {
+        "name_assets": "Assets",
+        "name_liabilities": "Liabilities",
+        "name_equity": "Equity",
+        "name_income": "Income",
+        "name_expenses": "Expenses",
+    }

@@ -16,6 +16,7 @@ from beangulp.extract import HEADER
 from beancount.parser import parser, printer
 
 from . import config
+from .config import get_account_root_names, DEFAULT_ACCOUNT_ROOT_NAMES
 from .errors import (
     BeancountFileExistsError,
     BeanaheadFileExistsError,
@@ -132,6 +133,12 @@ def compose_header_footer(file_key: str) -> tuple[str, str]:
     plugin, tag, comment = config["plugin"], config["tag"], config["comment"]
 
     header = f"""option "title" "{config['title']}"\n"""
+
+    for k, v in get_account_root_names().items():
+        if DEFAULT_ACCOUNT_ROOT_NAMES[k] == v:
+            continue
+        header += f'option "{k}" "{v}"\n'
+
     if plugin is not None:
         header += f'plugin "{plugin}"\n'
     header += f"pushtag #{tag}\n"
@@ -303,6 +310,32 @@ def get_options(path: Path) -> dict:
     """
     entries, errors, options = loader.load_file(path)
     return options
+
+
+def set_account_root_names(filepath: str) -> dict[str, str]:
+    """Set account root names from options defined on a beancount file.
+
+    Parameters
+    ----------
+    filepath: str
+        Path to .beancount file containing options defining account root
+        names, for example:
+            option "name_assets" "AltAssetsRootName"
+
+        Can be passed as either absolute path or path relative to the cwd.
+        It is not necessary to include the. beancount extension.
+        For example, "ledger" would refer to the file 'ledger.beancount' in
+        the cwd.
+
+    Returns
+    -------
+    account_root_names: dict[str, str]
+        Newly set account root names.
+    """
+    path = get_verified_path(filepath)
+    options = get_options(path)
+    names = {k: options[k] for k in DEFAULT_ACCOUNT_ROOT_NAMES if k in options}
+    return config.set_account_root_names(names)
 
 
 def get_verified_file_key(path: Path) -> str:
@@ -553,10 +586,7 @@ def is_assets_account(string: str) -> bool:
     >>> is_assets_account("Assets:US:BofA:Checking")
     True
     """
-    return is_account_type("Assets", string)
-
-
-BAL_SHEET_ACCS = ["Assets", "Liabilities"]
+    return is_account_type(get_account_root_names()["name_assets"], string)
 
 
 def is_balance_sheet_account(string: str) -> bool:
@@ -582,7 +612,14 @@ def is_balance_sheet_account(string: str) -> bool:
     >>> is_balance_sheet_account("Income:US:BayBook:Match401k")
     False
     """
-    return any(is_account_type(acc_type, string) for acc_type in BAL_SHEET_ACCS)
+    account_root_names = get_account_root_names()
+    return any(
+        is_account_type(acc_type, string)
+        for acc_type in [
+            account_root_names["name_assets"],
+            account_root_names["name_liabilities"],
+        ]
+    )
 
 
 def get_balance_sheet_accounts(txn: Transaction) -> list[str]:

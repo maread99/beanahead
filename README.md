@@ -99,7 +99,6 @@ $ beanahead make x -f x
 ```
 include "x.beancount"
 ```
-
 So, if you want to include both regular and ad hoc expected transactions then you should have created three new `.beancount` files and added two 'include' lines to top of your main ledger.
 
 > :information_source: The -f option provides for defining the filename (`make` will add the `.beancount` extension). If -f is not passed then default names will be used which are as those explicitly passed in the examples.
@@ -111,12 +110,15 @@ The [examples/new_empty_files](./examples/new_empty_files) folder includes a sam
 - [Regular Expected Transactions Ledger](./examples/new_empty_files/rx.beancount)
 - [Expected Transactions Ledger](./examples/new_empty_files/x.beancount)
 
-## Regular Expected Transactions
+NB If you're not using the default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then you'll also need to use the optional --main argument to provide the path to a ledger from which beanahead can read the customised name options. Example:
+```
+$ beanahead make x -f x --main my_ledger
+```
 
+## Regular Expected Transactions
 Regular expected transactions are defined on the Regular Expected Transaction _Definitions_ file. The `addrx` command can then be used to populate the Regular Expected Transactions _Ledger_ with transactions generated from these definitions.
 
 ### Defining regular transactions
-
 A new regular transaction can be defined at any time by adding a single transaction to the definitions file (the 'initial definition'). The date of this transaction will serve as the anchor off which future transactions are evaluated.
 
 The following initial definition would generate regular transactions on the 5th of every month, with the first generated transaction dated 2022-10-05. 
@@ -376,7 +378,8 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 ## Worth remembering
 > :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost. 
 
-## Developers
+## Options
+### Print to stderr
 If you are employing a workflow that directs output through `sys.stdout` then this will merge with Beanahead's own output to this stream. To avoid such conflicts `beanahead` provides for directing its output to `sys.stderr`. This can be set from the command line by preceeding any subcommand with --print_stderr, for example...
 ```
 $ beanahead --print_stderr exp rx x
@@ -388,6 +391,15 @@ $ beanahead -p exp rx x
 If using the underlying functions directly in the codebase then the print stream can be set via the following methods of the `beanahead.config` module:
 - `set_print_stderr()`
 - `set_print_stdout()`
+
+### Custom account root names
+If you're not using the default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then beanahead will need to know the values that you are using.
+
+The subcommands of the cli that require these names get them from a ledger ('addrx' will read them from the main ledger which is a required argument, 'make' will read them from any ledger passed to its optional --main argument).
+
+If using the underlying functions directly in the codebase then the names can be set either by passing a dictionary to `config.set_account_root_names` or by passing a ledger that contains these options to `utils.set_account_root_names`.
+
+The currently set names can be inspected via `config.get_account_root_names()` and reset to the default values with`config.reset_account_root_names()`.
 
 ## Alternative packages
 The beancount community offers a considerable array of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what `beanahead` offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.
