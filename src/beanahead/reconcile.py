@@ -9,64 +9,15 @@ from decimal import Decimal
 from pathlib import Path
 import re
 
-import beancount
-from beancount import loader
 from beancount.core import data
 from beancount.core.data import Transaction
 from beancount.core.getters import get_entry_accounts
 from beancount.core import number
+from beancount.parser.parser import parse_file
 from beangulp.extract import HEADER
 
 from . import utils
 from .errors import BeanaheadWriteError
-from .utils import ENCODING
-
-
-def load_extraction_file(path: Path) -> data.Entries:
-    """Load entries extracted from statements.
-
-    Parameters
-    ----------
-    path
-        Path to extraction file.
-    """
-    # load from string in case need to accommodate lost balance directives...
-    with path.open("rt", encoding=ENCODING) as file:
-        string = file.read()
-
-    # NB do not pass "utf-8" encoding to load_string. utf-8 is the default,
-    # although does not encode as utf-8 if pass encoding!?
-    new_entries, errors, options = loader.load_string(string)
-
-    balance_errors = []
-    for error in errors:
-        if isinstance(error, beancount.ops.balance.BalanceError):
-            version = int(beancount.__version__[0])
-            msg = error.message
-            if version > 2 and msg.startswith("Invalid reference to unknown account"):
-                balance_errors.append(error)
-            elif msg.startswith("Account ") and "does not exist" in msg:
-                balance_errors.append(error)
-
-    if balance_errors:
-        # when these errors are 'raised' the associated balance directive is not
-        # loaded. The following adds lines to create open directives for these
-        # accounts and reloads the entries.
-        for error in balance_errors:
-            account = error.entry.account
-            string += "1900-01-01 open " + account + "\n"
-        new_entries_, errors, options = loader.load_string(string)
-        # then removes the Open directives and loses balance diff from Balance
-        # directives - not useful for an extraction file.
-        new_entries = []
-        for entry in new_entries_:
-            if isinstance(entry, data.Open):
-                continue
-            if isinstance(entry, data.Balance):
-                entry = entry._replace(diff_amount=None)
-            new_entries.append(entry)
-
-    return new_entries
 
 
 def separate_out_txns(entries: data.Entries) -> tuple[list[Transaction], data.Entries]:
@@ -674,7 +625,7 @@ def reconcile_new_txns(
         False to order output latest transfer first.
     """
     input_path = utils.get_verified_path(new_entries)
-    new_entries_ = load_extraction_file(input_path)
+    new_entries_, _, _ = parse_file(str(input_path))
     new_txns, new_other = separate_out_txns(new_entries_)
 
     x_txns: dict[Path, list[Transaction]] = {}
