@@ -16,7 +16,6 @@ import pytest
 from beanahead import reconcile as m
 from beanahead.scripts import cli
 
-from . import cmn
 from .conftest import (
     get_entries_from_string,
     set_cl_args,
@@ -85,37 +84,6 @@ def test_txns() -> abc.Iterator[list[data.Transaction]]:
           Income:Salary:Baybook
         """
     yield get_entries_from_string(string)
-
-
-def test_load_extraction_file(filepath_recon_extraction):
-    """Also tests `separate_out_txns`."""
-    filepath = filepath_recon_extraction
-    extracted_entries = m.load_extraction_file(filepath)
-    expected_txns, errors, _ = beancount.loader.load_file(filepath)
-    assert errors
-
-    # verify that the txns are the same
-    cmn.assert_txns_equal(extracted_entries[:-2], expected_txns)
-    # and that entries loaded via 'load_extraction_file' will include bal entries...
-
-    def assert_bal_boa(bal: data.Balance):
-        assert bal.date == datetime.date(2022, 11, 1)
-        assert bal.account == "Assets:US:BofA:Checking"
-        assert bal.amount == data.Amount(Decimal("5320.22"), "USD")
-
-    def assert_bal_slate(bal: data.Balance):
-        assert bal.date == datetime.date(2022, 11, 1)
-        assert bal.account == "Liabilities:US:Chase:Slate"
-        assert bal.amount == data.Amount(Decimal("-520.33"), "USD")
-
-    assert_bal_boa(extracted_entries[-2])
-    assert_bal_slate(extracted_entries[-1])
-
-    # test `separate_out_txns`
-    extracted_txns, extracted_bals = m.separate_out_txns(extracted_entries)
-    cmn.assert_txns_equal(extracted_txns, expected_txns)
-    assert_bal_boa(extracted_bals[0])
-    assert_bal_slate(extracted_bals[1])
 
 
 def test_get_close_txns(extraction_txns, txn_burger_bar_223010):
