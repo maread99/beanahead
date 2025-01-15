@@ -14,29 +14,29 @@ beautifulsoup4==4.12.3
     # via beangulp
 chardet==5.2.0
     # via beangulp
-click==8.1.7
+click==8.1.8
     # via
     #   beancount
     #   beangulp
 colorama==0.4.6
     # via click
-lxml==5.2.2
+lxml==5.3.0
     # via beangulp
-numpy==2.0.0
+numpy==2.0.2
     # via pandas
-pandas==2.2.2
+pandas==2.2.3
     # via beanahead (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
     #   beancount
     #   pandas
-pytz==2024.1
+pytz==2024.2
     # via pandas
-regex==2024.5.15
+regex==2024.11.6
     # via beancount
-six==1.16.0
+six==1.17.0
     # via python-dateutil
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
-tzdata==2024.1
+tzdata==2024.2
     # via pandas
