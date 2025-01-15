@@ -4,7 +4,7 @@
 #
 #    pip-compile --extra=dev --output-file=requirements_dev.txt pyproject.toml
 #
-astroid==3.2.2
+astroid==3.3.8
     # via pylint
 beancount==3.0.0
     # via
@@ -14,15 +14,15 @@ beangulp==0.1.1
     # via beanahead (pyproject.toml)
 beautifulsoup4==4.12.3
     # via beangulp
-black==24.4.2
+black==24.10.0
     # via beanahead (pyproject.toml)
-build==1.2.1
+build==1.2.2.post1
     # via pip-tools
 cfgv==3.4.0
     # via pre-commit
 chardet==5.2.0
     # via beangulp
-click==8.1.7
+click==8.1.8
     # via
     #   beancount
     #   beangulp
@@ -34,35 +34,35 @@ colorama==0.4.6
     #   click
     #   pylint
     #   pytest
-dill==0.3.8
+dill==0.3.9
     # via pylint
-distlib==0.3.8
+distlib==0.3.9
     # via virtualenv
-exceptiongroup==1.2.1
+exceptiongroup==1.2.2
     # via pytest
-filelock==3.15.4
+filelock==3.16.1
     # via virtualenv
-flake8==7.1.0
+flake8==7.1.1
     # via
     #   beanahead (pyproject.toml)
     #   flake8-docstrings
 flake8-docstrings==1.7.0
     # via beanahead (pyproject.toml)
-identify==2.5.36
+identify==2.6.5
     # via pre-commit
-importlib-metadata==8.0.0
+importlib-metadata==8.5.0
     # via build
 iniconfig==2.0.0
     # via pytest
 isort==5.13.2
     # via pylint
-lxml==5.2.2
+lxml==5.3.0
     # via beangulp
 mccabe==0.7.0
     # via
     #   flake8
     #   pylint
-mypy==1.10.1
+mypy==1.14.1
     # via beanahead (pyproject.toml)
 mypy-extensions==1.0.0
     # via
@@ -70,59 +70,59 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.0.0
+numpy==2.0.2
     # via pandas
-packaging==24.1
+packaging==24.2
     # via
     #   black
     #   build
     #   pytest
-pandas==2.2.2
+pandas==2.2.3
     # via beanahead (pyproject.toml)
 pathspec==0.12.1
     # via black
 pip-tools==7.4.1
     # via beanahead (pyproject.toml)
-platformdirs==4.2.2
+platformdirs==4.3.6
     # via
     #   black
     #   pylint
     #   virtualenv
 pluggy==1.5.0
     # via pytest
-pre-commit==3.7.1
+pre-commit==4.0.1
     # via beanahead (pyproject.toml)
-pycodestyle==2.12.0
+pycodestyle==2.12.1
     # via flake8
 pydocstyle==6.3.0
     # via flake8-docstrings
 pyflakes==3.2.0
     # via flake8
-pylint==3.2.4
+pylint==3.3.3
     # via beanahead (pyproject.toml)
-pyproject-hooks==1.1.0
+pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.2.2
+pytest==8.3.4
     # via beanahead (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
     #   beancount
     #   pandas
-pytz==2024.1
+pytz==2024.2
     # via pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via pre-commit
-regex==2024.5.15
+regex==2024.11.6
     # via beancount
-six==1.16.0
+six==1.17.0
     # via python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
-tomli==2.0.1
+tomli==2.2.1
     # via
     #   black
     #   build
@@ -130,7 +130,7 @@ tomli==2.0.1
     #   pip-tools
     #   pylint
     #   pytest
-tomlkit==0.12.5
+tomlkit==0.13.2
     # via pylint
 typing-extensions==4.12.2
     # via
@@ -138,13 +138,13 @@ typing-extensions==4.12.2
     #   black
     #   mypy
     #   pylint
-tzdata==2024.1
+tzdata==2024.2
     # via pandas
-virtualenv==20.26.3
+virtualenv==20.28.1
     # via pre-commit
-wheel==0.43.0
+wheel==0.45.1
     # via pip-tools
-zipp==3.19.2
+zipp==3.21.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
