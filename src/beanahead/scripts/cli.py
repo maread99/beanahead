@@ -14,6 +14,17 @@ import beanahead
 from beanahead import utils, rx_txns, reconcile, expired, config
 
 
+def config_func(args: argparse.Namespace):
+    """Implement config subcommand."""
+    if "reset" in args:
+        config.reset_config()
+        msg = (
+            "The contents of the configuration file have been reset to default values."
+        )
+        print(msg)
+    config.print_config_file_path()
+
+
 def make_file(args: argparse.Namespace):
     """Pass through command line args to make a new beanahead file."""
     utils.create_beanahead_file(args.key, args.dirpath, args.filename)
@@ -61,21 +72,25 @@ def main():
         "--version", "-V", action="version", version=beanahead.__version__
     )
 
-    parser.add_argument(
-        *["-p", "--print_stderr"],
-        action="store_true",
-        help=(
-            "send any print to stderr rather than stdoud (this can"
-            "\nbe useful if the client wishes to use stdout for another"
-            "\npurpose)"
-        ),
-    )
-
     subparsers = parser.add_subparsers(
         title="subcommands",
         dest="subcmd",
-        required=True,
+        required=False,
     )
+
+    # Subparser for config
+    parser_config = subparsers.add_parser(
+        "config",
+        description="Configuration settings",
+        help="print the location of the configuration file.",
+    )
+    parser_config.add_argument(
+        *["--reset", "-r"],
+        help="Reset the configuration file to default values.\n",
+        action="store_true",
+        default=argparse.SUPPRESS,
+    )
+    parser_config.set_defaults(func=config_func)
 
     # Subparser for make_file
     parser_make = subparsers.add_parser(
@@ -278,21 +293,14 @@ def main():
     )
     parser_inject.set_defaults(func=inj)
 
-    # Call pass-through function corresponding with subcommand
     args = parser.parse_args()
 
-    # Set print stream
-    if args.print_stderr:
-        config.set_print_stderr()
     # Set root account names
     if "main" in args and args.main is not None:
         utils.set_account_root_names(args.main)
 
+    # Call pass-through function corresponding with subcommand
     args.func(args)
-
-    # Revert options to default values
-    config.set_print_stdout()
-    config.reset_account_root_names()
 
 
 if __name__ == "__main__":

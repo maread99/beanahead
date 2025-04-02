@@ -16,7 +16,7 @@ from beanahead import errors, config
 from beanahead.scripts import cli
 
 from . import cmn
-from .conftest import set_cl_args, also_get_stdout
+from .conftest import set_cl_args
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -464,6 +464,7 @@ class TestAdmin:
         defs_opts_221231_content,
         rx_opts_221231_content,
         encoding,
+        capsys,
     ):
         """Test for initial generation of rx txns.
 
@@ -515,13 +516,13 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         assert admin.rx_txns == []
 
-        _, output = also_get_stdout(admin.add_txns, datetime.date(2022, 12, 31))
+        admin.add_txns(datetime.date(2022, 12, 31))
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out.endswith(expected_output)
         assert defs_path.read_text(encoding) == defs_221231_content
         assert rx_path.read_text(encoding) == rx_221231_content
 
@@ -531,13 +532,13 @@ class TestAdmin:
         assert admin.rx_files == [defs_path, rx_path]
         cmn.assert_txns_equal(admin.rx_txns, rx_txns_221231)
 
-        _, output = also_get_stdout(admin.add_txns, datetime.date(2023, 6, 30))
+        admin.add_txns(datetime.date(2023, 6, 30))
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out == expected_output
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
 
@@ -570,13 +571,13 @@ class TestAdmin:
         assert admin_opts.rx_files == [defs_opts_path, rx_opts_path]
         assert admin_opts.rx_txns == []
 
-        _, output = also_get_stdout(admin_opts.add_txns, datetime.date(2022, 12, 31))
+        admin_opts.add_txns(datetime.date(2022, 12, 31))
         expected_output = (
             "42 transactions have been added to the ledger 'rx_opts'.\n"
             "Definitions on 'defs_opts' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out == expected_output
         assert defs_opts_path.read_text(encoding) == defs_opts_221231_content
         assert rx_opts_path.read_text(encoding) == rx_opts_221231_content
 
@@ -585,8 +586,6 @@ class TestAdmin:
         assert set(admin_opts.payees) == def_payees
         assert admin_opts.rx_files == [defs_opts_path, rx_opts_path]
         cmn.assert_txns_equal(admin_opts.rx_txns, rx_opts_txns_221231)
-
-        config.reset_account_root_names()
 
     @pytest.mark.usefixtures("cwd_as_temp_dir")
     def test_cli_addrx(
@@ -600,6 +599,7 @@ class TestAdmin:
         defs_opts_221231_content,
         rx_opts_221231_content,
         encoding,
+        capsys,
     ):
         """Test calling `Admin.add_txns` via cli.
 
@@ -609,24 +609,24 @@ class TestAdmin:
         rx_path = filepaths_defs_copy_0["rx"]
 
         set_cl_args("addrx defs rx ledger -e 2022-12-31")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_output = (
             "42 transactions have been added to the ledger 'rx'.\n"
             "Definitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out == expected_output
         assert defs_path.read_text(encoding) == defs_221231_content
         assert rx_path.read_text(encoding) == rx_221231_content
 
         set_cl_args("addrx defs rx ledger -e 2023-06-30")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_output = (
             "80 transactions have been added to the ledger 'rx'."
             "\nDefinitions on 'defs' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out == expected_output
         assert defs_path.read_text(encoding) == defs_230630_content
         assert rx_path.read_text(encoding) == rx_230630_content
 
@@ -635,12 +635,12 @@ class TestAdmin:
         rx_opts_path = filepaths_defs_opts_copy_0["rx"]
 
         set_cl_args("addrx defs_opts rx_opts ledger_opts -e 2022-12-31")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_output = (
             "42 transactions have been added to the ledger 'rx_opts'.\n"
             "Definitions on 'defs_opts' have been updated to reflect the"
             " most recent transactions.\n"
         )
-        assert output == expected_output
+        assert capsys.readouterr().out == expected_output
         assert defs_opts_path.read_text(encoding) == defs_opts_221231_content
         assert rx_opts_path.read_text(encoding) == rx_opts_221231_content

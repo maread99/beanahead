@@ -17,13 +17,7 @@ import pytest
 from beanahead import utils as m
 from beanahead import errors, config
 
-from .conftest import (
-    get_fileobj,
-    set_cl_args,
-    get_expected_output,
-    also_get_stderr,
-    also_get_stdout,
-)
+from .conftest import get_fileobj, set_cl_args, get_expected_output
 from . import cmn
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
@@ -206,7 +200,6 @@ def txns_rx_content(filepath_rx_content) -> abc.Iterator[str]:
 
 def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
     """Test module constants."""
-    assert m.ENCODING == "utf-8" == encoding
     assert m.TAG_X == tag_x
     assert m.TAG_RX == tag_rx
     assert m.TAGS_X == set([tag_x, tag_rx])
@@ -224,7 +217,6 @@ def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
 
     assert m.SEPARATOR_LINE.startswith("-")
     assert m.SEPARATOR_LINE.endswith("\n")
-    assert m.EXT == ".beancount"
 
     assert set(m.FILE_CONFIG.keys()) == set(file_keys)
     meta_keys = {"title", "plugin", "tag", "comment", "post_comment"}
@@ -239,29 +231,29 @@ def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
     assert set(m.LEDGER_FILE_KEYS) == ledger_file_keys
 
 
-def test_print_it():
-    def print_something():
-        m.print_it("something")
+def test_print_it_dflt(capsys):
+    """Test `print_it` with default settings.
 
-    _, prnt = also_get_stdout(print_something)
-    assert prnt == "something\n"
-    _, prnt = also_get_stderr(print_something)
-    assert not prnt
+    Also tests effect of passing kwargs.
+    """
+    m.print_it("something")
+    capture = capsys.readouterr()
+    assert capture.out == "something\n"
+    assert not capture.err
 
-    config.set_print_stderr()
-    _, prnt = also_get_stdout(print_something)
-    assert not prnt
-    _, prnt = also_get_stderr(print_something)
-    assert prnt == "something\n"
+    m.print_it("something else", end=":")  # Verify can pass through kwargs
+    capture = capsys.readouterr()
+    assert capture.out == "something else:"
+    assert not capture.err
 
-    def print_something_else():
-        m.print_it("something else", end=":")  # Verify can pass through kwargs
 
-    config.set_print_stdout()
-    _, prnt = also_get_stdout(print_something_else)
-    assert prnt == "something else:"
-    _, prnt = also_get_stderr(print_something_else)
-    assert not prnt
+@pytest.mark.usefixtures("settings_alt_prnt_mp")
+def test_print_it_alt(capsys):
+    """Test `print_it` when print_stream set to stderr."""
+    m.print_it("something")
+    capture = capsys.readouterr()
+    assert not capture.out
+    assert capture.err == "something\n"
 
 
 def test_validate_file_key(file_keys):
@@ -339,6 +331,14 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opt
     f(key, filename=filename)
     assertions(expected_path, key)
 
+    # verify can pass filename with custom extension
+    key = "rx"
+    filename = "rx.altbean"
+    expected_path = cwd_as_temp_dir / f"{filename}"
+    assert not expected_path.is_file()
+    f(key, filename=filename)
+    assertions(expected_path, key)
+
     # verify can pass dirpath
     key = "x"
     rel_path = "./_tempsub"
@@ -349,6 +349,7 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opt
 
     # verify can pass dirpath and filename
     key = "rx_def"
+    filename = "rx_def_alt"
     expected_path = cwd_as_temp_dir / rel_path / f"{filename}.beancount"
     assert not expected_path.is_file()
     f(key, dirpath=rel_path, filename=filename)
@@ -371,7 +372,6 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opt
 
     config.set_account_root_names({"name_assets": "Biens", "name_income": "Ingresos"})
     f(key, filename=filename)
-    config.reset_account_root_names()
 
     assert expected_path.is_file()
     fileobj = get_fileobj(filepath_make_rx_opts)
@@ -381,7 +381,27 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opt
         assert file.read() == expected_contents
 
 
-@pytest.mark.usefixtures("clean_test_dir")
+@pytest.mark.nosetdfltsettings
+@pytest.mark.usefixtures("config_path_mp_alt_ext", "reset_settings")
+def test_create_beanahead_file_alt_ext(files_make, cwd_as_temp_dir):
+    """Test create_beanahead_file with alternaive default extension"""
+    f = m.create_beanahead_file
+
+    make_contents = {k: fileobj.read() for k, fileobj in files_make.items()}
+
+    def assertions(expected_path: Path, file_key: str):
+        assert expected_path.is_file()
+        with get_fileobj(expected_path) as file:
+            assert file.read() == make_contents[file_key]
+
+    # verify default behaviour
+    for key in files_make:
+        expected_path = cwd_as_temp_dir / f"{key}.bean"
+        assert not expected_path.is_file()
+        f(key)
+        assertions(expected_path, key)
+
+
 def test_cli_make(files_make, cwd_as_temp_dir, filepath_make_rx_opts):
     """Test calling `create_beanahead_file` via cli.
 
@@ -468,11 +488,6 @@ def test_verify_path(filepath_ledger, filepath_no_file, filepath_empty_txt_file)
     with pytest.raises(ExceptionCls, match=f"{filepath_no_file.stem}"):
         f(filepath_no_file)
 
-    # check raises error when path exists but doesn't have beancount ext
-    match = "path does not have a '.beancount' extension."
-    with pytest.raises(ExceptionCls, match=match):
-        f(filepath_empty_txt_file)
-
 
 def test_verify_files_key(filepaths_make, filepath_ledger, filepath_empty_txt_file):
     f = m.verify_files_key
@@ -529,15 +544,13 @@ def test_get_options(filepath_make_rx):
 
 
 def test_set_account_root_names(filepath_make_rx_opts, account_root_names_dflt):
-    rtrn = m.set_account_root_names(filepath_make_rx_opts)
+    m.set_account_root_names(filepath_make_rx_opts)
     changes = {
         "name_assets": "Biens",
         "name_income": "Ingresos",
     }
     expected = account_root_names_dflt | changes
-    assert rtrn == expected
-
-    config.reset_account_root_names()
+    assert config.get_account_root_names() == expected
 
 
 def test_get_verified_file_key(filepaths_make, filepath_no_file, filepath_ledger):

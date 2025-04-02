@@ -16,12 +16,7 @@ import pytest
 from beanahead import reconcile as m
 from beanahead.scripts import cli
 
-from .conftest import (
-    get_entries_from_string,
-    set_cl_args,
-    get_expected_output,
-    also_get_stdout,
-)
+from .conftest import get_entries_from_string, set_cl_args, get_expected_output
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -599,7 +594,7 @@ class TestUserInput:
           """
         yield get_entries_from_string(input_)
 
-    def test_confirm_single(self, mock_input, txn, txns):
+    def test_confirm_single(self, mock_input, txn, txns, capsys):
         f = m.confirm_single
         expected_print = (
             get_expected_output(
@@ -624,23 +619,23 @@ class TestUserInput:
         inputs = (v for v in ("y",))
         mock_input(inputs)
         poss_match = txns[1]
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
-        assert output.endswith(expected_print)
+        rtrn = f(txn, [poss_match])
+        assert capsys.readouterr().out.endswith(expected_print)
         assert rtrn is poss_match
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
-        assert output.endswith(expected_print)
+        rtrn = f(txn, [poss_match])
+        assert capsys.readouterr().out.endswith(expected_print)
         assert rtrn is None
 
         # verify invalid input
         expected_print += "3 is not valid input, please try again, y/n: \n"
         inputs = (v for v in ("3", "y"))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, [poss_match])
-        assert output.endswith(expected_print)
+        rtrn = f(txn, [poss_match])
+        assert capsys.readouterr().out.endswith(expected_print)
         assert rtrn is poss_match
 
         # verify multiple invalid input
@@ -648,7 +643,7 @@ class TestUserInput:
         mock_input(inputs)
         assert f(txn, [poss_match]) is poss_match
 
-    def test_get_mult_match(self, mock_input, txn, txns):
+    def test_get_mult_match(self, mock_input, txn, txns, capsys):
         f = m.get_mult_match
         expected_print = get_expected_output(
             """
@@ -684,23 +679,23 @@ class TestUserInput:
         for i in (0, 1):
             inputs = (v for v in (str(i),))
             mock_input(inputs)
-            rtrn, output = also_get_stdout(f, txn, txns)
-            assert output.endswith(expected_print)
+            rtrn = f(txn, txns)
+            assert capsys.readouterr().out.endswith(expected_print)
             assert rtrn is txns[i]
 
         # verify non-confirmed match
         inputs = (v for v in ("n",))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, txns)
-        assert output.endswith(expected_print)
+        rtrn = f(txn, txns)
+        assert capsys.readouterr().out.endswith(expected_print)
         assert rtrn is None
 
         # verify invalid input
         expected_print += "2 is not valid input, please try again [0-1]/n: \n"
         inputs = (v for v in ("2", "0"))
         mock_input(inputs)
-        rtrn, output = also_get_stdout(f, txn, txns)
-        assert output.endswith(expected_print)
+        rtrn = f(txn, txns)
+        assert capsys.readouterr().out.endswith(expected_print)
         assert rtrn is txns[0]
 
         # verify multiple invalid input
@@ -1073,6 +1068,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test for default options."""
         f = m.reconcile_new_txns
@@ -1083,10 +1079,9 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers)
-
+        f(str(extraction), ledgers)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1105,6 +1100,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test for passing `output`."""
         f = m.reconcile_new_txns
@@ -1115,14 +1111,11 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(
-            f, str(extraction), ledgers, output=str(injection_output)
-        )
-
+        f(str(extraction), ledgers, output=str(injection_output))
         expected_print = self.get_expected_print(
             12, 6, x_path, rx_path, injection_output
         )
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             injection_output, expected_injection_content, extraction_txns, encoding
@@ -1138,6 +1131,7 @@ class TestReconcileNewTxns:
         input_responses,
         encoding,
         expected_injection_content,
+        capsys,
     ):
         """Test for `remove` option."""
         f = m.reconcile_new_txns
@@ -1151,12 +1145,12 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers, remove=False)
+        f(str(extraction), ledgers, remove=False)
         expected_print = (
             "18 incoming transactions have been reconciled against expected "
             f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
         )
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1175,6 +1169,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test for default options."""
         f = m.reconcile_new_txns
@@ -1185,9 +1180,9 @@ class TestReconcileNewTxns:
         ledgers = [str(filepath) for filepath in (rx_path, x_path)]
 
         mock_input(input_responses)
-        _, output = also_get_stdout(f, str(extraction), ledgers, ascending=False)
+        f(str(extraction), ledgers, ascending=False)
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_ascending_content, extraction_txns, encoding
@@ -1210,6 +1205,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test calling `reconcile_new_txns` via cli for with default options.
 
@@ -1221,9 +1217,9 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1243,6 +1239,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test calling `reconcile_new_txns` via cli with output option.
 
@@ -1253,11 +1250,11 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x --output injection")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_print = self.get_expected_print(
             12, 6, x_path, rx_path, injection_output
         )
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             injection_output, expected_injection_content, extraction_txns, encoding
@@ -1274,6 +1271,7 @@ class TestReconcileNewTxns:
         input_responses,
         encoding,
         expected_injection_content,
+        capsys,
     ):
         """Test calling `reconcile_new_txns` via cli with remove option as False
 
@@ -1288,12 +1286,12 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x -k")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_print = (
             "18 incoming transactions have been reconciled against expected "
             f"transactions.\nUpdated transactions have been output to '{extraction}'.\n"
         )
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_content, extraction_txns, encoding
@@ -1313,6 +1311,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         expected_x_content,
         expected_rx_content,
+        capsys,
     ):
         """Test calling `reconcile_new_txns` via cli with reverse option.
 
@@ -1324,9 +1323,9 @@ class TestReconcileNewTxns:
 
         mock_input(input_responses)
         set_cl_args("recon extraction rx x -r")
-        _, output = also_get_stdout(cli.main)
+        cli.main()
         expected_print = self.get_expected_print(12, 6, x_path, rx_path, extraction)
-        assert output.endswith(expected_print)
+        assert capsys.readouterr().out.endswith(expected_print)
 
         self.assert_expected_injection(
             extraction, expected_injection_ascending_content, extraction_txns, encoding

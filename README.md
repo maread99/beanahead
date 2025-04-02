@@ -31,7 +31,7 @@ Beanahead is compatible with both beancount v2 and v3.
 - Regular Expected Transactions (electicity bill, rent, etc) are defined by including a single transaction to a dedicated beancount file, by convention 'rx_def.beancount'.
 - The `addrx` command is used to populate a Regular Expected Transactions ledger with transactions. This ledger, by convention 'rx.beancount', is 'included' to your main .beancount ledger.
 - ad hoc Expected Transactions are added to the Expected Transactions ledger, by convention 'x.beancount'. This ledger is also 'included' to your main .beancount ledger.
-- The `recon` comamnd offers a cli to reconcile newly imported transactions with transactions on the expected transactions ledgers.
+- The `recon` command offers a cli to reconcile newly imported transactions with transactions on the expected transactions ledgers.
   - Newly imported transactions are updated to reflect any missing narration, tags, meta and 'other side' postings defined on the corresponding expected transactions.
   - Reconciled expected transactions are removed from their respective ledgers.
 
@@ -103,7 +103,7 @@ include "x.beancount"
 ```
 So, if you want to include both regular and ad hoc expected transactions then you should have created three new `.beancount` files and added two 'include' lines to top of your main ledger.
 
-> :information_source: The -f option provides for defining the filename (`make` will add the `.beancount` extension). If -f is not passed then default names will be used which are as those explicitly passed in the examples.
+> :information_source: The -f option provides for defining the filename (`make` will add the default `.beancount` extension - see the [Options](#options) section for how to change the default file extension). If -f is not passed then default names will be used which are as those explicitly passed in the examples.
 
 > :information_source: The quoted file in the 'include' lines should reflect the path to the expected transactions ledger from the directory in which your main ledger is located. The above examples assume that the expected transactions ledgers have the default filenames and are located in the same directory as the main ledger.
 
@@ -112,7 +112,7 @@ The [examples/new_empty_files](./examples/new_empty_files) folder includes a sam
 - [Regular Expected Transactions Ledger](./examples/new_empty_files/rx.beancount)
 - [Expected Transactions Ledger](./examples/new_empty_files/x.beancount)
 
-NB If you're not using the default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then you'll also need to use the optional --main argument to provide the path to a ledger from which beanahead can read the customised name options. Example:
+NB If you're not using the default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then you can either permenently set new default values (see [Options](#options)) or pass the optional --main argument to provide the path to a ledger from which beanahead can read the customised name options, for example:
 ```
 $ beanahead make x -f x --main my_ledger
 ```
@@ -255,7 +255,7 @@ Beanahead will treat each 'word' defined in the expected payee as a separate str
     For example, "Top of the World" will match with "The corner shop", "Another Day" and "Super Offers".
   - Use few unambiguous words. For example "Top World". Even just "Top" might be a better choice.
 
-> :information_source: The transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!
+> :information_source: The transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!  
 > :information_source: matches are case-insensitive
 
 ## Reconciling 
@@ -381,27 +381,43 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 > :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost. 
 
 ## Options
-### Print to stderr
-If you are employing a workflow that directs output through `sys.stdout` then this will merge with Beanahead's own output to this stream. To avoid such conflicts `beanahead` provides for directing its output to `sys.stderr`. This can be set from the command line by preceeding any subcommand with --print_stderr, for example...
-```
-$ beanahead --print_stderr exp rx x
-```
-The same effect can be achieved with the flag -p.
-```
-$ beanahead -p exp rx x
-```
-If using the underlying functions directly in the codebase then the print stream can be set via the following methods of the `beanahead.config` module:
-- `set_print_stderr()`
-- `set_print_stdout()`
+Beanahead provides options to set...
+- [account root names](#account-root-names)
+- [the print stream](#print-stream)
+- [a default beancount file extension](#beancount-file-extension)
 
-### Custom account root names
-If you're not using the default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then beanahead will need to know the values that you are using.
+The options are defined in an .ini configuration file. The location of the config file can be printed with the `config` subcommand:
+```
+$ beanahead config
+```
+Beanahead will create the configuration file with [default values](./examples/config/dflt.ini) (This [file](./examples/config/alt.ini) offers an example of alternative option values).
 
-The subcommands of the cli that require these names get them from a ledger ('addrx' will read them from the main ledger which is a required argument, 'make' will read them from any ledger passed to its optional --main argument).
+The configuration file can be reset to the default values at any time with:
+```
+$ beanahead config --reset
+```
 
-If using the underlying functions directly in the codebase then the names can be set either by passing a dictionary to `config.set_account_root_names` or by passing a ledger that contains these options to `utils.set_account_root_names`.
+### Account root names
+If you're not using Beancount's default account root names (e.g. 'Assets', 'Income', 'Expenses' etc) then Beanahead will need to know the values that you are using.
 
-The currently set names can be inspected via `config.get_account_root_names()` and reset to the default values with`config.reset_account_root_names()`.
+To **permanently set account root names** simply change the values of the following options on the configuration file:
+- name-assets
+- name-liabilities
+- name-equity
+- name-income
+- name-expenses
+
+This [configuration file](./examples/config/alt.ini) offers an example of setting alternative account root names.
+
+If **using the codebase directly** then the account root names can be set by passing a dictionary to `config.set_account_root_names`. The currently set names can be inspected via `config.get_account_root_names()`.
+
+If Beanahead can see your main ledger (such as is the case with the 'addrx' subcommand) then it will always override the account root names with the actual values defined on the main ledger. (The cli's 'make' subcommand can be forced to use actual values by passing your main ledger with the optional --main arugment.)
+
+### Print stream
+If you are employing a workflow that directs output through `sys.stdout` then this will merge with Beanahead's own output to this stream. To avoid such conflicts Beanahead provides for directing its output to `sys.stderr`. Simply set the configuration file `print-stream` option to 'stderr', as in this [example config file](./examples/config/alt.ini).
+
+### Beancount file extension
+Filenames passed as arguments to the cli can be defined either with or without the file extension. If defined without the extension then beanahead will assume the extension as defined by the `extension` option. By default this is 'beancount' (as [here](./examples/config/dflt.ini), whilst this [example config file](./examples/config/alt.ini) shows the extension set to `bean`).
 
 ## Alternative packages
 The beancount community offers a considerable array of add-on packages, many of which are well-rated and maintained. Below I've noted those I know of with functionality that includes some of what `beanahead` offers. Which package you're likely to find most useful will come down to your specific circumstances and requirements - horses for courses.
