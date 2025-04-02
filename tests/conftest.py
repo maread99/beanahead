@@ -1,7 +1,8 @@
 """Common pytest fixtures and hooks."""
 
 from collections import abc
-import contextlib
+import configparser
+import copy
 import datetime
 import io
 import os
@@ -9,13 +10,12 @@ from pathlib import Path
 import shutil
 import sys
 import textwrap
-import typing
 
 import beancount
 from beancount.core import data
 import pytest
 
-from beanahead import utils
+from beanahead import utils, config
 
 # pylint: disable=missing-function-docstring, missing-type-doc
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -36,9 +36,9 @@ ENCODING = "utf-8"
 TEST_ROOT = Path(__file__).parent
 TEMP_DIR = TEST_ROOT / r"./_temp"
 TEMP_SUBDIR = TEMP_DIR / r"./_tempsub"
-for temp_dir in (TEMP_DIR, TEMP_SUBDIR):
-    if not temp_dir.is_dir():
-        temp_dir.mkdir()
+for _temp_dir in (TEMP_DIR, TEMP_SUBDIR):
+    if not _temp_dir.is_dir():
+        _temp_dir.mkdir()
 
 
 def set_cl_args(cl: str):
@@ -71,20 +71,130 @@ def get_expected_output(string: str):
     return textwrap.dedent(string)[1:]
 
 
-def also_get_stdout(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
-    """Return a function's return together with print to stdout."""
-    prnt = io.StringIO()
-    with contextlib.redirect_stdout(prnt):
-        rtrn = f(*args, **kwargs)
-    return rtrn, prnt.getvalue()
+def pytest_sessionstart(session):
+    """Hook executed before session starts.
+
+    Cleans temporary test folder and patches settings to default.
+    """
+    _clean_test_dir()
 
 
-def also_get_stderr(f: abc.Callable, *args, **kwargs) -> tuple[typing.Any, str]:
-    """Return a function's return together with print to stderr."""
-    prnt = io.StringIO()
-    with contextlib.redirect_stderr(prnt):
-        rtrn = f(*args, **kwargs)
-    return rtrn, prnt.getvalue()
+@pytest.fixture
+def path_config_dflt(config_dir: Path) -> abc.Iterator[Path]:
+    """Path to default configuration file."""
+    path = config_dir / "dflt.ini"
+    assert path.exists()
+    yield path
+
+
+@pytest.fixture
+def path_config_alt(config_dir: Path) -> abc.Iterator[Path]:
+    """Path to alternative configuration file."""
+    path = config_dir / "alt.ini"
+    assert path.exists()
+    yield path
+
+
+@pytest.fixture
+def path_config_alt_ext(config_dir: Path) -> abc.Iterator[Path]:
+    """Path to configuration file with alternative extension."""
+    path = config_dir / "alt_ext.ini"
+    assert path.exists()
+    yield path
+
+
+def get_config(filepath: Path) -> configparser.SectionProxy:
+    """Get config file."""
+    config = configparser.ConfigParser(
+        inline_comment_prefixes=("#",), empty_lines_in_values=False
+    )
+    config.read(filepath)
+    return config["DEFAULT"]
+
+
+@pytest.fixture
+def config_dflt(path_config_dflt: Path) -> abc.Iterator[configparser.SectionProxy]:
+    """Config parser section for dlft configuration."""
+    yield get_config(path_config_dflt)
+
+
+@pytest.fixture
+def config_alt(path_config_alt: Path) -> abc.Iterator[configparser.SectionProxy]:
+    """Config parser section for alternative configuration."""
+    yield get_config(path_config_alt)
+
+
+@pytest.fixture
+def config_path_mp_dflt(monkeypatch, path_config_dflt):
+    """Mock CONFIG_FILE to alternative configuration file."""
+    monkeypatch.setattr("beanahead.config.CONFIG_FILE", path_config_dflt)
+
+
+@pytest.fixture
+def config_path_mp_alt(monkeypatch, path_config_alt):
+    """Mock CONFIG_FILE to alternative configuration file."""
+    monkeypatch.setattr("beanahead.config.CONFIG_FILE", path_config_alt)
+
+
+@pytest.fixture
+def config_path_mp_alt_ext(monkeypatch, path_config_alt_ext):
+    """Mock CONFIG_FILE to configuration file with alternative extension."""
+    monkeypatch.setattr("beanahead.config.CONFIG_FILE", path_config_alt_ext)
+
+
+@pytest.fixture(autouse=True)
+def set_dflt_settings(request, monkeypatch, path_config_dflt):
+    """Use default settings by default."""
+    if "nosetdfltsettings" not in request.keywords:
+        monkeypatch.setattr("beanahead.config.CONFIG_FILE", path_config_dflt)
+        config.reset_settings()
+
+
+@pytest.fixture
+def reset_settings():
+    """Reset config settings."""
+    config.reset_settings()
+
+
+@pytest.fixture
+def settings_dflt() -> abc.Iterator[config.Settings]:
+    """Expected default settings.
+
+    Settings match those in the default config file.
+    """
+    yield config.Settings(
+        name_assets="Assets",
+        name_equity="Equity",
+        name_expenses="Expenses",
+        name_income="Income",
+        name_liabilities="Liabilities",
+        print_stream=config.PrintStream.STDOUT,
+        extension=".beancount",
+    )
+
+
+@pytest.fixture
+def settings_alt() -> abc.Iterator[config.Settings]:
+    """Expected alternative settings.
+
+    Settings match those in the alt config file.
+    """
+    yield config.Settings(
+        name_assets="Bienes",
+        name_liabilities="Obligaciones",
+        name_equity="Participaciones",
+        name_income="Ingresos",
+        name_expenses="Gastos",
+        print_stream=config.PrintStream.STDERR,
+        extension=".bean",
+    )
+
+
+@pytest.fixture
+def settings_alt_prnt_mp(monkeypatch, settings_dflt):
+    settings = copy.copy(settings_dflt)
+    setattr(settings, "print_stream", config.PrintStream.STDERR)
+    monkeypatch.setattr("beanahead.config.SETTINGS", settings)
 
 
 @pytest.fixture
@@ -111,21 +221,16 @@ def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
 
 def _clean_test_dir():
     """Remove all files and directories from the test directory"""
-    for dirpath, dirname, filenames in os.walk(TEMP_DIR):
+    for dirpath, dirnames, filenames in os.walk(TEMP_DIR):
+        path_dir = Path(dirpath)
         for filename in filenames:
-            path = Path(dirpath) / filename
-            os.remove(path)
+            path = path_dir / filename
+            path.unlink()
+        if not dirpath.endswith("_temp") and not dirpath.endswith("_tempsub"):
+            path_dir.rmdir()
 
 
-def pytest_sessionstart(session):
-    """Hook executed before session starts.
-
-    Clean temporary test folder.
-    """
-    _clean_test_dir()
-
-
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_test_dir() -> abc.Iterator[Path]:
     _clean_test_dir()
     yield
@@ -155,6 +260,11 @@ def res_dir() -> abc.Iterator[Path]:
 @pytest.fixture
 def recon_dir(res_dir) -> abc.Iterator[Path]:
     yield res_dir / "recon"
+
+
+@pytest.fixture
+def config_dir(res_dir) -> abc.Iterator[Path]:
+    yield res_dir / "config"
 
 
 # Common fixtures from files in recon folder

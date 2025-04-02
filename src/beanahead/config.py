@@ -1,56 +1,202 @@
 """Configuration file for options."""
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+import configparser
+from dataclasses import dataclass
+import enum
+import pathlib
 import sys
+from typing import Any
+import warnings
 
-_print_stdout = True
+ENCODING = "utf-8"
 
-
-def get_print_file():
-    """Get stream to print to."""
-    return sys.stdout if _print_stdout else sys.stderr
-
-
-def set_print_stdout():
-    """Set output stream for print to stdout."""
-    global _print_stdout
-    _print_stdout = True
+CONFIG_DIR = pathlib.Path("~/.config/beanahead").expanduser()
+CONFIG_FILE = CONFIG_DIR / "config.ini"
 
 
-def set_print_stderr():
-    """Set output stream for print to stderr."""
-    global _print_stdout
-    _print_stdout = False
+SETTINGS_DFLTS = {
+    "name-assets": "Assets",
+    "name-liabilities": "Liabilities",
+    "name-equity": "Equity",
+    "name-income": "Income",
+    "name-expenses": "Expenses",
+    "print-stream": "stdout",
+    "extension": "beancount",
+}
+_comments = {
+    "print-stream": "from ('stdout', 'stderr')",
+    "extension": "Default extension for beancount files",
+}
+_lines = [
+    f"{k} = {v}" + (("  # " + _comments[k]) if k in _comments else "")
+    for k, v in SETTINGS_DFLTS.items()
+]
+_lines.insert(sum(k.startswith("name") for k in SETTINGS_DFLTS), "")
+DFLT_CONFIG = "[DEFAULT]\n# Account root names\n" + "\n".join(_lines) + "\n"
 
-
-DEFAULT_ACCOUNT_ROOT_NAMES = {
-    "name_assets": "Assets",
-    "name_liabilities": "Liabilities",
-    "name_equity": "Equity",
-    "name_income": "Income",
-    "name_expenses": "Expenses",
+BC_DEFAULT_ACCOUNT_ROOT_NAMES = {
+    k.replace("-", "_"): v for k, v in SETTINGS_DFLTS.items() if k.startswith("name")
 }
 
-_account_root_names = DEFAULT_ACCOUNT_ROOT_NAMES.copy()
+
+def print_config_file_path():
+    """Print address of configuration file to stdout."""
+    print(f"The beanahead configuration file can be found at:\n\t{CONFIG_FILE}")
+
+
+def print_default_config():
+    """Print contents of default configuration file to stdout."""
+    print(DFLT_CONFIG)
+
+
+def _write_config():
+    """Write default configuration file."""
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE.write_text(DFLT_CONFIG, encoding=ENCODING)
+
+
+def reset_config():
+    """Reset the configuration file to the default values."""
+    _write_config()
+
+
+class ConfigWarning(UserWarning):
+    """User warning to advise of invalid values in the configuration file."""
+
+    _msg = "Configuration Warning"  # subclass should override
+
+    def __str__(self) -> str:
+        return self._msg
+
+
+class ConfigInvalidOptionsWarning(ConfigWarning):
+    """The configuration file includes invalid options."""
+
+    def __init__(self, invalid_keys: set[str]):
+        self._msg = (
+            "The configuration file includes the following invalid options:"
+            f" '{invalid_keys}'.\nThese options will be ignored."
+        )
+
+
+class ConfigInvalidValueWarning(ConfigWarning):
+    """The configuration file includes an option with an invalid value."""
+
+    def __init__(
+        self,
+        key: str,
+        value: str,
+        dflt: str,
+        valid_values: Sequence[Any] | None = None,
+    ):
+        self._msg = (
+            f"'{value}' is not a valid value for the configuration option {key}."
+            f" The default value '{dflt}' will be used."
+        )
+        if valid_values is not None:
+            self._msg += f"\nValid values for '{key}' are: {valid_values}."
+
+
+warnings.simplefilter("always", ConfigInvalidValueWarning)
+
+
+class PrintStream(enum.Enum):
+    STDOUT = "stdout"
+    STDERR = "stderr"
+
+
+@dataclass
+class Settings:
+    """Configuration settings."""
+
+    name_assets: str
+    name_liabilities: str
+    name_equity: str
+    name_income: str
+    name_expenses: str
+    print_stream: PrintStream
+    extension: str
+
+    @property
+    def print_to(self):
+        return sys.stdout if self.print_stream is PrintStream.STDOUT else sys.stderr
+
+
+def parse_config(config: configparser.SectionProxy) -> Settings:
+    """Verify configuration settings."""
+    invalid_keys = set(config) - set(SETTINGS_DFLTS)
+    if invalid_keys:
+        warnings.warn(ConfigInvalidOptionsWarning(invalid_keys))
+    settings = {}
+    for k, v in config.items():
+        if k in invalid_keys:
+            continue
+        v = v.strip()
+        if " " in v:
+            warnings.warn(ConfigInvalidValueWarning(k, v, SETTINGS_DFLTS[k], None))
+            v = SETTINGS_DFLTS[k]
+        if k == "print-stream":
+            valid_values = [m.value for m in PrintStream]
+            if v not in valid_values:
+                warnings.warn(
+                    ConfigInvalidValueWarning(k, v, SETTINGS_DFLTS[k], valid_values)
+                )
+                v = SETTINGS_DFLTS[k]
+            v = PrintStream(v)
+        if k == "extension" and not v.startswith("."):
+            v = "." + v
+        settings[k.replace("-", "_")] = v
+    return Settings(**settings)
+
+
+def load_config() -> configparser.SectionProxy:
+    """Load configuration file.
+
+    If config file does not exist, create one with default values.
+    """
+    if not CONFIG_FILE.exists():
+        _write_config()
+
+    config = configparser.ConfigParser(
+        defaults=SETTINGS_DFLTS,
+        inline_comment_prefixes=("#",),
+        empty_lines_in_values=False,
+    )
+    config.read(CONFIG_FILE)
+    return config["DEFAULT"]
+
+
+def get_settings_from_config() -> Settings:
+    """Get settings from configuration file."""
+    return parse_config(load_config())
+
+
+SETTINGS: Settings = get_settings_from_config()
+
+
+def reset_settings():
+    """Set settings according to configuration file."""
+    global SETTINGS
+    SETTINGS = get_settings_from_config()
 
 
 def get_account_root_names() -> dict[str, str]:
     """Get account root names."""
-    return _account_root_names.copy()
+    return {
+        k.replace("-", "_"): getattr(SETTINGS, k.replace("-", "_"))
+        for k in SETTINGS_DFLTS
+        if k.startswith("name")
+    }
 
 
-def set_account_root_names(names: dict) -> dict[str, str]:
+def set_account_root_names(names: dict):
     """Set account root names.
 
-    Use this method to set the account root names.
-
-    Default account root names that otherwise prevail are:
-    {
-        'name_assets': 'Assets',
-        'name_liabilities': 'Liabilities',
-        'name_equity': 'Equity',
-        'name_income': 'Income',
-        'name_expenses': 'Expenses',
-    }
+    Use this method to override the account root names as defined on the
+    configuration file.
 
     Parameters
     ----------
@@ -63,44 +209,13 @@ def set_account_root_names(names: dict) -> dict[str, str]:
 
             values: str
                 Corresponding account root name.
-
-    Returns
-    -------
-    account_root_names: dict[str, str]
-        Newly set account root names.
     """
-    global _account_root_names
-    diff = set(names) - set(_account_root_names)
+    keys = {k.replace("-", "_") for k in SETTINGS_DFLTS}
+    diff = set(names) - keys
     if diff:
         raise ValueError(
-            f"'names' parameter can only contain keys: {set(_account_root_names)},"
-            f" although received 'names' included keys: {diff}"
+            f"'names' parameter can only contain keys: {keys},"
+            f" although received 'names' included keys: {diff}."
         )
-    _account_root_names |= names
-    set_names = get_account_root_names()
-    assert _account_root_names == set_names
-    return set_names
-
-
-def reset_account_root_names() -> dict[str, str]:
-    """Set account root names to default values.
-
-    Default account root names are:
-    {
-        'name_assets': 'Assets',
-        'name_liabilities': 'Liabilities',
-        'name_equity': 'Equity',
-        'name_income': 'Income',
-        'name_expenses': 'Expenses',
-    }
-
-    Returns
-    -------
-    account_root_names: dict[str, str]
-        Newly set account root names.
-    """
-    global _account_root_names
-    _account_root_names |= DEFAULT_ACCOUNT_ROOT_NAMES
-    set_names = get_account_root_names()
-    assert _account_root_names == set_names
-    return set_names
+    for k, v in names.items():
+        setattr(SETTINGS, k, v)

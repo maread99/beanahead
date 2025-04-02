@@ -12,13 +12,7 @@ from beanahead import expired as m
 from beanahead import errors
 from beanahead.scripts import cli
 
-from .conftest import (
-    get_entries_from_string,
-    set_cl_args,
-    get_expected_output,
-    also_get_stdout,
-    also_get_stderr,
-)
+from .conftest import get_entries_from_string, set_cl_args, get_expected_output
 
 # pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
 # pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
@@ -127,7 +121,7 @@ def test_get_from_response(monkeypatch):
     assert f("2023-01-01") == f("01") == f("1") == datetime.date(2023, 1, 1)
 
 
-def test_update_txn(monkeypatch, mock_input):
+def test_update_txn(monkeypatch, mock_input, capsys):
     f = m._update_txn
     mock_today(datetime.date(2022, 11, 15), monkeypatch)
     tomorrow = datetime.date(2022, 11, 16)
@@ -158,18 +152,18 @@ def test_update_txn(monkeypatch, mock_input):
     )
 
     mock_input((v for v in ["0"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=tomorrow)
 
     mock_input((v for v in ["2"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn is None
 
     mock_input((v for v in ["3"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn is txn
 
     # verify handles invalid input
@@ -179,15 +173,15 @@ def test_update_txn(monkeypatch, mock_input):
         " please try again, [0-3]: \n"
     )
     mock_input((v for v in ["n", "y", "4", "3"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print_)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print_)
     assert rtrn is txn
 
     # verify option to enter a new date
     expected_print += "Enter a new date (YYYY-MM-DD or MM-DD or DD): \n"
     mock_input((v for v in ["1", "2022-12-03"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
     # verify handles invalid date input
@@ -198,8 +192,8 @@ def test_update_txn(monkeypatch, mock_input):
         " (YYYY-MM-DD or MM-DD or DD): \n"
     )
     mock_input((v for v in ["1", "22-12-03", "2022-11-14", "2022-12-03"]))
-    rtrn, output = also_get_stdout(f, txn, path)
-    assert output.endswith(expected_print)
+    rtrn = f(txn, path)
+    assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
 
 
@@ -259,7 +253,14 @@ class TestAdminExpiredTxns:
         yield filepath.read_text(encoding)
 
     def test_all_options(
-        self, monkeypatch, mock_input, filepaths_copy, expected_x, expected_rx, encoding
+        self,
+        monkeypatch,
+        mock_input,
+        filepaths_copy,
+        expected_x,
+        expected_rx,
+        encoding,
+        capsys,
     ):
         """Test all options for an expired transaction."""
         f = m.admin_expired_txns
@@ -279,12 +280,14 @@ class TestAdminExpiredTxns:
             """
         )
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
-        _, output = also_get_stdout(f, ledgers)
-        assert output.endswith(expected_print)
+        f(ledgers)
+        assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx
 
-    def test_no_changes(self, monkeypatch, mock_input, filepaths_copy, encoding):
+    def test_no_changes(
+        self, monkeypatch, mock_input, filepaths_copy, encoding, capsys
+    ):
         """Test all options for an expired transaction."""
         f = m.admin_expired_txns
         mock_today(datetime.date(2022, 11, 15), monkeypatch)
@@ -300,11 +303,11 @@ class TestAdminExpiredTxns:
         )
         expected_print = expected_print[1:]
         mock_input((v for v in ["3", "3", "3", "3"]))
-        _, output = also_get_stdout(f, [str(filepath_x)])
-        assert output.endswith(expected_print)
+        f([str(filepath_x)])
+        assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
 
-    def test_none_expired(self, monkeypatch, filepaths_copy, encoding):
+    def test_none_expired(self, monkeypatch, filepaths_copy, encoding, capsys):
         """Test all options for an expired transaction."""
         f = m.admin_expired_txns
         mock_today(datetime.date(2022, 10, 1), monkeypatch)
@@ -323,8 +326,8 @@ class TestAdminExpiredTxns:
             {filepath_x}
             """
         )
-        _, output = also_get_stdout(f, ledgers)
-        assert output.endswith(expected_print)
+        f(ledgers)
+        assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
         assert filepath_rx.read_text(encoding) == orig_contents_rx
 
@@ -337,6 +340,7 @@ class TestAdminExpiredTxns:
         expected_x,
         expected_rx,
         encoding,
+        capsys,
     ):
         """Test calling via cli.
 
@@ -358,12 +362,12 @@ class TestAdminExpiredTxns:
         )
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
         set_cl_args("exp x rx")
-        _, output = also_get_stdout(cli.main)
-        assert output.endswith(expected_print)
+        cli.main()
+        assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx
 
-    @pytest.mark.usefixtures("cwd_as_temp_dir")
+    @pytest.mark.usefixtures("cwd_as_temp_dir", "settings_alt_prnt_mp")
     def test_cli_exp_print_to_stderr(
         self,
         monkeypatch,
@@ -372,6 +376,7 @@ class TestAdminExpiredTxns:
         expected_x,
         expected_rx,
         encoding,
+        capsys,
     ):
         """As `test_cli_exp` with print to stderr.
 
@@ -392,8 +397,8 @@ class TestAdminExpiredTxns:
             """
         )
         mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
-        set_cl_args("--print_stderr exp x rx")
-        _, output = also_get_stderr(cli.main)
-        assert output.endswith(expected_print)
+        set_cl_args("exp x rx")
+        cli.main()
+        assert capsys.readouterr().err.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
         assert filepath_rx.read_text(encoding) == expected_rx

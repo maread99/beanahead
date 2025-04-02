@@ -16,7 +16,7 @@ from beangulp.extract import HEADER
 from beancount.parser import parser, printer
 
 from . import config
-from .config import get_account_root_names, DEFAULT_ACCOUNT_ROOT_NAMES
+from .config import get_account_root_names, BC_DEFAULT_ACCOUNT_ROOT_NAMES
 from .errors import (
     BeancountFileExistsError,
     BeanaheadFileExistsError,
@@ -24,8 +24,6 @@ from .errors import (
     BeanaheadFileKeyError,
     BeancountLoaderErrors,
 )
-
-ENCODING = "utf-8"
 
 TAG_X = "x_txn"
 TAG_RX = "rx_txn"
@@ -38,7 +36,6 @@ RX_META_DFLTS = {
 
 SEPARATOR_LINE = "-" * 77 + "\n"
 TODAY = datetime.datetime.now().date()
-EXT = ".beancount"
 
 FILE_CONFIG = {
     "x": {
@@ -81,7 +78,7 @@ def print_it(text: str, **kwargs):
     kwargs
         Kwargs to pass to 'print' function.
     """
-    kwargs["file"] = config.get_print_file()
+    kwargs["file"] = config.SETTINGS.print_to
     print(text, **kwargs)
 
 
@@ -135,7 +132,7 @@ def compose_header_footer(file_key: str) -> tuple[str, str]:
     header = f"""option "title" "{config['title']}"\n"""
 
     for k, v in get_account_root_names().items():
-        if DEFAULT_ACCOUNT_ROOT_NAMES[k] == v:
+        if BC_DEFAULT_ACCOUNT_ROOT_NAMES[k] == v:
             continue
         header += f'option "{k}" "{v}"\n'
 
@@ -173,8 +170,9 @@ def create_beanahead_file(
         directory. By default, the current working directory.
 
     filename
-        Name of new beanahead file. By default, same as `file_key`. Should not
-        include the .beancount extension.
+        Name of new beanahead file. By default, same as `file_key`. If an
+        extension is not included then the default extension will be added
+        (as defined in the configuration file).
 
     Raises
     ------
@@ -193,14 +191,16 @@ def create_beanahead_file(
         raise NotADirectoryError(dirpath_)
 
     filename = file_key if filename is None else filename
-    path = (dirpath_ / filename).with_suffix(EXT)
+    path = dirpath_ / filename
+    if not path.suffix:
+        path = path.with_suffix(config.SETTINGS.extension)
     if path.is_file():
         raise FileExistsError(path)
 
     header, footer = compose_header_footer(file_key)
     content = header + "\n\n" + footer
 
-    with path.open("wt", encoding=ENCODING) as file:
+    with path.open("wt", encoding=config.ENCODING) as file:
         file.write(content)
 
 
@@ -219,9 +219,7 @@ def verify_path(path: Path):
         If path does not represent an existing file.
 
     """
-    if path.suffix != EXT:
-        raise BeancountFileExistsError("path does not have a '.beancount' extension.")
-    elif not path.is_file():
+    if not path.is_file():
         raise BeancountFileExistsError(f"{path} is not a path to an existing file.")
 
 
@@ -249,7 +247,7 @@ def verify_files_key(path: Path, file_key: str):
     get_verified_ledger_file_key : Verify path to a beanahead ledger file
         and return its file key.
     """
-    with path.open("rt", encoding=ENCODING) as file:
+    with path.open("rt", encoding=config.ENCODING) as file:
         first_line = file.readline()
     title = FILE_CONFIG[file_key]["title"]
     if not first_line[:-2].endswith(title):
@@ -265,11 +263,12 @@ def get_unverified_path(filepath: str) -> Path:
     ----------
     filepath
         Path to .beancount file, either absolute or relative to the cwd.
-        It is not necessary to include the .beancount extension.
+        It is not necessary to include the default extension (as defined
+        in the configuration file, for example '.beancount').
     """
     path = Path(filepath).absolute()
     if not path.suffix:
-        path = path.with_suffix(EXT)
+        path = path.with_suffix(config.SETTINGS.extension)
     return path
 
 
@@ -334,7 +333,7 @@ def set_account_root_names(filepath: str) -> dict[str, str]:
     """
     path = get_verified_path(filepath)
     options = get_options(path)
-    names = {k: options[k] for k in DEFAULT_ACCOUNT_ROOT_NAMES if k in options}
+    names = {k: options[k] for k in BC_DEFAULT_ACCOUNT_ROOT_NAMES if k in options}
     return config.set_account_root_names(names)
 
 
@@ -654,7 +653,7 @@ def get_content(path: Path) -> str:
     path
         Path to file from which to get all content.
     """
-    with path.open("r", encoding=ENCODING) as file:
+    with path.open("r", encoding=config.ENCODING) as file:
         content = file.read()
     return content
 
@@ -760,7 +759,7 @@ def compose_new_content(file_key: str, txns_content: str) -> str:
 
 def write(path: Path, content: str):
     """Write content to path."""
-    with path.open("wt", encoding=ENCODING) as file:
+    with path.open("wt", encoding=config.ENCODING) as file:
         file.write(content)
 
 
@@ -956,7 +955,7 @@ def inject_txns(injection: str, ledger: str):
     content = "\n" + content
     ledger_path = get_verified_path(ledger)
 
-    with ledger_path.open("at", encoding=ENCODING) as file:
+    with ledger_path.open("at", encoding=config.ENCODING) as file:
         file.write(content)
 
 
