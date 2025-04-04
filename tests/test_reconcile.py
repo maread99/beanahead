@@ -35,8 +35,8 @@ from .conftest import get_entries_from_string, set_cl_args, get_expected_output
 
 @pytest.fixture
 def extraction_txns(filepath_recon_extraction) -> abc.Iterator[list[data.Transaction]]:
-    txns, _, _ = beancount.loader.load_file(filepath_recon_extraction)
-    yield txns
+    entries, _, _ = beancount.loader.load_file(filepath_recon_extraction)
+    yield [e for e in entries if isinstance(e, data.Transaction)]
 
 
 @pytest.fixture
@@ -1030,7 +1030,10 @@ class TestReconcileNewTxns:
         injection_content = injection.read_text(encoding)
         assert injection_content == expected_injection_content
 
-        txns_injection, _, _ = beancount.loader.load_file(injection)
+        entries_injection, _, _ = beancount.loader.load_file(injection)
+        txns_injection = [
+            e for e in entries_injection if isinstance(e, data.Transaction)
+        ]
         assert len(txns_extraction) == len(txns_injection)
 
         for txn in txns_injection:
