@@ -4,15 +4,15 @@
 #
 #    pip-compile --extra=tests --output-file=requirements_tests.txt pyproject.toml
 #
-beancount==3.0.0
+beancount==3.1.0
     # via
     #   beanahead (pyproject.toml)
     #   beangulp
-beangulp==0.1.1
+beangulp==0.2.0
     # via beanahead (pyproject.toml)
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.3
     # via beangulp
-black==24.10.0
+black==25.1.0
     # via beanahead (pyproject.toml)
 chardet==5.2.0
     # via beangulp
@@ -27,15 +27,15 @@ colorama==0.4.6
     #   pytest
 exceptiongroup==1.2.2
     # via pytest
-flake8==7.1.1
+flake8==7.2.0
     # via
     #   beanahead (pyproject.toml)
     #   flake8-docstrings
 flake8-docstrings==1.7.0
     # via beanahead (pyproject.toml)
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
-lxml==5.3.0
+lxml==5.3.1
     # via beangulp
 mccabe==0.7.0
     # via flake8
@@ -51,23 +51,23 @@ pandas==2.2.3
     # via beanahead (pyproject.toml)
 pathspec==0.12.1
     # via black
-platformdirs==4.3.6
+platformdirs==4.3.7
     # via black
 pluggy==1.5.0
     # via pytest
-pycodestyle==2.12.1
+pycodestyle==2.13.0
     # via flake8
 pydocstyle==6.3.0
     # via flake8-docstrings
-pyflakes==3.2.0
+pyflakes==3.3.2
     # via flake8
-pytest==8.3.4
+pytest==8.3.5
     # via beanahead (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
     #   beancount
     #   pandas
-pytz==2024.2
+pytz==2025.2
     # via pandas
 regex==2024.11.6
     # via beancount
@@ -81,7 +81,9 @@ tomli==2.2.1
     # via
     #   black
     #   pytest
-typing-extensions==4.12.2
-    # via black
-tzdata==2024.2
+typing-extensions==4.13.1
+    # via
+    #   beautifulsoup4
+    #   black
+tzdata==2025.2
     # via pandas
