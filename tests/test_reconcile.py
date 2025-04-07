@@ -884,7 +884,7 @@ class TestUpdateNewTxn:
         and `x_txn` the corresponding expected transaction.
         """
         assert txn.date == new_txn.date == datetime.date(2022, 10, 18)
-        assert txn.narration == new_txn.narration == "new_txn narration"
+        assert txn.narration == x_txn.narration == "x_txn narration"
         assert txn.tags == frozenset(["x_txn_tag", "new_tag"])
 
         assert len(txn.meta) == 6

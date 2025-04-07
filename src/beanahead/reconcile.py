@@ -455,7 +455,7 @@ def update_new_txn(new_txn: Transaction, x_txn: Transaction) -> Transaction:
     x_txn = utils.reverse_automatic_balancing(x_txn)
     new_txn = utils.reverse_automatic_balancing(new_txn)
 
-    if not new_txn.narration:
+    if x_txn.narration:
         new_txn = new_txn._replace(narration=x_txn.narration)
 
     if tags_to_add := x_txn.tags - utils.TAGS_X:
