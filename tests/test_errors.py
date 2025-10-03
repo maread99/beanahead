@@ -7,20 +7,6 @@ import pytest
 
 from beanahead import errors as m
 
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
-
 
 @pytest.fixture
 def path() -> abc.Iterator[Path]:
@@ -68,7 +54,7 @@ def test_BeanaheadWriteError(path):
     expected = (
         f"An error occurred when attempting to overwrite '{path}'."
         " The following files have been reverted to their most recent saved content:"
-        f"\n{str(reverted[0])}\n{str(reverted[1])}"
+        f"\n{reverted[0]}\n{reverted[1]}"
     )
     assert str(error) == expected
 

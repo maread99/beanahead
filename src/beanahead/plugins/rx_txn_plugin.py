@@ -1,7 +1,8 @@
 """Plugins for Regular Expected Transactions."""
 
 from beancount.core.data import Entries, Options, Transaction
-from beanahead.utils import TAG_RX, RX_META_DFLTS
+
+from beanahead.utils import RX_META_DFLTS, TAG_RX
 
 __plugins__ = ["convert_meta"]
 
@@ -20,4 +21,4 @@ def convert_meta(entries: Entries, _: Options) -> tuple[Entries, list[tuple]]:
         for k, v in RX_META_DFLTS.items():
             entry.meta.setdefault(k, v)
 
-    return entries, (errors := [])
+    return entries, (_errors := [])

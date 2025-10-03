@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 import configparser
-from dataclasses import dataclass
 import enum
 import pathlib
 import sys
-from typing import Any
 import warnings
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ENCODING = "utf-8"
 
@@ -44,12 +46,12 @@ BC_DEFAULT_ACCOUNT_ROOT_NAMES = {
 
 def print_config_file_path():
     """Print address of configuration file to stdout."""
-    print(f"The beanahead configuration file can be found at:\n\t{CONFIG_FILE}")
+    print(f"The beanahead configuration file can be found at:\n\t{CONFIG_FILE}")  # noqa: T201
 
 
 def print_default_config():
     """Print contents of default configuration file to stdout."""
-    print(DFLT_CONFIG)
+    print(DFLT_CONFIG)  # noqa: T201
 
 
 def _write_config():
@@ -104,6 +106,8 @@ warnings.simplefilter("always", ConfigInvalidValueWarning)
 
 
 class PrintStream(enum.Enum):
+    """Enumerator for print stream values."""
+
     STDOUT = "stdout"
     STDERR = "stderr"
 
@@ -122,6 +126,7 @@ class Settings:
 
     @property
     def print_to(self):
+        """TextIO to print to."""
         return sys.stdout if self.print_stream is PrintStream.STDOUT else sys.stderr
 
 
@@ -129,25 +134,25 @@ def parse_config(config: configparser.SectionProxy) -> Settings:
     """Verify configuration settings."""
     invalid_keys = set(config) - set(SETTINGS_DFLTS)
     if invalid_keys:
-        warnings.warn(ConfigInvalidOptionsWarning(invalid_keys))
+        warnings.warn(ConfigInvalidOptionsWarning(invalid_keys))  # noqa: B028
     settings = {}
     for k, v in config.items():
         if k in invalid_keys:
             continue
-        v = v.strip()
+        v = v.strip()  # noqa: PLW2901
         if " " in v:
-            warnings.warn(ConfigInvalidValueWarning(k, v, SETTINGS_DFLTS[k], None))
-            v = SETTINGS_DFLTS[k]
+            warnings.warn(ConfigInvalidValueWarning(k, v, SETTINGS_DFLTS[k], None))  # noqa: B028
+            v = SETTINGS_DFLTS[k]  # noqa: PLW2901
         if k == "print-stream":
             valid_values = [m.value for m in PrintStream]
             if v not in valid_values:
-                warnings.warn(
+                warnings.warn(  # noqa: B028
                     ConfigInvalidValueWarning(k, v, SETTINGS_DFLTS[k], valid_values)
                 )
-                v = SETTINGS_DFLTS[k]
-            v = PrintStream(v)
+                v = SETTINGS_DFLTS[k]  # noqa: PLW2901
+            v = PrintStream(v)  # noqa: PLW2901
         if k == "extension" and not v.startswith("."):
-            v = "." + v
+            v = "." + v  # noqa: PLW2901
         settings[k.replace("-", "_")] = v
     return Settings(**settings)
 
@@ -179,7 +184,7 @@ SETTINGS: Settings = get_settings_from_config()
 
 def reset_settings():
     """Set settings according to configuration file."""
-    global SETTINGS
+    global SETTINGS  # noqa: PLW0603
     SETTINGS = get_settings_from_config()
 
 

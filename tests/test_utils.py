@@ -1,38 +1,24 @@
 """Tests for `utils` module."""
 
-from collections import abc
 import datetime
-from decimal import Decimal
 import io
 import os
-from pathlib import Path
 import re
 import shutil
+from collections import abc
+from decimal import Decimal
+from pathlib import Path
 
 import beancount
-from beancount.core import data
-from beanahead.scripts import cli
 import pytest
+from beancount.core import data
 
+from beanahead import config, errors
 from beanahead import utils as m
-from beanahead import errors, config
+from beanahead.scripts import cli
 
-from .conftest import get_fileobj, set_cl_args, get_expected_output
 from . import cmn
-
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
+from .conftest import get_expected_output, get_fileobj, set_cl_args
 
 
 @pytest.fixture
@@ -168,7 +154,7 @@ def filepath_empty_txt_file(res_dir) -> abc.Iterator[Path]:
 
 @pytest.fixture
 def entries_ledger(filepath_ledger) -> abc.Iterator[data.Entries]:
-    entries, errors, options = beancount.loader.load_file(filepath_ledger)
+    entries, _errors, _options = beancount.loader.load_file(filepath_ledger)
     yield entries
 
 
@@ -182,7 +168,7 @@ def txn_payroll(txns_ledger) -> abc.Iterator[data.Transaction]:
 
 @pytest.fixture
 def txns_rx_copy(filepath_rx_copy) -> abc.Iterator[list[data.Transaction]]:
-    txns, errors, options = beancount.loader.load_file(filepath_rx_copy)
+    txns, _errors, _options = beancount.loader.load_file(filepath_rx_copy)
     yield txns
 
 
@@ -193,27 +179,27 @@ def filepath_rx_content(filepath_rx, encoding) -> abc.Iterator[str]:
 
 @pytest.fixture
 def txns_rx_content(filepath_rx_content) -> abc.Iterator[str]:
-    """Content of txns_rx relating to transactions"""
+    """Content of txns_rx relating to transactions."""
     contents_rx_lines = filepath_rx_content.split("\n")
     yield "\n".join(contents_rx_lines[6:-3])
 
 
-def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys, encoding):
+def test_constants(tag_x, tag_rx, file_keys, ledger_file_keys):
     """Test module constants."""
-    assert m.TAG_X == tag_x
-    assert m.TAG_RX == tag_rx
-    assert m.TAGS_X == set([tag_x, tag_rx])
+    assert tag_x == m.TAG_X
+    assert tag_rx == m.TAG_RX
+    assert {tag_x, tag_rx} == m.TAGS_X
 
     dflts = m.RX_META_DFLTS
     assert len(dflts) == 2
     assert dflts["final"] is None
     assert dflts["roll"] is True
 
-    today = datetime.datetime.now().date()
+    today = datetime.datetime.now().date()  # noqa: DTZ005
     try:
-        assert m.TODAY == today
+        assert today == m.TODAY
     except AssertionError:  # if tests started before 00:00 and now > 00:00
-        assert m.TODAY == today - datetime.timedelta(1)
+        assert today - datetime.timedelta(1) == m.TODAY
 
     assert m.SEPARATOR_LINE.startswith("-")
     assert m.SEPARATOR_LINE.endswith("\n")
@@ -384,7 +370,7 @@ def test_create_beanahead_file(files_make, cwd_as_temp_dir, filepath_make_rx_opt
 @pytest.mark.nosetdfltsettings
 @pytest.mark.usefixtures("config_path_mp_alt_ext", "reset_settings")
 def test_create_beanahead_file_alt_ext(files_make, cwd_as_temp_dir):
-    """Test create_beanahead_file with alternaive default extension"""
+    """Test create_beanahead_file with alternaive default extension."""
     f = m.create_beanahead_file
 
     make_contents = {k: fileobj.read() for k, fileobj in files_make.items()}
@@ -478,7 +464,7 @@ def test_cli_make(files_make, cwd_as_temp_dir, filepath_make_rx_opts):
         assert file.read() == expected_contents
 
 
-def test_verify_path(filepath_ledger, filepath_no_file, filepath_empty_txt_file):
+def test_verify_path(filepath_ledger, filepath_no_file):
     f = m.verify_path
     # check verifies valid beancount file
     f(filepath_ledger)
@@ -526,7 +512,7 @@ def test_get_unverified_path(cwd_as_temp_dir):
     assert f(str(expected_path)) == expected_path  # verify absolute
 
 
-def test_get_verified_path(cwd_as_make_dir, filepath_make_x, filepath_no_file):
+def test_get_verified_path(cwd_as_make_dir, filepath_make_x, filepath_no_file):  # noqa: ARG001
     f = m.get_verified_path
     assert f("x") == filepath_make_x
     assert f("x", "x") == filepath_make_x
@@ -619,7 +605,6 @@ class TestEntriesTxns:
         indices = [4, 17, 21]
         to_remove = [txns_ledger[i] for i in indices]
         rtrn = m.remove_txns(txns_ledger, to_remove)
-        # assert len(rtrn) == len(txns_ledger) - len(indices)
         expected = (
             txns_ledger[:4] + txns_ledger[5:17] + txns_ledger[18:21] + txns_ledger[22:]
         )
@@ -795,7 +780,7 @@ def test_compose_entries_content(rx_txn_chase, txns_rx, txns_rx_content):
     assert rtrn == expected
 
 
-def test_compose_new_content(filepath_rx_content, txns_rx_content, encoding):
+def test_compose_new_content(filepath_rx_content, txns_rx_content):
     f = m.compose_new_content
     file_key = "rx"
     rtrn = f(file_key, txns_rx_content)
@@ -846,7 +831,7 @@ def test_remove_txns_from_ledger(filepath_rx_copy, txns_rx_copy, encoding, ans_d
         datetime.date(2022, 10, 31),
     )
     payees = ("BayBook", "RGAGX", "Slate")
-    for txn, date, payee in zip(to_remove, dates, payees):
+    for txn, date, payee in zip(to_remove, dates, payees, strict=True):
         assert txn.date == date
         assert txn.payee == payee
 

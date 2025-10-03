@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
-from collections.abc import Callable
 from datetime import timedelta
 from decimal import Decimal
-from pathlib import Path
-import re
+from typing import TYPE_CHECKING
 
-from beancount.core import data
+from beancount.core import data, number
 from beancount.core.data import Transaction
 from beancount.core.getters import get_entry_accounts
-from beancount.core import number
 from beancount.parser.parser import parse_file
 from beangulp.extract import HEADER
 
 from . import utils
 from .errors import BeanaheadWriteError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 
 def separate_out_txns(entries: data.Entries) -> tuple[list[Transaction], data.Entries]:
@@ -88,11 +90,11 @@ def get_basic_matches(txns: list[Transaction], x_txn: Transaction) -> list[Trans
 
 
 def get_pattern(x_txn: Transaction) -> re.Pattern:
-    """Get a pattern to match an Expected Transaction's payee"""
+    """Get a pattern to match an Expected Transaction's payee."""
     payee = x_txn.payee
     words = payee.split(" ")
     if len(words) == 1:
-        return re.compile(payee, re.I)
+        return re.compile(payee, re.IGNORECASE)
     return utils.compile_strings_regex(words)
 
 
@@ -116,7 +118,7 @@ def get_common_balance_sheet_accounts(a: Transaction, b: Transaction) -> set[str
 
 
 def get_posting_to_account(txn: Transaction, account: str) -> data.Posting | None:
-    """Return a transaction's posting to a given account
+    """Return a transaction's posting to a given account.
 
     None if transaction does not have a posting to `account`.
     """
@@ -196,7 +198,7 @@ def number_diff(a: Transaction, b: Transaction) -> Decimal:
     for account in get_common_balance_sheet_accounts(a, b):
         num_a, cur_a = get_amount_for_account(a, account)
         num_b, cur_b = get_amount_for_account(b, account)
-        if not cur_a == cur_b:
+        if cur_a != cur_b:
             continue
         diff = decimal_diff(num_a, num_b)
         if diff == number.ONE:
@@ -215,7 +217,7 @@ def get_sortkey_number(x_txn: Transaction) -> Callable:
     """
 
     def sortkey_number(txn: Transaction) -> Decimal:
-        """sortkey to sort transactions by difference in number."""
+        """Sortkey to sort transactions by difference in number."""
         return number_diff(x_txn, txn)
 
     return sortkey_number
@@ -238,7 +240,7 @@ def get_sortkey_date(x_txn: Transaction) -> Callable:
     """
 
     def sortkey_date(txn: Transaction) -> Decimal:
-        """sortkey to sort transactions by difference in date."""
+        """Sortkey to sort transactions by difference in date."""
         return (abs(x_txn.date - txn.date), -len(get_common_accounts(txn, x_txn)))
 
     return sortkey_date
@@ -325,8 +327,9 @@ def confirm_single(
         )
     if response == "n":
         return None
-    elif response == "y":
+    if response == "y":
         return matches[0]
+    return None
 
 
 def get_mult_match(
@@ -553,16 +556,18 @@ def map_path_to_reconciled_x_txns(
                 mapping[path].append(x_txn)
                 mapped = True
                 break
-        assert mapped, "reconciled x_txn not mapped to path."
+        if not mapped:
+            msg_err = "reconciled x_txn not mapped to path."
+            raise AssertionError(msg_err)
     return mapping
 
 
-def reconcile_new_txns(
+def reconcile_new_txns(  # noqa: C901
     new_entries: str,
     x_txns_ledgers: list[str],
-    remove: bool = True,
+    remove: bool = True,  # noqa: FBT001, FBT002
     output: str | None = None,
-    ascending: bool = True,
+    ascending: bool = True,  # noqa: FBT001, FBT002
 ):
     """Reconcile new transactions with expected transactions.
 
@@ -661,7 +666,7 @@ def reconcile_new_txns(
         for revert_path in seen[:]:
             try:
                 utils.write(revert_path, prev_contents[revert_path])
-            except Exception:
+            except Exception:  # noqa: BLE001, PERF203
                 seen.remove(revert_path)
         raise BeanaheadWriteError(path, seen) from err
 
@@ -676,7 +681,7 @@ def reconcile_new_txns(
         for revert_path, prev_content in prev_contents.items():
             try:
                 utils.write(revert_path, prev_content)
-            except Exception:
+            except Exception:  # noqa: BLE001, PERF203
                 reverted.remove(revert_path)
         raise BeanaheadWriteError(out_path, reverted, overwrite) from err
 

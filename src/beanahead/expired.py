@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import datetime
-from datetime import timedelta
-from pathlib import Path
 import re
-
-from beancount.core.data import Transaction
+from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from . import utils
 from .errors import BeanaheadWriteError
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from beancount.core.data import Transaction
 
 TODAY = utils.TODAY
 TOMORROW = TODAY + timedelta(1)
@@ -138,9 +141,9 @@ def _update_txn(txn: Transaction, path: Path) -> Transaction | None:
         )
     if response == "3":
         return txn
-    elif response == "2":
+    if response == "2":
         return None
-    elif response[0] == "0":
+    if response[0] == "0":
         return txn._replace(date=TOMORROW)
 
     response = utils.get_input(f"Enter a new date {DATE_FORMATS}: ")
@@ -190,7 +193,7 @@ def overwrite_ledgers(contents: dict[Path, str]):
         for path_ in seen[:]:
             try:
                 utils.write(path_, prev_contents[path_])
-            except Exception:
+            except Exception:  # noqa: BLE001, PERF203
                 seen.remove(path_)
         raise BeanaheadWriteError(path, seen) from err
 
@@ -228,8 +231,8 @@ def admin_expired_txns(ledgers: list[str]):
 
     no_expired_txns = True
     paths = list(x_txns.keys())
-    ledger_updated = {path: False for path in paths}
-    updated_txns: dict[path, list[Transaction]] = {}
+    ledger_updated = dict.fromkeys(paths, False)
+    updated_txns: dict[Path, list[Transaction]] = {}
     for path, txns in x_txns.items():
         new_txns = []
         for txn in txns:
@@ -238,7 +241,7 @@ def admin_expired_txns(ledgers: list[str]):
                 txn_ = _update_txn(txn, path)
                 if not ledger_updated[path] and txn_ != txn:
                     ledger_updated[path] = True
-                txn = txn_
+                txn = txn_  # noqa: PLW2901
             if txn is not None:
                 new_txns.append(txn)
         updated_txns[path] = new_txns

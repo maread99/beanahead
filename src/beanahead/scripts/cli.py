@@ -11,7 +11,7 @@ import argparse
 import datetime
 
 import beanahead
-from beanahead import utils, rx_txns, reconcile, expired, config
+from beanahead import config, expired, reconcile, rx_txns, utils
 
 
 def config_func(args: argparse.Namespace):
@@ -21,7 +21,7 @@ def config_func(args: argparse.Namespace):
         msg = (
             "The contents of the configuration file have been reset to default values."
         )
-        print(msg)
+        print(msg)  # noqa: T201
     config.print_config_file_path()
 
 
@@ -269,7 +269,7 @@ def main():
         description=("Append new transactions to a ledger."),
         help="inject new transactions.",
         epilog=(
-            "Documentation of underlying function:" f"\n\n{utils.inject_txns.__doc__}"
+            f"Documentation of underlying function:\n\n{utils.inject_txns.__doc__}"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )

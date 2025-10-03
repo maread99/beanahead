@@ -1,32 +1,18 @@
 """Tests for `expired` module."""
 
-from collections import abc
 import datetime
-from pathlib import Path
 import re
 import shutil
+from collections import abc
+from pathlib import Path
 
 import pytest
 
-from beanahead import expired as m
 from beanahead import errors
+from beanahead import expired as m
 from beanahead.scripts import cli
 
-from .conftest import get_entries_from_string, set_cl_args, get_expected_output
-
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
+from .conftest import get_entries_from_string, get_expected_output, set_cl_args
 
 
 @pytest.fixture
@@ -47,7 +33,7 @@ def filepaths_copy(expired_dir, temp_dir) -> abc.Iterator[dict[str, Path]]:
     filepath_x = expired_dir / "x.beancount"
     filepath_rx = expired_dir / "rx.beancount"
     d = {}
-    for k, filepath in zip(("rx", "x"), (filepath_rx, filepath_x)):
+    for k, filepath in zip(("rx", "x"), (filepath_rx, filepath_x), strict=True):
         string = shutil.copy(filepath, temp_dir)
         d[k] = Path(string)
     yield d
@@ -65,24 +51,24 @@ def mock_tomorrow(tomorrow: datetime.date, monkeypatch):
 
 
 def test_constants():
-    now = datetime.datetime.now()
+    now = datetime.datetime.now()  # noqa: DTZ005
     today = now.date()
     try:
-        assert m.TODAY == today
+        assert today == m.TODAY
     except AssertionError:  # if tests started before 00:00 and now > 00:00
         assert now.hour == 0 and now.minute < 5
         today = today - datetime.timedelta(1)
-        assert m.TODAY == today
+        assert today == m.TODAY
 
-    assert m.TOMORROW == today + datetime.timedelta(1)
+    assert today + datetime.timedelta(1) == m.TOMORROW
 
     assert m.DATE_FORMATS == "(YYYY-MM-DD or MM-DD or DD)"
 
-    assert m.VALID_DATE_FORMAT_REGEXES == [
+    assert [
         re.compile(r"^\d{4}-\d{1,2}-\d{1,2}$"),
         re.compile(r"^\d{1,2}-\d{1,2}$"),
         re.compile(r"^\d{1,2}$"),
-    ]
+    ] == m.VALID_DATE_FORMAT_REGEXES
 
 
 def test_get_date_parts(monkeypatch):
@@ -151,17 +137,17 @@ def test_update_txn(monkeypatch, mock_input, capsys):
         """
     )
 
-    mock_input((v for v in ["0"]))
+    mock_input(v for v in ["0"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=tomorrow)
 
-    mock_input((v for v in ["2"]))
+    mock_input(v for v in ["2"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn is None
 
-    mock_input((v for v in ["3"]))
+    mock_input(v for v in ["3"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn is txn
@@ -172,14 +158,14 @@ def test_update_txn(monkeypatch, mock_input, capsys):
         " valid input, please try again, [0-3]: \n'4' is not valid input,"
         " please try again, [0-3]: \n"
     )
-    mock_input((v for v in ["n", "y", "4", "3"]))
+    mock_input(v for v in ["n", "y", "4", "3"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print_)
     assert rtrn is txn
 
     # verify option to enter a new date
     expected_print += "Enter a new date (YYYY-MM-DD or MM-DD or DD): \n"
-    mock_input((v for v in ["1", "2022-12-03"]))
+    mock_input(v for v in ["1", "2022-12-03"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
@@ -191,7 +177,7 @@ def test_update_txn(monkeypatch, mock_input, capsys):
         " not represent a date >= 2022-11-15.\nPlease enter a valid date"
         " (YYYY-MM-DD or MM-DD or DD): \n"
     )
-    mock_input((v for v in ["1", "22-12-03", "2022-11-14", "2022-12-03"]))
+    mock_input(v for v in ["1", "22-12-03", "2022-11-14", "2022-12-03"])
     rtrn = f(txn, path)
     assert capsys.readouterr().out.endswith(expected_print)
     assert rtrn == txn._replace(date=datetime.date(2022, 12, 3))
@@ -240,7 +226,7 @@ def test_overwrite_ledgers(filepaths_recon_copy, encoding):
 
 
 class TestAdminExpiredTxns:
-    """Tests for function `admin_expired_txns`"""
+    """Tests for function `admin_expired_txns`."""
 
     @pytest.fixture
     def expected_x(self, expired_dir, encoding) -> abc.Iterator[str]:
@@ -279,7 +265,7 @@ class TestAdminExpiredTxns:
             {filepath_rx}
             """
         )
-        mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
+        mock_input(v for v in ["3", "0", "1", "2022-11-20", "2", "0"])
         f(ledgers)
         assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == expected_x
@@ -302,7 +288,7 @@ class TestAdminExpiredTxns:
             "\nNo ledger has been altered.\n"
         )
         expected_print = expected_print[1:]
-        mock_input((v for v in ["3", "3", "3", "3"]))
+        mock_input(v for v in ["3", "3", "3", "3"])
         f([str(filepath_x)])
         assert capsys.readouterr().out.endswith(expected_print)
         assert filepath_x.read_text(encoding) == orig_contents_x
@@ -360,7 +346,7 @@ class TestAdminExpiredTxns:
             {filepath_rx}
             """
         )
-        mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
+        mock_input(v for v in ["3", "0", "1", "2022-11-20", "2", "0"])
         set_cl_args("exp x rx")
         cli.main()
         assert capsys.readouterr().out.endswith(expected_print)
@@ -396,7 +382,7 @@ class TestAdminExpiredTxns:
             {filepath_rx}
             """
         )
-        mock_input((v for v in ["3", "0", "1", "2022-11-20", "2", "0"]))
+        mock_input(v for v in ["3", "0", "1", "2022-11-20", "2", "0"])
         set_cl_args("exp x rx")
         cli.main()
         assert capsys.readouterr().err.endswith(expected_print)

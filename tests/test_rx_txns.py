@@ -1,36 +1,22 @@
 """Tests for `rx_txns` module."""
 
-from collections import abc
 import datetime
 import re
-from pathlib import Path
 import shutil
+from collections import abc
+from pathlib import Path
 
 import beancount
-from beancount.core import data
 import pandas as pd
 import pytest
+from beancount.core import data
 
+from beanahead import config, errors
 from beanahead import rx_txns as m
-from beanahead import errors, config
 from beanahead.scripts import cli
 
 from . import cmn
 from .conftest import set_cl_args
-
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
 
 
 @pytest.fixture
@@ -75,13 +61,13 @@ def filepath_defs_ledger_with_error(defs_dir) -> abc.Iterator[Path]:
 
 @pytest.fixture
 def defs(filepath_defs) -> abc.Iterator[list[data.Transaction]]:
-    entries, errors, options = beancount.loader.load_file(filepath_defs)
+    entries, _errors, _options = beancount.loader.load_file(filepath_defs)
     yield entries
 
 
 @pytest.fixture
 def defs_opts(filepath_defs_opts) -> abc.Iterator[list[data.Transaction]]:
-    entries, errors, options = beancount.loader.load_file(filepath_defs_opts)
+    entries, _errors, _options = beancount.loader.load_file(filepath_defs_opts)
     yield entries
 
 
@@ -150,6 +136,7 @@ def filepaths_defs_copy_0(
     for k, filepath in zip(
         ("defs", "rx", "ledger"),
         (filepath_defs, filepath_defs_rx, filepath_defs_ledger),
+        strict=True,
     ):
         string = shutil.copy(filepath, temp_dir)
         d[k] = Path(string)
@@ -177,6 +164,7 @@ def filepaths_defs_opts_copy_0(
     for k, filepath in zip(
         ("defs", "rx", "ledger"),
         (filepath_defs_opts, filepath_defs_rx_opts, filepath_defs_ledger_opts),
+        strict=True,
     ):
         string = shutil.copy(filepath, temp_dir)
         d[k] = Path(string)
@@ -190,11 +178,11 @@ def filepaths_defs_opts_copy_0(
 
 def test_constants():
     """Test module constants."""
-    end_dflt = datetime.datetime.now().date() + datetime.timedelta(weeks=13)
+    end_dflt = datetime.datetime.now().date() + datetime.timedelta(weeks=13)  # noqa: DTZ005
     try:
-        assert m.END_DFLT == end_dflt
+        assert end_dflt == m.END_DFLT
     except AssertionError:  # if tests started before 00:00 and now > 00:00
-        assert m.END_DFLT == end_dflt - datetime.timedelta(1)
+        assert end_dflt - datetime.timedelta(1) == m.END_DFLT
 
     assert m.SIMPLE_FREQ_MAPPING == {"w": "weeks", "m": "months", "y": "years"}
 
@@ -237,7 +225,7 @@ def test_create_entries_and_final_roll(def_chase, def_verizon, monkeypatch):
     def_date = def_chase.date
     rtrn_txns, rtrn_def = f(def_chase, datetime.date(2023, 2, 28))
 
-    for txn, date in zip(rtrn_txns, expected_dates):
+    for txn, date in zip(rtrn_txns, expected_dates, strict=True):
         assert txn.date == date
         # verify otherwise as definition
         assert txn._replace(date=def_date) == def_chase
@@ -281,7 +269,7 @@ def test_create_entries_and_final_roll(def_chase, def_verizon, monkeypatch):
     def_date = def_verizon.date
     rtrn_txns, rtrn_def = f(def_verizon, None)
 
-    for txn, date in zip(rtrn_txns, expected_dates):
+    for txn, date in zip(rtrn_txns, expected_dates, strict=True):
         assert txn.date == date
         # verify otherwise as definition
         assert txn._replace(date=def_date) == def_verizon
@@ -307,7 +295,7 @@ def test_create_entries_and_final_roll(def_chase, def_verizon, monkeypatch):
         datetime.date(2023, 8, 16),  # saturday rolled to monday
         datetime.date(2023, 9, 18),
     ]
-    for txn, date in zip(rolled, expected_rolled_dates):
+    for txn, date in zip(rolled, expected_rolled_dates, strict=True):
         assert txn.date == date
         # verify otherwise as definition
         assert txn._replace(date=def_date) == def_verizon

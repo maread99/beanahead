@@ -4,30 +4,33 @@ from __future__ import annotations
 
 import copy
 import datetime
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from beancount import loader
-from beancount.core import data
 from beancount.core.account_types import is_account_type
 from beancount.core.data import Transaction
 from beancount.core.interpolate import AUTOMATIC_META
-from beangulp.extract import HEADER
 from beancount.parser import parser, printer
+from beangulp.extract import HEADER
 
 from . import config
-from .config import get_account_root_names, BC_DEFAULT_ACCOUNT_ROOT_NAMES
+from .config import BC_DEFAULT_ACCOUNT_ROOT_NAMES, get_account_root_names
 from .errors import (
-    BeancountFileExistsError,
     BeanaheadFileExistsError,
-    BeanaheadLedgerFileExistsError,
     BeanaheadFileKeyError,
+    BeanaheadLedgerFileExistsError,
+    BeancountFileExistsError,
     BeancountLoaderErrors,
 )
 
+if TYPE_CHECKING:
+    from beancount.core import data
+
 TAG_X = "x_txn"
 TAG_RX = "rx_txn"
-TAGS_X = set([TAG_X, TAG_RX])
+TAGS_X = {TAG_X, TAG_RX}
 
 RX_META_DFLTS = {
     "final": None,
@@ -35,7 +38,7 @@ RX_META_DFLTS = {
 }
 
 SEPARATOR_LINE = "-" * 77 + "\n"
-TODAY = datetime.datetime.now().date()
+TODAY = datetime.datetime.now().date()  # noqa: DTZ005
 
 FILE_CONFIG = {
     "x": {
@@ -79,7 +82,7 @@ def print_it(text: str, **kwargs):
         Kwargs to pass to 'print' function.
     """
     kwargs["file"] = config.SETTINGS.print_to
-    print(text, **kwargs)
+    print(text, **kwargs)  # noqa: T201
 
 
 def validate_file_key(file_key: str):
@@ -129,7 +132,7 @@ def compose_header_footer(file_key: str) -> tuple[str, str]:
     config = FILE_CONFIG[file_key]
     plugin, tag, comment = config["plugin"], config["tag"], config["comment"]
 
-    header = f"""option "title" "{config['title']}"\n"""
+    header = f"""option "title" "{config["title"]}"\n"""
 
     for k, v in get_account_root_names().items():
         if BC_DEFAULT_ACCOUNT_ROOT_NAMES[k] == v:
@@ -241,7 +244,7 @@ def verify_files_key(path: Path, file_key: str):
         title for `file_key`.
 
     See Also
-    ---------
+    --------
     get_verified_file_key : Verify path to a beanahead file and return its
         file key.
     get_verified_ledger_file_key : Verify path to a beanahead ledger file
@@ -307,7 +310,7 @@ def get_options(path: Path) -> dict:
     dict
         Options as mapping of 'option name' : value.
     """
-    entries, errors, options = loader.load_file(path)
+    _entries, _errors, options = loader.load_file(path)
     return options
 
 
@@ -346,6 +349,7 @@ def get_verified_file_key(path: Path) -> str:
         Path to file to be verified.
 
     Returns
+    -------
         file_key, as key of `FILE_CONFIG`, corresponding with file at
         `path`.
 
@@ -358,7 +362,7 @@ def get_verified_file_key(path: Path) -> str:
         If `path` does not represent a beanahead file.
 
     See Also
-    ---------
+    --------
     get_verified_ledger_file_key : Verify path to a beanahead ledger file
         and return its file key.
     verify_files_key : Verify beancount file is a beanahead file of a
@@ -400,7 +404,7 @@ def get_verified_ledger_file_key(path: Path) -> str:
         Expected Transactions Ledger.
 
     See Also
-    ---------
+    --------
     get_verified_file_key : Verify path to a beanahead file and return its
         file key.
     verify_files_key : Verify beancount file is a beanahead file of a
@@ -428,7 +432,7 @@ def get_unverified_entries(path: Path) -> data.Entries:
     data.Entries
         Entries extracted from unverified ledger file.
     """
-    entries, errors, options = loader.load_file(path)
+    entries, _errors, _options = loader.load_file(path)
     return entries
 
 
@@ -451,7 +455,7 @@ def get_verified_entries(path: Path) -> data.Entries:
     data.Entries
         Entries extracted from verified ledger file.
     """
-    entries, errors, options = loader.load_file(path)
+    entries, errors, _options = loader.load_file(path)
     if errors:
         raise BeancountLoaderErrors(path, errors)
     return entries
@@ -548,7 +552,6 @@ def remove_txns(
     rtrn = [txn for txn in txns if txn not in txns_to_remove]
     if len(rtrn) > len(txns) - len(txns_to_remove):
         not_in_txns = [txn for txn in txns_to_remove if txn not in txns]
-        assert not_in_txns
         raise ValueError(
             "The following items are in `txns_to_remove` although not"
             f" in `txns`:\n{not_in_txns}."
@@ -568,7 +571,7 @@ def reverse_automatic_balancing(txn: Transaction) -> Transaction:
     for posting in txn.postings:
         if AUTOMATIC_META in posting.meta:
             meta = {k: v for k, v in posting.meta.items() if k != AUTOMATIC_META}
-            posting = posting._replace(units=None, meta=meta)
+            posting = posting._replace(units=None, meta=meta)  # noqa: PLW2901
         new_postings.append(posting)
     return txn._replace(postings=new_postings)
 
@@ -654,8 +657,7 @@ def get_content(path: Path) -> str:
         Path to file from which to get all content.
     """
     with path.open("r", encoding=config.ENCODING) as file:
-        content = file.read()
-    return content
+        return file.read()
 
 
 def clean_rx_meta(txn: Transaction) -> Transaction:
@@ -722,7 +724,7 @@ def compose_entries_content(entries: data.Directive | data.Entries) -> str:
     content = ""
     for entry in entries:
         if isinstance(entry, Transaction):
-            entry = prepare_for_printer(entry)
+            entry = prepare_for_printer(entry)  # noqa: PLW2901
         content += printer.format_entry(entry) + "\n"
     return content[:-1]
 
@@ -832,7 +834,7 @@ def remove_txns_from_ledger(path: Path, txns: list[Transaction]):
 
 def compile_strings_regex(
     strings: str | list[str],
-    flags=re.I,  # noqa: E741
+    flags=re.IGNORECASE,
 ) -> re.Pattern:
     """Return regex to match any string of one or more strings.
 
@@ -891,6 +893,7 @@ def get_input(text: str) -> str:
         String to introduce request for user input.
 
     Returns
+    -------
         User input
 
     Notes
@@ -950,8 +953,7 @@ def inject_txns(injection: str, ledger: str):
     """
     injection_path = get_verified_path(injection)
     content = get_content(injection_path)
-    if content.startswith(HEADER):
-        content = content[len(HEADER) :]
+    content = content.removeprefix(HEADER)
     content = "\n" + content
     ledger_path = get_verified_path(ledger)
 
@@ -976,7 +978,7 @@ def remove_tags(txn: Transaction, tags: str | list | set) -> Transaction:
         Copy of `txn` with `tags` removed.
         If `txn` has no tag of `tags` then returns `txn` as received.
     """
-    tags = set([tags]) if isinstance(tags, str) else set(tags)
+    tags = {tags} if isinstance(tags, str) else set(tags)
     new_tags = txn.tags - tags
     if new_tags != txn.tags:
         return txn._replace(tags=new_tags)
@@ -1000,7 +1002,7 @@ def add_tags(txn: Transaction, tags: str | list | set) -> Transaction:
         Copy of `txn` with `tags` added.
         If `txn` already has all `tags` then returns `txn` as received.
     """
-    tags = set([tags]) if isinstance(tags, str) else set(tags)
+    tags = {tags} if isinstance(tags, str) else set(tags)
     new_tags = txn.tags | tags
     if new_tags != txn.tags:
         return txn._replace(tags=new_tags)

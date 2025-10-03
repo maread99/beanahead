@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=43.0.0", "wheel", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=77.0.0", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,8 +10,9 @@ authors = [
   {name = "Marcus Read"},
 ]
 readme = "README.md"
-license = {text = "MIT License"}
+license = "MIT"
 keywords = ["accounting", "beancount", "ledger", "finance"]
+dynamic = ["version"]
 requires-python = "~=3.10"
 
 classifiers = [
@@ -20,7 +21,6 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Financial and Insurance Industry",
 	"Natural Language :: English",
-	"License :: OSI Approved :: MIT License",
 	"Operating System :: OS Independent",
 	"Programming Language :: Python",
 	"Programming Language :: Python :: 3",
@@ -39,24 +39,16 @@ dependencies = [
     "pandas",
 ]
 
-dynamic = ["version"]
-
-[project.optional-dependencies]
-tests = [
-    "black",
-    "flake8",
-    "flake8-docstrings",
+[dependency-groups]
+test = [
     "pytest",
 ]
 dev = [
-    "black",
-    "flake8",
-    "flake8-docstrings",
-    "pytest",
+    {include-group = "test"},
     "mypy",
-    "pip-tools",
+    "mypy-extensions",
     "pre-commit",
-    "pylint",
+    # "ruff",  # use local standalone install or ruff extension for editor.
 ]
 
 [project.urls]
@@ -70,7 +62,3 @@ beanahead = "beanahead.scripts.cli:main"
 
 [tool.setuptools_scm]
 write_to = "src/beanahead/_version.py"
-
-[tool.black]
-line-length = 88
-target-version = ['py310', 'py311', 'py312', 'py313']

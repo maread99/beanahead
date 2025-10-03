@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 import copy
-from collections import defaultdict
 import datetime
 import functools
-from pathlib import Path
 import re
+from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from beancount import loader
 from beancount.core import data
 from beancount.core.account_types import get_account_type
-from beancount.core.data import Transaction
 from beancount.parser import parser
 from beancount.parser.printer import EntryPrinter
 
-from . import utils, errors, config
+from . import config, errors, utils
 from .errors import BeanaheadWriteError, BeancountLoaderErrors
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from beancount.core.data import Transaction
 
 END_DFLT = utils.TODAY + datetime.timedelta(weeks=13)
 
@@ -246,7 +250,7 @@ def group_definitions(
 
 
 def sortkey_grouper(grouper_key: GrouperKey) -> tuple[str, str]:
-    """sortkey for a GrouperKey.
+    """Sortkey for a GrouperKey.
 
     Sorts by:
         Assets account name
@@ -276,11 +280,11 @@ def get_group_heading(group: GrouperKey) -> str:
     if other_side_type == "Assets":
         insert = "other " if utils.is_assets_account(bal_sheet_acc) else ""
         return f"Transactions between '{bal_sheet_acc}' and {insert}Assets accounts"
-    elif other_side_type == "Expenses":
+    if other_side_type == "Expenses":
         return f"'{bal_sheet_acc}' to Expenses and Liabilities"
-    elif other_side_type == "Income":
+    if other_side_type == "Income":
         return f"Income to '{bal_sheet_acc}'"
-    elif other_side_type == "Various":
+    if other_side_type == "Various":
         return f"'{bal_sheet_acc}' to various account types"
     return "Other definitions"
 
@@ -301,7 +305,7 @@ def compose_definitions_content(txns: list[Transaction]) -> str:
         group_txns = grouper[key]
         group_txns.sort(key=lambda txn: txn.payee)
         for txn in group_txns:
-            txn = utils.prepare_for_printer(txn)
+            txn = utils.prepare_for_printer(txn)  # noqa: PLW2901
             content += "\n" + printer(txn)
         content += "\n\n"
     return content
@@ -404,10 +408,9 @@ class Admin:
             self.path_ledger_main = utils.get_verified_path(ledger_main)
             if errors := self._get_main_ledger_errors():
                 raise BeancountLoaderErrors(self.path_ledger_main, errors)
-            else:
-                self._stored_content: dict[Path, str] = {}
-                for path in [self.path_ledger, self.path_defs]:
-                    self._store_content(path)
+            self._stored_content: dict[Path, str] = {}
+            for path in [self.path_ledger, self.path_defs]:
+                self._store_content(path)
 
     def _verify_payees_unique(self):
         """Raise error if rx txn payees are not unique.
@@ -417,7 +420,7 @@ class Admin:
         """
         txns = utils.get_unverified_txns(self.path_defs)
         payees = [txn.payee.lower() for txn in txns]
-        if len((unique_payees := set(payees))) < len(payees):
+        if len(unique_payees := set(payees)) < len(payees):
             repeated_payees = [
                 payee for payee in unique_payees if payees.count(payee) > 1
             ]
@@ -471,7 +474,9 @@ class Admin:
         path
             Path to rx txns file with contents to be stored.
         """
-        assert path in self.rx_files
+        if path not in self.rx_files:
+            msg_err = f"{path=} not in {self.rx_files=}."
+            raise AssertionError(msg_err)
         self._stored_content[path] = utils.get_content(path)
 
     def _revert_to_stored_content(self, path: Path):
@@ -488,7 +493,7 @@ class Admin:
             List of beancount errors registered on loading the main
             beancount ledger. Empty list indicates no errors.
         """
-        entries, errors, options = loader.load_file(self.path_ledger_main)
+        _entries, errors, _options = loader.load_file(self.path_ledger_main)
         return errors
 
     def create_raw_new_entries(
@@ -568,14 +573,13 @@ class Admin:
                 del self.rx_defs
             return
 
-        else:
-            for path in paths:
-                self._revert_to_stored_content(path)
-            raise errors.RegularTransactionsDefinitionError(
-                "Changes resulted in the main ledger loading with the following errors:"
-                f"\n{errors_}\n.The following files have been reverted to their prior"
-                f" content:\n{paths}"
-            )
+        for path in paths:
+            self._revert_to_stored_content(path)
+        raise errors.RegularTransactionsDefinitionError(
+            "Changes resulted in the main ledger loading with the following errors:"
+            f"\n{errors_}\n.The following files have been reverted to their prior"
+            f" content:\n{paths}"
+        )
 
     def _overwrite_beancount_file(
         self,

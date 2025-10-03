@@ -1,36 +1,21 @@
 """Common pytest fixtures and hooks."""
 
-from collections import abc
 import configparser
 import copy
 import datetime
 import io
 import os
-from pathlib import Path
 import shutil
 import sys
 import textwrap
+from collections import abc
+from pathlib import Path
 
 import beancount
-from beancount.core import data
 import pytest
+from beancount.core import data
 
-from beanahead import utils, config
-
-# pylint: disable=missing-function-docstring, missing-type-doc
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
-
+from beanahead import config, utils
 
 ENCODING = "utf-8"
 TEST_ROOT = Path(__file__).parent
@@ -71,7 +56,7 @@ def get_expected_output(string: str):
     return textwrap.dedent(string)[1:]
 
 
-def pytest_sessionstart(session):
+def pytest_sessionstart(session):  # noqa: ARG001
     """Hook executed before session starts.
 
     Cleans temporary test folder and patches settings to default.
@@ -193,7 +178,7 @@ def settings_alt() -> abc.Iterator[config.Settings]:
 @pytest.fixture
 def settings_alt_prnt_mp(monkeypatch, settings_dflt):
     settings = copy.copy(settings_dflt)
-    setattr(settings, "print_stream", config.PrintStream.STDERR)
+    settings.print_stream = config.PrintStream.STDERR
     monkeypatch.setattr("beanahead.config.SETTINGS", settings)
 
 
@@ -220,8 +205,8 @@ def cwd_as_temp_dir(temp_dir) -> abc.Iterator[Path]:
 
 
 def _clean_test_dir():
-    """Remove all files and directories from the test directory"""
-    for dirpath, dirnames, filenames in os.walk(TEMP_DIR):
+    """Remove all files and directories from the test directory."""
+    for dirpath, _dirnames, filenames in os.walk(TEMP_DIR):
         path_dir = Path(dirpath)
         for filename in filenames:
             path = path_dir / filename
@@ -302,6 +287,7 @@ def filepaths_recon_copy(
     for k, filepath in zip(
         ("extraction", "rx", "x"),
         (filepath_recon_extraction, filepath_recon_rx, filepath_recon_x),
+        strict=True,
     ):
         string = shutil.copy(filepath, temp_dir)
         d[k] = Path(string)
@@ -325,7 +311,7 @@ def filepath_rx(res_dir) -> abc.Iterator[Path]:
 
 @pytest.fixture
 def txns_ledger(filepath_ledger_txns) -> abc.Iterator[list[data.Transaction]]:
-    txns, errors, options = beancount.loader.load_file(filepath_ledger_txns)
+    txns, _errors, _options = beancount.loader.load_file(filepath_ledger_txns)
     yield txns
 
 
@@ -336,7 +322,7 @@ def txn(txns_ledger) -> abc.Iterator[data.Transaction]:
 
 @pytest.fixture
 def txns_rx(filepath_rx) -> abc.Iterator[list[data.Transaction]]:
-    txns, errors, options = beancount.loader.load_file(filepath_rx)
+    txns, _errors, _options = beancount.loader.load_file(filepath_rx)
     yield txns
 
 
