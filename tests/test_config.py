@@ -1,10 +1,10 @@
 """Tests for `config` module."""
 
-from collections import abc
 import copy
 import pathlib
 import sys
 import textwrap
+from collections import abc
 
 import pytest
 
@@ -12,20 +12,6 @@ from beanahead import config as m
 from beanahead.scripts import cli
 
 from .conftest import set_cl_args
-
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
 
 
 @pytest.fixture
@@ -52,9 +38,9 @@ def dflt_config() -> abc.Iterator[str]:
 def test_constants(account_root_names_dflt, encoding, dflt_config):
     """Verify value of constants."""
     assert m.ENCODING == "utf-8" == encoding
-    assert m.CONFIG_DIR == pathlib.Path("~/.config/beanahead").expanduser()
+    assert pathlib.Path("~/.config/beanahead").expanduser() == m.CONFIG_DIR
     assert (
-        m.CONFIG_FILE == pathlib.Path("~/.config/beanahead").expanduser() / "config.ini"
+        pathlib.Path("~/.config/beanahead").expanduser() / "config.ini" == m.CONFIG_FILE
     )
     assert m.SETTINGS_DFLTS == {
         "name-assets": "Assets",
@@ -65,8 +51,8 @@ def test_constants(account_root_names_dflt, encoding, dflt_config):
         "print-stream": "stdout",
         "extension": "beancount",
     }
-    assert m.BC_DEFAULT_ACCOUNT_ROOT_NAMES == account_root_names_dflt
-    assert m.DFLT_CONFIG == dflt_config
+    assert account_root_names_dflt == m.BC_DEFAULT_ACCOUNT_ROOT_NAMES
+    assert dflt_config == m.DFLT_CONFIG
 
     assert len(m.PrintStream) == 2
     assert m.PrintStream("stdout") == m.PrintStream["STDOUT"]
@@ -159,7 +145,10 @@ def test_parse_config(config_dflt, settings_dflt, config_alt, settings_alt):
     invalid_print_stream["print-stream"] = "invalid_stream"
     with pytest.warns(
         m.ConfigInvalidValueWarning,
-        match="'invalid_stream' is not a valid value for the configuration option print-stream",
+        match=(
+            "'invalid_stream' is not a valid value for the configuration option"
+            " print-stream"
+        ),
     ):
         parsed_settings = m.parse_config(invalid_print_stream)
     assert parsed_settings == settings_dflt  # default value should have been used

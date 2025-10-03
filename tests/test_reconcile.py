@@ -1,36 +1,24 @@
 """Tests for `reconcile` module."""
 
-from collections import abc
 import copy
 import datetime
-from decimal import Decimal
 import itertools
-from pathlib import Path
 import re
+from collections import abc
+from decimal import Decimal
+from pathlib import Path
 from types import GeneratorType
 
 import beancount
-from beancount.core import data
 import pytest
+from beancount.core import data
 
 from beanahead import reconcile as m
 from beanahead.scripts import cli
 
-from .conftest import get_entries_from_string, set_cl_args, get_expected_output
+from .conftest import get_entries_from_string, get_expected_output, set_cl_args
 
-# pylint: disable=missing-function-docstring, missing-type-doc, missing-class-docstring
-# pylint: disable=missing-param-doc, missing-any-param-doc, redefined-outer-name
-# pylint: disable=too-many-public-methods, too-many-arguments, too-many-locals
-# pylint: disable=too-many-statements
-# pylint: disable=protected-access, line-too-long, unused-argument, invalid-name
-#   missing-fuction-docstring: doc not required for all tests
-#   protected-access: not required for tests
-#   not compatible with use of fixtures to parameterize tests:
-#       too-many-arguments, too-many-public-methods
-#   not compatible with pytest fixtures:
-#       redefined-outer-name, missing-any-param-doc, missing-type-doc
-#   unused-argument: not compatible with pytest fixtures, caught by pylance anyway.
-#   invalid-name: names in tests not expected to strictly conform with snake_case.
+# ruff: noqa: E741  # ambiguous-variable-name.  Happy to use 'l' in these tests.
 
 
 @pytest.fixture
@@ -125,13 +113,13 @@ def test_bal_sheet_accounts_match(test_txns):
         (6,),
     )
 
-    for matches_, txn in zip(matches, txns):
+    for matches_, txn in zip(matches, txns, strict=True):
         for i, txn_ in enumerate(txns):
             match = f(txn, txn_)
             assert match if i in matches_ else not match
 
     f = m.get_accounts_matches
-    for txn, matches_ in zip(txns, matches):
+    for txn, matches_ in zip(txns, matches, strict=True):
         assert f(txns, txn) == [txns[i] for i in matches_]
 
     txn = txns.pop(1)
@@ -212,7 +200,7 @@ def test_get_common_accounts():
 
     f3 = m.get_amount_for_account
     assert f3(c, "Income:US:BayBook:Salary") == data.Amount(Decimal("-4615.38"), "USD")
-    assert f3(c, "Assets:US:BayBook:Vacation") == data.Amount(Decimal("5"), "VACHR")
+    assert f3(c, "Assets:US:BayBook:Vacation") == data.Amount(Decimal(5), "VACHR")
 
 
 def test_get_posting_to_account():
@@ -320,20 +308,20 @@ class TestNumberAndSort:
     def test_number_diff(self, txns):
         (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         f = m.number_diff
-        assert f(a, b) == Decimal("1")
-        assert f(a, c) == Decimal("1")
-        assert f(a, d) == Decimal("1")
-        assert f(a, e) == Decimal("0")
-        assert f(a, f_) == Decimal("0")
+        assert f(a, b) == Decimal(1)
+        assert f(a, c) == Decimal(1)
+        assert f(a, d) == Decimal(1)
+        assert f(a, e) == Decimal(0)
+        assert f(a, f_) == Decimal(0)
         assert f(a, g) == Decimal("0.5")
         assert f(a, h) == Decimal("0.5")
         assert f(a, i) == Decimal("0.5")
         assert f(a, j) == Decimal("0.375")
-        assert f(a, k) == Decimal("1")
-        assert f(a, l) == Decimal("0")
+        assert f(a, k) == Decimal(1)
+        assert f(a, l) == Decimal(0)
 
     def test_have_same_number(self, txns):
-        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
+        (a, _b, _c, _d, e, f_, g, h, i, j, _k, l) = txns
         expected = (
             (a, e),
             (a, f_),
@@ -365,16 +353,16 @@ class TestNumberAndSort:
             assert f(txns, txn) == [txn]
 
         # verify margin
-        assert f(txns, a, Decimal(0.374)) == [a, e, f_, l]
+        assert f(txns, a, Decimal("0.374")) == [a, e, f_, l]
         expected = [a, e, f_, j, l]
-        assert f(txns, a, Decimal(0.375)) == f(txns, a, Decimal(0.499)) == expected
+        assert f(txns, a, Decimal("0.375")) == f(txns, a, Decimal("0.499")) == expected
 
         expected = [a, e, f_, g, h, i, j, l]
-        assert f(txns, a, Decimal(0.5)) == f(txns, a, Decimal(0.99)) == expected
+        assert f(txns, a, Decimal("0.5")) == f(txns, a, Decimal("0.99")) == expected
         assert f(txns, a, Decimal(1)) == txns
 
     def test_sort_by_number(self, txns):
-        (a, b, c, d, e, f_, g, h, i, j, k, l) = txns
+        (_a, b, c, d, e, f_, g, h, i, j, k, l) = txns
         sorted_txns = m.sort_by_number(txns[1:], txns[0])
         assert sorted_txns == [e, f_, l, j, g, h, i, b, c, d, k]
 
@@ -467,7 +455,7 @@ class TestGetMatches:
         yield txns
 
     def test_txns_no_payee_match(self, txn, txns_no_payee_match):
-        a, b, c, d, e, f_, g, h, i = txns_no_payee_match
+        _a, b, _c, d, e, f_, *_other = txns_no_payee_match
         assert m.get_matches(txns_no_payee_match, txn) == [b, d, e, f_]
 
     def test_mult_payee_match(self, txn):
@@ -535,7 +523,9 @@ class TestGetMatches:
               Expenses:Food:Restaurant                     40 USD
               Expenses:Food:Alcohol
           """
-        a, b, c, d, e, f_, g, h, i, j, k, l, m_ = txns = get_entries_from_string(input_)
+        _a, b, c, _d, _e, f_, g, h, i, j, k, l, _m = txns = get_entries_from_string(
+            input_
+        )
         f = m.get_matches
         assert f(txns, txn) == [f_]
         txns.remove(f_)  # remove exact match
@@ -709,7 +699,7 @@ class TestUserInput:
 
         # verify each option where mult options
         # txns[1] is dated 07 is closer and so appears as option 0, txn[0] is option 1
-        for i, i_ in zip((0, 1), (1, 0)):
+        for i, i_ in zip((0, 1), (1, 0), strict=True):
             inputs = (v for v in (str(i), "y"))
             mock_input(inputs)
             rtrn = f(x_txns, txns)
@@ -724,7 +714,7 @@ class TestUserInput:
         rtrn = f(x_txns, txns)
         assert rtrn == [(txn2, txns[-1])]
 
-        for i, i_ in zip((0, 1), (1, 0)):
+        for i, i_ in zip((0, 1), (1, 0), strict=True):
             inputs = (v for v in (str(i), "n"))
             mock_input(inputs)
             rtrn = f(x_txns, txns)
@@ -746,7 +736,7 @@ class TestUserInput:
 
 
 class TestUpdateNewTxn:
-    """Tests for `update_new_txn` function"""
+    """Tests for `update_new_txn` function."""
 
     @pytest.fixture
     def new_txns(self) -> abc.Iterator[list[data.Transaction]]:
@@ -919,7 +909,7 @@ class TestUpdateNewTxn:
         # verify original meta not amended...
         assert alc_posting != new_txn.postings[1]
         # verify as new_txn posting except for updated meta...
-        assert alc_posting.units == data.Amount(Decimal("20"), "USD")
+        assert alc_posting.units == data.Amount(Decimal(20), "USD")
         self.assert_cost_price_flag_none(alc_posting)
         assert len(alc_posting.meta) == 5
         assert all(k in alc_posting.meta for k in ["filename", "lineno"])
@@ -1276,7 +1266,7 @@ class TestReconcileNewTxns:
         expected_injection_content,
         capsys,
     ):
-        """Test calling `reconcile_new_txns` via cli with remove option as False
+        """Test calling `reconcile_new_txns` via cli with remove option as False.
 
         Test based on `test_remove`.
         """

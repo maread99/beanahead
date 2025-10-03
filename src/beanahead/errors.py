@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class BeancountFileExistsError(FileExistsError):
@@ -18,7 +21,7 @@ class BeanaheadFileKeyError(Exception):
 
 
 class RegularTransactionsDefinitionError(Exception):
-    """Error in a regular transactions definition file"""
+    """Error in a regular transactions definition file."""
 
 
 class BeanaheadLedgerFileExistsError(FileExistsError):
@@ -36,7 +39,7 @@ class BeanaheadLedgerFileExistsError(FileExistsError):
         return self._msg
 
 
-class BeancountLoaderErrors(Exception):
+class BeancountLoaderErrors(Exception):  # noqa: N818
     """Errors returned when loading ledger file."""
 
     def __init__(self, path: Path, errors: list[Exception]):
@@ -71,6 +74,7 @@ class BeanaheadWriteError(Exception):
         self,
         path: Path,
         reverted: list[Path] | None = None,
+        *,
         overwrite: bool = True,
     ):
         insert = "overwrite" if overwrite else "write to"
