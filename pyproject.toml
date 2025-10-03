@@ -13,7 +13,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["accounting", "beancount", "ledger", "finance"]
 dynamic = ["version"]
-requires-python = "~=3.10"
+requires-python = ">=3.10, <4"
 
 classifiers = [
 	"Development Status :: 4 - Beta",
@@ -33,21 +33,31 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Accounting",
 ]
 
+# Include minimum versions for 'minimum envionment' test in test workflow.
 dependencies = [
-    "beancount",
-    "beangulp",
-    "pandas",
+    "beancount >=2.3.6",
+    "beangulp >=0.1",
+    "pandas >=2.2",
 ]
 
+# Include minimum versions for 'minimum envionment' test in test workflow.
 [dependency-groups]
 test = [
-    "pytest",
+    "pytest >=8.4.2",
 ]
+# Separate group required for test jobs running on python 3.13.
+# Should be able to remove this provision once numpy and pandas officially support python 3.13.
+test_py13 = [
+    {include-group = "test"},
+    "numpy>=2.1; python_version<'3.13'",
+    "numpy>=2.3.3; python_version>='3.13'",
+    "pandas>=2.3; python_version>='3.13'",
+]
+
 dev = [
     {include-group = "test"},
-    "mypy",
-    "mypy-extensions",
-    "pre-commit",
+    "mypy >=1.18.2",
+    "pre-commit >=4.3.0",
     # "ruff",  # use local standalone install or ruff extension for editor.
 ]
 
@@ -62,3 +72,9 @@ beanahead = "beanahead.scripts.cli:main"
 
 [tool.setuptools_scm]
 write_to = "src/beanahead/_version.py"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
