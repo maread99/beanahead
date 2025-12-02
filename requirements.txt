@@ -6,11 +6,11 @@ beancount==3.2.0
     #   beangulp
 beangulp==0.2.0
     # via beanahead
-beautifulsoup4==4.14.2
+beautifulsoup4==4.14.3
     # via beangulp
 chardet==5.2.0
     # via beangulp
-click==8.3.0
+click==8.3.1
     # via
     #   beancount
     #   beangulp
@@ -32,7 +32,7 @@ python-magic==0.4.27 ; sys_platform != 'win32'
     # via beangulp
 pytz==2025.2
     # via pandas
-regex==2025.9.18
+regex==2025.11.3
     # via beancount
 six==1.17.0
     # via python-dateutil
