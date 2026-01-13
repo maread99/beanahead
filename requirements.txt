@@ -6,11 +6,11 @@ beancount==3.2.0
     #   beangulp
 beangulp==0.2.0
     # via beanahead
-beautifulsoup4==4.14.2
+beautifulsoup4==4.14.3
     # via beangulp
 chardet==5.2.0
     # via beangulp
-click==8.3.0
+click==8.3.1
     # via
     #   beancount
     #   beangulp
@@ -20,7 +20,7 @@ lxml==6.0.2
     # via beangulp
 numpy==2.2.6 ; python_full_version < '3.11'
     # via pandas
-numpy==2.3.3 ; python_full_version >= '3.11'
+numpy==2.4.1 ; python_full_version >= '3.11'
     # via pandas
 pandas==2.3.3
     # via beanahead
@@ -32,13 +32,13 @@ python-magic==0.4.27 ; sys_platform != 'win32'
     # via beangulp
 pytz==2025.2
     # via pandas
-regex==2025.9.18
+regex==2025.11.3
     # via beancount
 six==1.17.0
     # via python-dateutil
-soupsieve==2.8
+soupsieve==2.8.1
     # via beautifulsoup4
 typing-extensions==4.15.0
     # via beautifulsoup4
-tzdata==2025.2
+tzdata==2025.3
     # via pandas
