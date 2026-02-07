@@ -45,8 +45,8 @@ dependencies = [
 test = [
     "pytest >=8.4.2",
 ]
+
 # Separate group required for test jobs running on python 3.13.
-# Should be able to remove this provision once numpy and pandas officially support python 3.13.
 test_py13 = [
     {include-group = "test"},
     "numpy>=2.1; python_version<'3.13'",
