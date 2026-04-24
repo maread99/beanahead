@@ -22,7 +22,58 @@ See @pyproject.toml for project metadata and dependencies.
 ### Repository Layout
 
 ```
-TODO
+beanahead/
+├── .agents/                            # instructions for LLM coding agents
+│   └── skills/                         # skills for LLM coding agents
+│       ├── create-pr/
+│       │   └── SKILL.md
+│       ├── dependencies-management/
+│       │   └── SKILL.md
+│       └── update-agents-md/
+│           └── SKILL.md
+├── .github/
+│   ├── workflows/
+│   │   ├── build-test.yml
+│   │   ├── draft-release-notes.yml
+│   │   └── release.yml
+│   └── release-drafter.yml
+├── examples/                           # example files referred to by docs
+├── src/
+│   └── beanahead/
+│       ├── plugins/
+│       │   └── rx_txn_plugin.py
+│       ├── scripts/
+│       │   └── cli.py
+│       ├── config.py
+│       ├── errors.py
+│       ├── expired.py
+│       ├── reconcile.py
+│       ├── rx_txns.py
+│       └── utils.py
+├── tests/
+│   ├── resources/                      # Static test resource files
+│   ├── cmn.py                          # Shared test helper functions
+│   ├── conftest.py
+│   ├── test_config.py
+│   ├── test_errors.py
+│   ├── test_expired.py
+│   ├── test_init.py
+│   ├── test_plugins.py
+│   ├── test_reconcile.py
+│   ├── test_rx_txns.py
+│   └── test_utils.py
+├── .pre-commit-config.yaml
+├── .python-version
+├── AGENTS.md
+├── CLAUDE.md
+├── LICENSE.txt
+├── MANIFEST.in
+├── README.md
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+├── ruff.toml
+└── uv.lock
 ```
 
 ## Technology Stack
