@@ -14,14 +14,26 @@ Create a new branch (following the naming convention in @AGENTS.md).
 
 ### 2. Update the lock file and environment
 
+Update `uv`:
 ```bash
-uv self update
+uv self update --token $GITHUB_TOKEN
 ```
 
-**IMPORTANT: updating `uv` MUST NOT be skipped.** If the above command fails (e.g. due to a GitHub API rate limit), install the latest `uv` via an alternative method before proceeding:
+**IMPORTANT: updating `uv` MUST NOT be skipped.** If the above command fails (e.g. due to a GitHub API rate limit), try the following fallbacks in order until `uv --version` confirms the latest version is active on PATH:
+
+**Fallback 1 — official install script** (preferred; replaces PATH binary directly):
 
 ```bash
-pip install --upgrade uv  # fallback if uv self update fails
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env  # refresh current shell session
+uv --version                 # verify PATH binary is now updated
+```
+
+**Fallback 2 — pip** (use only if `curl` is unavailable):
+
+```bash
+pip install --user --upgrade uv
+uv --version   # check if PATH binary was updated
 ```
 
 Once `uv` is up to date, run:
