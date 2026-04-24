@@ -75,7 +75,7 @@ As a general RULE, **change the package code to get the tests passing, not the t
 To facilitate identifying the cause of test failures consider researching the changelogs of updated dependencies for versions released since the previously locked version.
 
 Iterate on this process until:
-- all tests are passing with the exception of any requiring unreachable services.
+- all tests are passing.
 - all fixable warnings have been fixed.
 
 IMPORTANT: in this step you should not run the full test suite, rather validate fixes by re-running only the previously failing tests. Example to run a specific test:
