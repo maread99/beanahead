@@ -70,7 +70,7 @@ Once local tests pass, commit all changes to the branch and raise a PR.
   - `<MM>` should be replaced with the first three letters of the current month, the first of which should be capitalized.
   - `<DD>` should be replaced with the current day of the month as represented by two digits.
   Example title: `Update Dependencies Apr 07 (auto)`
-- **label**: Add the 'dependencies' label to the PR via `mcp__github__update_pull_request`.
+- **label**: Add the 'dependencies' label to the PR.
 - otherwise comply with the package's 'create-pr' skill.
 
 ### 7. Subscribe to PR activity

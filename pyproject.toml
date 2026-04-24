@@ -73,6 +73,9 @@ beanahead = "beanahead.scripts.cli:main"
 [tool.setuptools_scm]
 write_to = "src/beanahead/_version.py"
 
+[tool.uv]
+exclude-newer = "2 days"
+
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
