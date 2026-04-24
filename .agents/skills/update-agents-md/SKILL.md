@@ -13,6 +13,7 @@ Update the 'Repository Layout' section to reflect the current layout. Remove all
     - all files named `__init__.py`
 - do not include files and/or folders under the following directories (but do include the folders listed here):
     - @tests/resources
+    - @examples
 List all folders before any files for any given hierarchal level.
 If the purpose of a file or directory is not reasonably evident from its name then include a minimalist comment offering a top-line explanation.
 The comment should:
