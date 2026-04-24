@@ -16,6 +16,17 @@ Create a new branch (following the naming convention in @AGENTS.md).
 
 ```bash
 uv self update
+```
+
+**IMPORTANT: updating `uv` MUST NOT be skipped.** If the above command fails (e.g. due to a GitHub API rate limit), install the latest `uv` via an alternative method before proceeding:
+
+```bash
+pip install --upgrade uv  # fallback if uv self update fails
+```
+
+Once `uv` is up to date, run:
+
+```bash
 uv lock --upgrade  # update the lock file
 uv export --format requirements-txt --no-emit-project --no-hashes --no-dev -o requirements.txt  # sync @requirements.txt with @uv.lock
 uv sync --inexact  # update environment to match @uv.lock
