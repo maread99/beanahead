@@ -61,12 +61,15 @@ ignore = [
     "EM101",  # raw-string-in-exception. TODO: Review / fix.
     "EM102",  # f-string-in-exception. TODO: Review / fix.
     "TRY003",  # raise-vanilla-args. TODO: Review / fix.
+    "CPY001",  # missing-copyright-notice. TODO: Review / fix.
+    "ICN001",  # unconventional-import-alias. TODO: Review / fix.
     # Global wilful ignores...
     "COM812",  # missing-trailing-comma.  As recommended by ruff as conflicts with formatter.
     "TD002",  # missing-todo-author
     "TD003",  # missing-todo-issue
     "FIX002",  # line-contains-todo.  Ignore here to pass CI tests.
     "PLR0913",  # too-many-arguments
+    "PLR0917",  # too-many-positional-arguments. Same rationale as PLR0913.
     "D105",  # undocumented-magic-method
     # Package-specific wilful ignores...
     # None
