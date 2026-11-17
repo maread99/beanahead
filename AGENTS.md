@@ -155,7 +155,7 @@ The project employs a predominantly functional architecture.
 
 ### Formatting
 
-- format to `ruff` (Black compatible).  
+- format to `ruff` (Black compatible).
 - see @ruff.toml for configuration.
 
 ```bash
@@ -236,7 +236,7 @@ def my_func(param1: int, param2: str = "default", param3: None | str = None) -> 
 
 ### Comments
 
-- pay particular attention to comments starting with...: 
+- pay particular attention to comments starting with...:
     - 'NOTE'
     - 'TODO'
     - 'AIDEV-NOTE' - these comments are specifically addressed to you.

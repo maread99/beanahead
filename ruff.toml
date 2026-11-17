@@ -40,7 +40,7 @@ indent-width = 4
 # Assume Python 3.10
 target-version = "py310"
 
-[lint]  
+[lint]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
@@ -68,6 +68,8 @@ ignore = [
     "FIX002",  # line-contains-todo.  Ignore here to pass CI tests.
     "PLR0913",  # too-many-arguments
     "D105",  # undocumented-magic-method
+    "CPY001",  # missing-copyright-notice.  Project does not use copyright headers.
+    "ICN001",  # unconventional-import-alias.  Project convention is `import datetime`.
     # Package-specific wilful ignores...
     # None
 ]
@@ -80,6 +82,7 @@ ignore = [
     "SLF001",  # private-member-access
     "PLR0912",  # too-many-branches
     "PLR0915",  # too-many-statements
+    "PLR0917",  # too-many-positional-arguments
     "C901",  # complex-structure. Mccabe.
     "S101",  # assert
     "D101",  # undocumented-public-class.
