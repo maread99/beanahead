@@ -124,7 +124,7 @@ Regular expected transactions are defined on the Regular Expected Transaction _D
 ### Defining regular transactions
 A new regular transaction can be defined at any time by adding a single transaction to the definitions file (the 'initial definition'). The date of this transaction will serve as the anchor off which future transactions are evaluated.
 
-The following initial definition would generate regular transactions on the 5th of every month, with the first generated transaction dated 2022-10-05. 
+The following initial definition would generate regular transactions on the 5th of every month, with the first generated transaction dated 2022-10-05.
 ```beancount
 2022-10-05 * "EDISON" "Electricity, monthly fixed tarrif"
   freq: "m"
@@ -256,10 +256,10 @@ Beanahead will treat each 'word' defined in the expected payee as a separate str
     For example, "Top of the World" will match with "The corner shop", "Another Day" and "Super Offers".
   - Use few unambiguous words. For example "Top World". Even just "Top" might be a better choice.
 
-> :information_source: The transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!  
+> :information_source: The transaction that ends up on your main ledger will have the payee as defined on the statement, not "Top"!
 > :information_source: matches are case-insensitive
 
-## Reconciling 
+## Reconciling
 
 The `recon` command provides for reconciling imported transactions with expected transactions.
 
@@ -379,7 +379,7 @@ With a bit of luck and perhaps a tweak or two to your ledger, your `bean-check` 
 > :information_source: An alternative to using `exp` is to manually redate / remove transactions on the expected transactions ledgers.
 
 ## Worth remembering
-> :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost. 
+> :warning: Whenever an expected transactions ledger or the regular expected transaction definition files are updated the entries are resorted and the file is overwritten - anything that is not a directive (e.g. comments) will be lost.
 
 ## Options
 Beanahead provides options to set...
