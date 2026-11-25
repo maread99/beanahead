@@ -34,14 +34,14 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Accounting",
 ]
 
-# Include minimum versions for 'minimum envionment' test in test workflow.
+# Include minimum versions for 'minimum environment' test in test workflow.
 dependencies = [
     "beancount >=2.3.6",
     "beangulp >=0.1",
     "pandas >=2.2",
 ]
 
-# Include minimum versions for 'minimum envionment' test in test workflow.
+# Include minimum versions for 'minimum environment' test in test workflow.
 [dependency-groups]
 test = [
     "pytest >=8.4.2",
